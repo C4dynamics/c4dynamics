@@ -1,19 +1,9 @@
 """
-quad_pid_utils.py
-=================
-Supporting module for the Quadcopter Cascade PID notebook.
+Supporting module for the quadcopter cascade-PID notebook.
 
-Contains all implementation details:
-  - PID controller class
-  - Quadcopter nonlinear dynamics
-  - Reference trajectory and velocity
-  - Control allocation
-  - Main simulation loop
-  - Plotting helpers
-  - Performance metrics
-
-Users do not need to modify this file.
-All user-facing parameters are in the notebook.
+The notebook exposes the user-facing inputs. This file keeps the simulation,
+control, plotting, and metric implementation details out of the notebook so the
+workflow stays focused on: edit inputs -> run -> inspect results.
 """
 
 import numpy as np
@@ -98,7 +88,7 @@ class PID:
             )
         I = self.Ki * self._integral
 
-        # Derivative — on measurement if provided, else on error
+        # Derivative on measurement if provided, else on error
         if measurement is not None:
             if self._prev_meas is None:
                 self._prev_meas = measurement
@@ -165,18 +155,18 @@ def quad_dynamics(t, X, F, tau_phi, tau_theta, tau_psi,
     y_dot = vy
     z_dot = vz
 
-    # Translational dynamics (Newton — inertial frame)
+    # Translational dynamics (Newton - inertial frame)
     # Thrust projected via ZYX rotation matrix
     vx_dot = (F / m) * (cpsi * stheta * cphi + spsi * sphi)
     vy_dot = (F / m) * (spsi * stheta * cphi - cpsi * sphi)
     vz_dot = (F / m) * (ctheta * cphi) - g
 
-    # Rotational kinematics — body rates to Euler angle rates
+    # Rotational kinematics - body rates to Euler angle rates
     phi_dot   = p + (q * sphi + r * cphi) * ttheta
     theta_dot = q * cphi - r * sphi
     psi_dot   = (q * sphi + r * cphi) / (ctheta + 1e-6)
 
-    # Rotational dynamics — Euler equations
+    # Rotational dynamics - Euler equations
     p_dot = ((Iyy - Izz) / Ixx) * q * r + tau_phi   / Ixx
     q_dot = ((Izz - Ixx) / Iyy) * p * r + tau_theta / Iyy
     r_dot = ((Ixx - Iyy) / Izz) * p * q + tau_psi   / Izz
@@ -256,6 +246,18 @@ def get_reference_velocity(t, A, B, omega, t_start=5.0, t_ramp=12.0):
               + ramp * B * 2.0 * omega * np.cos(2.0 * omega * t_fig))
 
     return vx_ref, vy_ref
+
+
+def get_steady_start(trajectory):
+    """
+    Return the start time of the steady-state tracking window.
+
+    By default, steady-state begins after the initial hover delay plus the
+    figure-8 ramp.
+    """
+    return trajectory.get('steady_start',
+                          trajectory.get('t_start', 5.0)
+                          + trajectory.get('t_ramp', 12.0))
 
 
 # ============================================================
@@ -424,6 +426,8 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
     B     = trajectory['B']
     omega = trajectory['omega']
     z_ref = trajectory['z_ref']
+    t_start = trajectory.get('t_start', 5.0)
+    t_ramp = trajectory.get('t_ramp', 12.0)
     t_end = trajectory['t_end']
 
     # ── Unpack simulation settings ──
@@ -474,8 +478,12 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
 
         # ── Outer loop — Position (50 Hz) ──
         if step % outer_every == 0:
-            x_ref, y_ref, z_ref_t = get_reference(ti, A, B, omega, z_ref)
-            vx_ref, vy_ref        = get_reference_velocity(ti, A, B, omega)
+            x_ref, y_ref, z_ref_t = get_reference(
+                ti, A, B, omega, z_ref, t_start=t_start, t_ramp=t_ramp
+            )
+            vx_ref, vy_ref = get_reference_velocity(
+                ti, A, B, omega, t_start=t_start, t_ramp=t_ramp
+            )
 
             # Position PID + velocity feedforward
             theta_des = (pids['x'].update(x_ref - quad.x)
@@ -602,8 +610,7 @@ def plot_results(results):
     y_hist = quad.data('y')[1]
     z_hist = quad.data('z')[1]
 
-    # Show only steady state (after ramp completes)
-    t_steady   = 17.0
+    # Show only steady-state tracking
     steady_idx = t_hist >= t_steady
 
     ax3d.plot(x_hist[steady_idx],
@@ -612,8 +619,8 @@ def plot_results(results):
               'b', linewidth=1.5, label='Actual')
 
     t_vec = np.arange(t_steady, t_end, dt)
-    x_r   = [get_reference(t, A, B, omega, z_ref)[0] for t in t_vec]
-    y_r   = [get_reference(t, A, B, omega, z_ref)[1] for t in t_vec]
+    x_r   = [get_reference(t, A, B, omega, z_ref, t_start, t_ramp)[0] for t in t_vec]
+    y_r   = [get_reference(t, A, B, omega, z_ref, t_start, t_ramp)[1] for t in t_vec]
     z_r   = np.full(len(t_vec), z_ref)
 
     ax3d.plot(x_r, y_r, z_r, 'r--', linewidth=1.5, label='Reference')
@@ -642,27 +649,30 @@ def compute_metrics(results):
     """
     quad       = results['quad']
     trajectory = results['trajectory']
-    dt         = results['dt']
-
     A     = trajectory['A']
     B     = trajectory['B']
     omega = trajectory['omega']
     z_ref = trajectory['z_ref']
+    t_start = trajectory.get('t_start', 5.0)
+    t_ramp = trajectory.get('t_ramp', 12.0)
+    t_steady = get_steady_start(trajectory)
+    t_start = trajectory.get('t_start', 5.0)
+    t_ramp = trajectory.get('t_ramp', 12.0)
 
     t_hist = quad.data('x')[0]
     x_hist = quad.data('x')[1]
     y_hist = quad.data('y')[1]
     z_hist = quad.data('z')[1]
 
-    # Steady state indices
-    t_steady   = 17.0
+    # Steady-state indices
+    t_steady = get_steady_start(trajectory)
     steady_idx = t_hist >= t_steady
-    t_ss       = t_hist[steady_idx]
+    t_ss = t_hist[steady_idx]
 
     # Reference at steady state times
-    x_ref_ss = np.array([get_reference(t, A, B, omega, z_ref)[0]
+    x_ref_ss = np.array([get_reference(t, A, B, omega, z_ref, t_start, t_ramp)[0]
                           for t in t_ss])
-    y_ref_ss = np.array([get_reference(t, A, B, omega, z_ref)[1]
+    y_ref_ss = np.array([get_reference(t, A, B, omega, z_ref, t_start, t_ramp)[1]
                           for t in t_ss])
     z_ref_ss = np.full(len(t_ss), z_ref)
 
@@ -672,9 +682,9 @@ def compute_metrics(results):
     rmse_z = np.sqrt(np.mean((z_hist[steady_idx] - z_ref_ss) ** 2))
 
     # Normalized errors
-    norm_x = rmse_x / A  * 100
-    norm_y = rmse_y / B  * 100
-    norm_z = rmse_z / z_ref * 100
+    norm_x = rmse_x / A * 100 if A else np.nan
+    norm_y = rmse_y / B * 100 if B else np.nan
+    norm_z = rmse_z / z_ref * 100 if z_ref else np.nan
 
     # Max altitude deviation
     max_z_dev = np.max(np.abs(z_hist[steady_idx] - z_ref))
