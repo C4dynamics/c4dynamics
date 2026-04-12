@@ -143,9 +143,9 @@ def quad_dynamics(t, X, F, tau_phi, tau_theta, tau_psi,
     ----------
     t                         : current time [s]
     X                         : state vector [12]
-    F                         : total thrust [N]
-    tau_phi, tau_theta, tau_psi : body torques [N.m]
-    m, g, Ixx, Iyy, Izz       : vehicle parameters
+    F                         : total thrust in z-body direction [N]
+    tau_phi, tau_theta, tau_psi : body torques about xb, yb, and zb, respectively [N.m]
+    m, g, Ixx, Iyy, Izz       : mass, gravity, and inertias [kg, m/s^2, kg*m^2]
 
     Returns
     -------
@@ -430,12 +430,12 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
     dt    = sim['dt']
 
     # ── Sample rates ──
-    dt_inner = dt          # 200 Hz — inner rate loop
-    dt_mid   = dt * 2      # 100 Hz — middle attitude loop
-    dt_outer = dt * 4      #  50 Hz — outer position loop
-
     mid_every   = 2
     outer_every = 4
+    dt_inner = dt                    # 200 Hz — inner rate loop
+    dt_mid   = dt * mid_every        # 100 Hz — middle attitude loop
+    dt_outer = dt * outer_every      #  50 Hz — outer position loop
+
 
     # ── Feedforward gains ──
     Kff_x = controller.get('Kff_x', 0.2479)
@@ -464,9 +464,8 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
     r_des     = 0.0
 
     # ── Main simulation loop ──
-    step = 0
 
-    for ti in np.arange(0, t_end, dt):
+    for step, ti in enumerate(np.arange(0, t_end, dt)):
 
         # Store state and control inputs at this timestep
         quad.store(ti)
@@ -520,7 +519,7 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
         )
         quad.X = sol.y[:, -1]
 
-        step += 1
+        
 
     # ── Pack and return results ──
     results = {
