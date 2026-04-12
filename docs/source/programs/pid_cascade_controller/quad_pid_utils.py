@@ -191,12 +191,13 @@ def quad_dynamics(t, X, F, tau_phi, tau_theta, tau_psi,
 #  REFERENCE TRAJECTORY
 # ============================================================
 
-def get_reference(t, A, B, omega, z_ref, t_start=5.0, t_ramp=12.0):
+def get_reference(t, A, B, omega, z_ref, t_takeoff=8.0, t_land=8.0, t_sim=90.0):
     """
-    Figure-8 reference position with cosine ramp.
+    Three-phase reference trajectory: takeoff, figure-8, landing.
 
-    A cosine ramp is applied for t_ramp seconds after takeoff
-    to avoid velocity discontinuity at trajectory start.
+    Phase 1 — Takeoff:   Z rises 0 to z_ref, X=Y=0  (0 to t_takeoff seconds)
+    Phase 2 — Figure-8:  X=A*sin(wt), Y=B*sin(2wt), Z=z_ref
+    Phase 3 — Landing:   Z drops z_ref to 0, X=Y go to 0
 
     Parameters
     ----------
@@ -204,31 +205,52 @@ def get_reference(t, A, B, omega, z_ref, t_start=5.0, t_ramp=12.0):
     A       : figure-8 X amplitude [m]
     B       : figure-8 Y amplitude [m]
     omega   : figure-8 angular frequency [rad/s]
-    z_ref   : constant reference altitude [m]
-    t_start : time to start figure-8 after simulation begins [s]
-    t_ramp  : ramp duration [s]
+    z_ref   : hover altitude [m]
+    t_takeoff : takeoff duration [s]
+    t_land    : landing duration [s]
+    t_sim     : total simulation time [s]
 
     Returns
     -------
     x_ref, y_ref, z_ref : reference position [m]
     """
-    if t < t_start:
-        return 0.0, 0.0, z_ref
+    t_land_start = t_sim - t_land
 
-    t_fig = t - t_start
+    if t <= t_takeoff:
+        # ---- PHASE 1: TAKEOFF ----
+        # Smooth S-curve rise: starts and ends with zero velocity
+        frac = t / t_takeoff
+        smooth_frac = 3 * frac**2 - 2 * frac**3
+        x_ref = 0.0
+        y_ref = 0.0
+        z_ref_out = z_ref * smooth_frac
 
-    if t_fig < t_ramp:
-        ramp = 0.5 * (1.0 - np.cos(np.pi * t_fig / t_ramp))
+    elif t <= t_land_start:
+        # ---- PHASE 2: FIGURE-8 TRACKING ----
+        tau = t - t_takeoff
+        x_ref = A * np.sin(omega * tau)
+        y_ref = B * np.sin(2 * omega * tau)
+        z_ref_out = z_ref
+
     else:
-        ramp = 1.0
+        # ---- PHASE 3: LANDING ----
+        frac = (t - t_land_start) / t_land
+        smooth_frac = 3 * frac**2 - 2 * frac**3
 
-    x_ref = ramp * A * np.sin(omega * t_fig)
-    y_ref = ramp * B * np.sin(2.0 * omega * t_fig)
+        # Position at the moment landing begins
+        tau_land = t_land_start - t_takeoff
+        x_land_start = A * np.sin(omega * tau_land)
+        y_land_start = B * np.sin(2 * omega * tau_land)
 
-    return x_ref, y_ref, z_ref
+        # Smoothly return to origin
+        x_ref = x_land_start * (1 - smooth_frac)
+        y_ref = y_land_start * (1 - smooth_frac)
+        z_ref_out = z_ref * (1 - smooth_frac)
+
+    return x_ref, y_ref, z_ref_out
 
 
-def get_reference_velocity(t, A, B, omega, t_start=5.0, t_ramp=12.0):
+def get_reference_velocity(t, A, B, omega, t_takeoff=8.0, t_land=8.0, t_sim=90.0):
     """
     Analytical time derivative of get_reference.
     Used for velocity feedforward in the position loop.
@@ -237,23 +259,24 @@ def get_reference_velocity(t, A, B, omega, t_start=5.0, t_ramp=12.0):
     -------
     vx_ref, vy_ref : reference velocity [m/s]
     """
-    if t < t_start:
-        return 0.0, 0.0
+    t_land_start = t_sim - t_land
 
-    t_fig = t - t_start
+    if t <= t_takeoff:
+        # ---- PHASE 1: TAKEOFF ----
+        vx_ref = 0.0
+        vy_ref = 0.0
 
-    if t_fig < t_ramp:
-        ramp     = 0.5 * (1.0 - np.cos(np.pi * t_fig / t_ramp))
-        ramp_dot = 0.5 * (np.pi / t_ramp) * np.sin(np.pi * t_fig / t_ramp)
+    elif t <= t_land_start:
+        # ---- PHASE 2: FIGURE-8 TRACKING ----
+        tau = t - t_takeoff
+        vx_ref = A * omega * np.cos(omega * tau)
+        vy_ref = 2 * B * omega * np.cos(2 * omega * tau)
+
     else:
-        ramp     = 1.0
-        ramp_dot = 0.0
-
-    vx_ref = (ramp_dot * A * np.sin(omega * t_fig)
-              + ramp * A * omega * np.cos(omega * t_fig))
-
-    vy_ref = (ramp_dot * B * np.sin(2.0 * omega * t_fig)
-              + ramp * B * 2.0 * omega * np.cos(2.0 * omega * t_fig))
+        # ---- PHASE 3: LANDING ----
+        # For simplicity, set velocity to zero during landing
+        vx_ref = 0.0
+        vy_ref = 0.0
 
     return vx_ref, vy_ref
 
@@ -420,11 +443,14 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
     kQ  = vehicle.get('kQ', 0.01)
 
     # ── Unpack trajectory parameters ──
-    A     = trajectory['A']
-    B     = trajectory['B']
-    omega = trajectory['omega']
-    z_ref = trajectory['z_ref']
-    t_end = trajectory['t_end']
+    A        = trajectory['A']
+    B        = trajectory['B']
+    omega    = trajectory['omega']
+    z_ref    = trajectory['z_ref']
+    t_takeoff = trajectory.get('t_takeoff', 8.0)
+    t_land    = trajectory.get('t_land', 8.0)
+    t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
+    t_end     = t_sim
 
     # ── Unpack simulation settings ──
     dt    = sim['dt']
@@ -473,8 +499,8 @@ def run_fig8_pid(vehicle, trajectory, controller, sim):
 
         # ── Outer loop — Position (50 Hz) ──
         if step % outer_every == 0:
-            x_ref, y_ref, z_ref_t = get_reference(ti, A, B, omega, z_ref)
-            vx_ref, vy_ref        = get_reference_velocity(ti, A, B, omega)
+            x_ref, y_ref, z_ref_t = get_reference(ti, A, B, omega, z_ref, t_takeoff, t_land, t_sim)
+            vx_ref, vy_ref        = get_reference_velocity(ti, A, B, omega, t_takeoff, t_land, t_sim)
 
             # Position PID + velocity feedforward
             theta_des = (pids['x'].update(x_ref - quad.x)
@@ -555,10 +581,13 @@ def plot_results(results):
     t_end      = results['t_end']
     dt         = results['dt']
 
-    A     = trajectory['A']
-    B     = trajectory['B']
-    omega = trajectory['omega']
-    z_ref = trajectory['z_ref']
+    A        = trajectory['A']
+    B        = trajectory['B']
+    omega    = trajectory['omega']
+    z_ref    = trajectory['z_ref']
+    t_takeoff = trajectory.get('t_takeoff', 8.0)
+    t_land    = trajectory.get('t_land', 8.0)
+    t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
 
     # ── Figure 1: Position, Euler Angles, Control Inputs ──
     fig, axs = plt.subplots(3, 1, figsize=(10, 10))
@@ -611,8 +640,8 @@ def plot_results(results):
               'b', linewidth=1.5, label='Actual')
 
     t_vec = np.arange(t_steady, t_end, dt)
-    x_r   = [get_reference(t, A, B, omega, z_ref)[0] for t in t_vec]
-    y_r   = [get_reference(t, A, B, omega, z_ref)[1] for t in t_vec]
+    x_r   = [get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[0] for t in t_vec]
+    y_r   = [get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[1] for t in t_vec]
     z_r   = np.full(len(t_vec), z_ref)
 
     ax3d.plot(x_r, y_r, z_r, 'r--', linewidth=1.5, label='Reference')
@@ -643,10 +672,13 @@ def compute_metrics(results):
     trajectory = results['trajectory']
     dt         = results['dt']
 
-    A     = trajectory['A']
-    B     = trajectory['B']
-    omega = trajectory['omega']
-    z_ref = trajectory['z_ref']
+    A        = trajectory['A']
+    B        = trajectory['B']
+    omega    = trajectory['omega']
+    z_ref    = trajectory['z_ref']
+    t_takeoff = trajectory.get('t_takeoff', 8.0)
+    t_land    = trajectory.get('t_land', 8.0)
+    t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
 
     t_hist = quad.data('x')[0]
     x_hist = quad.data('x')[1]
@@ -659,9 +691,9 @@ def compute_metrics(results):
     t_ss       = t_hist[steady_idx]
 
     # Reference at steady state times
-    x_ref_ss = np.array([get_reference(t, A, B, omega, z_ref)[0]
+    x_ref_ss = np.array([get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[0]
                           for t in t_ss])
-    y_ref_ss = np.array([get_reference(t, A, B, omega, z_ref)[1]
+    y_ref_ss = np.array([get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[1]
                           for t in t_ss])
     z_ref_ss = np.full(len(t_ss), z_ref)
 
