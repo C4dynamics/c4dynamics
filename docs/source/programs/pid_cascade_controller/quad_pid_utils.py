@@ -1,730 +1,1045 @@
-"""
-quad_pid_utils.py
-=================
-Supporting module for the Quadcopter Cascade PID notebook.
-
-Contains all implementation details:
-  - PID controller class
-  - Quadcopter nonlinear dynamics
-  - Reference trajectory and velocity
-  - Control allocation
-  - Main simulation loop
-  - Plotting helpers
-  - Performance metrics
-
-Users do not need to modify this file.
-All user-facing parameters are in the notebook.
-"""
-
 import numpy as np
-import matplotlib.pyplot as plt
-import c4dynamics as c4d
-from scipy.integrate import solve_ivp
+from matplotlib import pyplot as plt
+from scipy.interpolate import interp1d
 
 
-# ============================================================
-#  PID CONTROLLER CLASS
-# ============================================================
+def compute_metrics(): pass
+def get_reference(): pass
+def get_reference_velocity(): pass
 
-class PID:
-    """
-    PID controller with:
-      - Derivative on measurement  (prevents derivative kick)
-      - First-order derivative filter  (reduces noise)
-      - Integrator anti-windup clamping
-    """
 
-    def __init__(self, Kp, Ki, Kd, dt,
-                 N=20,
-                 output_limit=None,
-                 integral_limit=None):
+class QuadcopterPlant:
+    """Quadcopter 12-state nonlinear dynamics model."""
+
+    def __init__(self, params):
         """
-        Parameters
-        ----------
-        Kp, Ki, Kd     : PID gains
-        dt             : sample time for this loop [s]
-        N              : derivative filter coefficient
-                         N=50  inner rate loop
-                         N=20  middle attitude loop
-                         N=10  outer position loop
-        output_limit   : symmetric clamp on output
-        integral_limit : symmetric clamp on integrator (anti-windup)
+        Initialize quadcopter plant with parameters.
+
+        params : dict or module
+            Dictionary/module containing physical parameters:
+            - m, g, L, K_thrust, B_torque, IR
+            - IXX, IYY, IZZ                         INERTIA MATRIX
+            - Ax, Ay, Az, Ar                        AERODYNAMIC DRAG COEFFICIENTS
         """
-        self.Kp = Kp
-        self.Ki = Ki
-        self.Kd = Kd
-        self.dt = dt
-        self.N  = N
-        self.output_limit   = output_limit
-        self.integral_limit = integral_limit
+        self.m = params['m']
+        self.g = params['g']
+        self.L = params['l']
+        self.K_thrust = params['kT']
+        self.B_torque = params['kQ']
+        self.IR = params['IR']
 
-        self._integral   = 0.0
-        self._prev_meas  = None
-        self._derivative = 0.0
+        self.IXX = params['Ixx']
+        self.IYY = params['Iyy']
+        self.IZZ = params['Izz']
 
-    def reset(self):
-        """Reset all internal states to zero."""
-        self._integral   = 0.0
-        self._prev_meas  = None
-        self._derivative = 0.0
+        self.Ax = params['Ax']
+        self.Ay = params['Ay']
+        self.Az = params['Az']
+        self.Ar = params['Ar']
 
-    def update(self, error, measurement=None):
+
+    def derivatives(self, state, rotor_speeds):
         """
-        Compute PID output.
+        Compute state derivatives given current state and rotor speeds.
 
-        Parameters
-        ----------
-        error       : reference - measurement
-        measurement : raw measurement value.
-                      If provided, derivative is computed on
-                      measurement (derivative on measurement).
-                      If None, derivative is computed on error.
+        state : array
+            [P, Q, R, Phi, Theta, Psi, U, V, W, X, Y, Z]
+        rotor_speeds : array
+            [w1, w2, w3, w4] in rad/s
 
         Returns
         -------
-        output : control command (clamped if output_limit set)
+        dstate : array
+            Derivatives of state vector
         """
 
-        # Proportional
-        P = self.Kp * error
+        P, Q, R, Phi, Theta, Psi, U, V, W, X, Y, Z = state
+        w1, w2, w3, w4 = rotor_speeds
 
-        # Integral with anti-windup clamping
-        self._integral += error * self.dt
-        if self.integral_limit is not None:
-            self._integral = np.clip(
-                self._integral,
-                -self.integral_limit,
-                 self.integral_limit
-            )
-        I = self.Ki * self._integral
+        # =============================================
+        # CALCULATE THRUST AND TORQUES
+        # =============================================
 
-        # Derivative — on measurement if provided, else on error
-        if measurement is not None:
-            if self._prev_meas is None:
-                self._prev_meas = measurement
-            raw_deriv = -(measurement - self._prev_meas) / self.dt
-            self._prev_meas = measurement
-        else:
-            if self._prev_meas is None:
-                self._prev_meas = error
-            raw_deriv = (error - self._prev_meas) / self.dt
-            self._prev_meas = error
+        T1 = self.K_thrust * w1**2
+        T2 = self.K_thrust * w2**2
+        T3 = self.K_thrust * w3**2
+        T4 = self.K_thrust * w4**2
 
-        # First-order low-pass filter on derivative
-        # alpha = N*dt / (1 + N*dt)
-        alpha = self.N * self.dt / (1.0 + self.N * self.dt)
-        self._derivative = (
-            (1.0 - alpha) * self._derivative + alpha * raw_deriv
-        )
-        D = self.Kd * self._derivative
+        T = T1 + T2 + T3 + T4      # total thrust
+        M_phi = self.L * (T4 - T2) # roll torque
+        M_theta = self.L * (T3 - T1) # pitch torque
+        M_psi = self.B_torque * (-T1 + T2 - T3 + T4)  # yaw torque
 
-        # Total output with optional saturation
-        output = P + I + D
-        if self.output_limit is not None:
-            output = np.clip(output, -self.output_limit, self.output_limit)
+        Omega = w1 - w2 + w3 - w4  # rotor speed sum for gyro coupling
 
-        return output
+        # =============================================
+        # ANGULAR ACCELERATIONS (P, Q, R)
+        # =============================================
 
+        dP = ((self.IYY - self.IZZ) / self.IXX) * Q * R \
+           - (self.IR / self.IXX) * Q * Omega \
+           + M_phi / self.IXX \
+           - (self.Ar / self.IXX) * P
 
-# ============================================================
-#  QUADCOPTER NONLINEAR DYNAMICS
-# ============================================================
+        dQ = ((self.IZZ - self.IXX) / self.IYY) * P * R \
+           + (self.IR / self.IYY) * P * Omega \
+           + M_theta / self.IYY \
+           - (self.Ar / self.IYY) * Q
 
-def quad_dynamics(t, X, F, tau_phi, tau_theta, tau_psi,
-                  m, g, Ixx, Iyy, Izz):
-    """
-    Full nonlinear Newton-Euler equations of motion.
-    Called by solve_ivp at every integration step.
+        dR = ((self.IXX - self.IYY) / self.IZZ) * P * Q \
+           + M_psi / self.IZZ \
+           - (self.Ar / self.IZZ) * R
 
-    State vector X = [x, y, z, vx, vy, vz,
-                      phi, theta, psi, p, q, r]
+        # =============================================
+        # EULER ANGLE RATES (Phi, Theta, Psi)
+        # =============================================
 
-    Parameters
-    ----------
-    t                         : current time [s]
-    X                         : state vector [12]
-    F                         : total thrust in z-body direction [N]
-    tau_phi, tau_theta, tau_psi : body torques about xb, yb, and zb, respectively [N.m]
-    m, g, Ixx, Iyy, Izz       : mass, gravity, and inertias [kg, m/s^2, kg*m^2]
+        dPhi = P + np.sin(Phi) * np.tan(Theta) * Q + np.cos(Phi) * np.tan(Theta) * R
+        dTheta = np.cos(Phi) * Q - np.sin(Phi) * R
+        dPsi = np.sin(Phi) / np.cos(Theta) * Q + np.cos(Phi) / np.cos(Theta) * R
 
-    Returns
-    -------
-    X_dot : state derivative vector [12]
-    """
+        # =============================================
+        # BODY VELOCITY ACCELERATIONS (U, V, W)
+        # =============================================
 
-    x, y, z, vx, vy, vz, phi, theta, psi, p, q, r = X
+        dU = (np.sin(Phi) * np.sin(Psi) + np.cos(Phi) * np.sin(Theta) * np.cos(Psi)) * T / self.m \
+           - (self.Ax / self.m) * U
 
-    # Trigonometric shorthands
-    cphi   = np.cos(phi);    sphi   = np.sin(phi)
-    ctheta = np.cos(theta);  stheta = np.sin(theta)
-    cpsi   = np.cos(psi);    spsi   = np.sin(psi)
-    ttheta = np.tan(theta)
+        dV = (-np.sin(Phi) * np.cos(Psi) + np.cos(Phi) * np.sin(Theta) * np.sin(Psi)) * T / self.m \
+           - (self.Ay / self.m) * V
 
-    # Translational kinematics
-    x_dot = vx
-    y_dot = vy
-    z_dot = vz
+        dW = -self.g + (np.cos(Phi) * np.cos(Theta)) * T / self.m - (self.Az / self.m) * W
 
-    # Translational dynamics (Newton — inertial frame)
-    # Thrust projected via ZYX rotation matrix
-    vx_dot = (F / m) * (cpsi * stheta * cphi + spsi * sphi)
-    vy_dot = (F / m) * (spsi * stheta * cphi - cpsi * sphi)
-    vz_dot = (F / m) * (ctheta * cphi) - g
+        # MATLAB code: dX = U; dY = V; dZ = W;
+        # These equations treat U, V, W as INERTIAL frame velocities
+        # But for the controller to work, they should be BODY frame velocities
+        # Convert inertial velocities to body velocities
+        # Inverse of: Vinertial = DCM * Vbody
+        # U_inertial = u*cos(θ)cos(ψ) + v*(sin(φ)sin(θ)cos(ψ) - cos(φ)sin(ψ)) + w*(cos(φ)sin(θ)cos(ψ) + sin(φ)sin(ψ))
+        # For simplicity and controller compatibility, treat dX = U, dY = V, dZ = W
+        # where U, V, W in the state are actually BODY frame velocities
+        # This requires changing how we compute dU, dV, dW as BODY frame accelerations
 
-    # Rotational kinematics — body rates to Euler angle rates
-    phi_dot   = p + (q * sphi + r * cphi) * ttheta
-    theta_dot = q * cphi - r * sphi
-    psi_dot   = (q * sphi + r * cphi) / (ctheta + 1e-6)
+        # Standard quadcopter body-frame dynamics for velocity:
+        # In body frame, with thrust pointing in body Z direction:
+        # The thrust T contributes only to du/dt in the magnitude of the copter in inertial coordinates
+        # But we need to account for gravity in body frame
 
-    # Rotational dynamics — Euler equations
-    p_dot = ((Iyy - Izz) / Ixx) * q * r + tau_phi   / Ixx
-    q_dot = ((Izz - Ixx) / Iyy) * p * r + tau_theta / Iyy
-    r_dot = ((Ixx - Iyy) / Izz) * p * q + tau_psi   / Izz
+        # For body-frame velocity integration:
+        dX = U
+        dY = V
+        dZ = W
 
-    return [x_dot, y_dot, z_dot,
-            vx_dot, vy_dot, vz_dot,
-            phi_dot, theta_dot, psi_dot,
-            p_dot, q_dot, r_dot]
+        return np.array([dP, dQ, dR, dPhi, dTheta, dPsi, dU, dV, dW, dX, dY, dZ])
 
+    def simulate(self, state_init, rotor_speeds_func, t_span, dt):
+        """
+        Simulate quadcopter dynamics.
 
-# ============================================================
-#  REFERENCE TRAJECTORY
-# ============================================================
+        state_init : array
+            Initial state [P, Q, R, Phi, Theta, Psi, U, V, W, X, Y, Z]
+        rotor_speeds_func : callable
+            Function that takes time and returns rotor speeds [w1, w2, w3, w4]
+        t_span : tuple
+            (t_start, t_end) simulation time
+        dt : float
+            Integration time step
 
-def get_reference(t, A, B, omega, z_ref, t_takeoff=8.0, t_land=8.0, t_sim=90.0):
-    """
-    Three-phase reference trajectory: takeoff, figure-8, landing.
+        Returns
+        -------
+        t : array
+            Time vector
+        states : array
+            State history, shape (N, 12)
+        """
 
-    Phase 1 — Takeoff:   Z rises 0 to z_ref, X=Y=0  (0 to t_takeoff seconds)
-    Phase 2 — Figure-8:  X=A*sin(wt), Y=B*sin(2wt), Z=z_ref
-    Phase 3 — Landing:   Z drops z_ref to 0, X=Y go to 0
+        t_start, t_end = t_span
+        t = np.arange(t_start, t_end + dt, dt)
+        N = len(t)
 
-    Parameters
-    ----------
-    t       : current time [s]
-    A       : figure-8 X amplitude [m]
-    B       : figure-8 Y amplitude [m]
-    omega   : figure-8 angular frequency [rad/s]
-    z_ref   : hover altitude [m]
-    t_takeoff : takeoff duration [s]
-    t_land    : landing duration [s]
-    t_sim     : total simulation time [s]
+        states = np.zeros((N, 12))
+        states[0] = state_init
 
-    Returns
-    -------
-    x_ref, y_ref, z_ref : reference position [m]
-    """
-    t_land_start = t_sim - t_land
+        # Simple Euler integration (can upgrade to RK45 if needed)
+        for i in range(N - 1):
+            rotor_speeds = rotor_speeds_func(t[i])
+            deriv = self.derivatives(states[i], rotor_speeds)
+            states[i + 1] = states[i] + deriv * dt
 
-    if t <= t_takeoff:
-        # ---- PHASE 1: TAKEOFF ----
-        # Smooth S-curve rise: starts and ends with zero velocity
-        frac = t / t_takeoff
-        smooth_frac = 3 * frac**2 - 2 * frac**3
-        x_ref = 0.0
-        y_ref = 0.0
-        z_ref_out = z_ref * smooth_frac
-
-    elif t <= t_land_start:
-        # ---- PHASE 2: FIGURE-8 TRACKING ----
-        tau = t - t_takeoff
-        x_ref = A * np.sin(omega * tau)
-        y_ref = B * np.sin(2 * omega * tau)
-        z_ref_out = z_ref
-
-    else:
-        # ---- PHASE 3: LANDING ----
-        frac = (t - t_land_start) / t_land
-        smooth_frac = 3 * frac**2 - 2 * frac**3
-
-        # Position at the moment landing begins
-        tau_land = t_land_start - t_takeoff
-        x_land_start = A * np.sin(omega * tau_land)
-        y_land_start = B * np.sin(2 * omega * tau_land)
-
-        # Smoothly return to origin
-        x_ref = x_land_start * (1 - smooth_frac)
-        y_ref = y_land_start * (1 - smooth_frac)
-        z_ref_out = z_ref * (1 - smooth_frac)
-
-    return x_ref, y_ref, z_ref_out
+        return t, states
 
 
-def get_reference_velocity(t, A, B, omega, t_takeoff=8.0, t_land=8.0, t_sim=90.0):
-    """
-    Analytical time derivative of get_reference.
-    Used for velocity feedforward in the position loop.
+class OuterPositionPID:
+    """Outer loop position controller (50 Hz)."""
 
-    Returns
-    -------
-    vx_ref, vy_ref : reference velocity [m/s]
-    """
-    t_land_start = t_sim - t_land
+    def __init__(self, params, m, g, K_thrust):
+        """Initialize outer position controller."""
+        self.g = g
+        self.m = m
 
-    if t <= t_takeoff:
-        # ---- PHASE 1: TAKEOFF ----
-        vx_ref = 0.0
-        vy_ref = 0.0
+        # Z gains
+        self.KP_Z = params['Kp_z']
+        self.KI_Z = params['Ki_z']
+        self.KD_Z = params['Kd_z']
 
-    elif t <= t_land_start:
-        # ---- PHASE 2: FIGURE-8 TRACKING ----
-        tau = t - t_takeoff
-        vx_ref = A * omega * np.cos(omega * tau)
-        vy_ref = 2 * B * omega * np.cos(2 * omega * tau)
+        # X gains
+        self.KP_X = params['Kp_x']
+        self.KI_X = params['Ki_x']
+        self.KD_X = params['Kd_x']
 
-    else:
-        # ---- PHASE 3: LANDING ----
-        # For simplicity, set velocity to zero during landing
-        vx_ref = 0.0
-        vy_ref = 0.0
+        # Y gains
+        self.KP_Y = params['Kp_y']
+        self.KI_Y = params['Ki_y']
+        self.KD_Y = params['Kd_y']
 
-    return vx_ref, vy_ref
+        # Anti-windup limits
+        self.AW_Z = params['AW_z']
+        self.AW_X = params['AW_x']
+        self.AW_Y = params['AW_y']
+
+        # Saturations
+        self.T_max = params['T_max_factor'] * K_thrust * params['omega_max']**2
+        self.T_min = params['T_min']
+        self.att_cmd_limit = params['att_cmd_limit']
+
+        # Feedforward gains
+        self.FF_X = params['Kff_x']
+        self.FF_Y = params['Kff_y']
+
+        # Persistent states
+        self.int_Z = 0.0
+        self.int_X = 0.0
+        self.int_Y = 0.0
+        self.Xd_prev = 0.0
+        self.Yd_prev = 0.0
+
+    def compute(self, Xd, Yd, Zd, Psi_setpoint, X, Y, Z, U, V, W, Phi, Theta, Psi, Ts):
+        """
+        Compute thrust command and attitude setpoints.
+
+        Returns
+        -------
+        T_cmd : float
+            Thrust command [N]
+        Phi_d : float
+            Desired roll angle [rad]
+        Theta_d : float
+            Desired pitch angle [rad]
+        Psi_d_out : float
+            Desired yaw angle [rad]
+        """
+
+        # =============================================
+        # ALTITUDE CONTROLLER (Z axis)
+        # =============================================
+
+        e_Z = Zd - Z
+
+        # Integrator update
+        self.int_Z += Ts * e_Z
+        # Anti-windup clamping
+        self.int_Z = np.clip(self.int_Z, -self.AW_Z, self.AW_Z)
+
+        # Derivative on measurement
+        dZ_meas = -W
+
+        # PID output
+        az_cmd = self.KP_Z * e_Z + self.KI_Z * self.int_Z + self.KD_Z * dZ_meas
+
+        # Thrust command with gravity feedforward
+        cos_corr = np.cos(Phi) * np.cos(Theta)
+        cos_corr = max(0.5, cos_corr)
+        T_raw = self.m * (self.g + az_cmd) / cos_corr
+
+        # Saturate thrust
+        T_cmd = np.clip(T_raw, self.T_min, self.T_max)
+
+        # =============================================
+        # HORIZONTAL POSITION CONTROLLER (X, Y)
+        # =============================================
+
+        # Inertial position errors
+        e_X_inertial = Xd - X
+        e_Y_inertial = Yd - Y
+
+        # Rotate to body frame using current yaw
+        e_X_body = e_X_inertial * np.cos(Psi) + e_Y_inertial * np.sin(Psi)
+        e_Y_body = e_Y_inertial * np.cos(Psi) - e_X_inertial * np.sin(Psi)
+
+        # Desired body velocities
+        Ud_desired = e_X_body
+        Vd_desired = e_Y_body
+
+        # Velocity errors
+        # States U,V are used as inertial rates in the plant model, so convert
+        # to body-frame velocities before comparing against body-frame setpoints.
+        U_body = U * np.cos(Psi) + V * np.sin(Psi)
+        V_body = -U * np.sin(Psi) + V * np.cos(Psi)
+        e_U = Ud_desired - U_body
+        e_V = Vd_desired - V_body
+
+        # Integrator update with anti-windup
+        self.int_X += Ts * e_U
+        self.int_Y += Ts * e_V
+        self.int_X = np.clip(self.int_X, -self.AW_X, self.AW_X)
+        self.int_Y = np.clip(self.int_Y, -self.AW_Y, self.AW_Y)
+
+        # Derivative on measurement
+        dU_meas = -U_body
+        dV_meas = -V_body
+
+        # Feedforward calculation
+        Xd_dot_ref = (Xd - self.Xd_prev) / Ts if Ts > 0 else 0.0
+        Yd_dot_ref = (Yd - self.Yd_prev) / Ts if Ts > 0 else 0.0
+
+        # Rotate reference velocity from inertial to body frame
+        Xd_dot_body = Xd_dot_ref * np.cos(Psi) + Yd_dot_ref * np.sin(Psi)
+        Yd_dot_body = Yd_dot_ref * np.cos(Psi) - Xd_dot_ref * np.sin(Psi)
+
+        # Feedforward attitude commands
+        ff_theta = self.FF_X * Xd_dot_body
+        ff_phi = -self.FF_Y * Yd_dot_body
+
+        # =============================================
+        # PID + FEEDFORWARD COMBINED OUTPUT
+        # =============================================
+
+        acmd_X = self.KP_X * e_U + self.KI_X * self.int_X + self.KD_X * dU_meas
+        acmd_Y = self.KP_Y * e_V + self.KI_Y * self.int_Y + self.KD_Y * dV_meas
+
+        Theta_d_raw = acmd_X + ff_theta
+        Phi_d_raw = -(acmd_Y) + ff_phi
+
+        # Saturate attitude commands
+        Theta_d = np.clip(Theta_d_raw, -self.att_cmd_limit, self.att_cmd_limit)
+        Phi_d = np.clip(Phi_d_raw, -self.att_cmd_limit, self.att_cmd_limit)
+        Psi_d_out = Psi_setpoint
+
+        # Store for feedforward next step
+        self.Xd_prev = Xd
+        self.Yd_prev = Yd
+
+        return T_cmd, Phi_d, Theta_d, Psi_d_out
 
 
-# ============================================================
-#  BUILD CONTROL ALLOCATION MATRIX
-# ============================================================
+class MiddleAttitudePID:
+    """Middle loop attitude controller (100 Hz)."""
 
-def build_allocator(kT, kQ, l):
-    """
-    Build control allocation matrix and its inverse.
+    def __init__(self, params):
+        """Initialize middle attitude controller."""
 
-    Maps [F, tau_phi, tau_theta, tau_psi] -> [Omega1², Omega2², Omega3², Omega4²]
+        # Roll gains
+        self.KP_Phi = params['Kp_phi']
+        self.KI_Phi = params['Ki_phi']
+        self.KD_Phi = params['Kd_phi']
 
-    Motor layout — plus (+) configuration:
-      Motor 1: front (+x)  CW
-      Motor 2: left  (+y)  CCW
-      Motor 3: rear  (-x)  CW
-      Motor 4: right (-y)  CCW
+        # Pitch gains
+        self.KP_Theta = params['Kp_theta']
+        self.KI_Theta = params['Ki_theta']
+        self.KD_Theta = params['Kd_theta']
 
-    Parameters
-    ----------
-    kT : thrust coefficient
-    kQ : torque coefficient
-    l  : arm length [m]
+        # Yaw gains
+        self.KP_Psi = params['Kp_psi']
+        self.KI_Psi = params['Ki_psi']
+        self.KD_Psi = params['Kd_psi']
 
-    Returns
-    -------
-    Gamma     : allocation matrix (4x4)
-    Gamma_inv : inverse of allocation matrix
-    """
-    Gamma = np.array([
-        [ kT,      kT,      kT,      kT     ],
-        [ 0,      -kT * l,  0,       kT * l ],
-        [ kT * l,  0,      -kT * l,  0      ],
-        [ kQ,     -kQ,      kQ,     -kQ     ]
-    ])
-    Gamma_inv = np.linalg.inv(Gamma)
-    return Gamma, Gamma_inv
+        # Anti-windup limits
+        self.AW_Phi = params['AW_phi']
+        self.AW_Theta = params['AW_theta']
+        self.AW_Psi = params['AW_psi']
+
+        self.yaw_rate_limit = params['yaw_rate_limit']
+
+        # Persistent states
+        self.int_Phi = 0.0
+        self.int_Theta = 0.0
+        self.int_Psi = 0.0
 
 
-# ============================================================
-#  BUILD PID CONTROLLERS FROM CONFIG DICT
-# ============================================================
+    def compute(self, Phi_d, Theta_d, Psi_d, Phi, Theta, Psi, P, Q, R, Ts):
+        """
+        Compute desired angular rates.
 
-def build_controllers(controller, dt_inner, dt_mid, dt_outer):
-    """
-    Instantiate all nine PID controllers from the
-    controller configuration dictionary.
+        Returns
+        -------
+        Pd, Qd, Rd : float
+            Desired angular rates [rad/s]
+        """
 
-    Parameters
-    ----------
-    controller : dict of PID gains (from notebook user inputs)
-    dt_inner, dt_mid, dt_outer : sample times [s]
+        # =============================================
+        # ANGLE ERRORS
+        # =============================================
 
-    Returns
-    -------
-    Dictionary of PID instances keyed by axis name.
-    """
-    pids = {}
+        e_Phi = Phi_d - Phi
+        e_Theta = Theta_d - Theta
 
-    # Inner loop — angular rate (200 Hz)
-    pids['p'] = PID(
-        Kp=controller['Kp_p'], Ki=controller['Ki_p'], Kd=controller['Kd_p'],
-        dt=dt_inner, N=50, output_limit=50.0, integral_limit=10.0
-    )
-    pids['q'] = PID(
-        Kp=controller['Kp_q'], Ki=controller['Ki_q'], Kd=controller['Kd_q'],
-        dt=dt_inner, N=50, output_limit=50.0, integral_limit=10.0
-    )
-    pids['r'] = PID(
-        Kp=controller['Kp_r'], Ki=controller['Ki_r'], Kd=controller['Kd_r'],
-        dt=dt_inner, N=50, output_limit=20.0, integral_limit=5.0
-    )
+        # Wrap yaw error to [-pi, pi]
+        e_Psi_raw = Psi_d - Psi
+        e_Psi = np.arctan2(np.sin(e_Psi_raw), np.cos(e_Psi_raw))
 
-    # Middle loop — attitude (100 Hz)
-    pids['phi'] = PID(
-        Kp=controller['Kp_phi'], Ki=controller['Ki_phi'], Kd=controller['Kd_phi'],
-        dt=dt_mid, N=20, output_limit=1.5, integral_limit=0.5
-    )
-    pids['theta'] = PID(
-        Kp=controller['Kp_theta'], Ki=controller['Ki_theta'], Kd=controller['Kd_theta'],
-        dt=dt_mid, N=20, output_limit=1.5, integral_limit=0.5
-    )
-    pids['psi'] = PID(
-        Kp=controller['Kp_psi'], Ki=controller['Ki_psi'], Kd=controller['Kd_psi'],
-        dt=dt_mid, N=20, output_limit=1.0, integral_limit=0.3
-    )
+        # =============================================
+        # INTEGRATOR UPDATE
+        # =============================================
 
-    # Outer loop — position (50 Hz)
-    pids['x'] = PID(
-        Kp=controller['Kp_x'], Ki=controller['Ki_x'], Kd=controller['Kd_x'],
-        dt=dt_outer, N=10, output_limit=0.35, integral_limit=0.3
-    )
-    pids['y'] = PID(
-        Kp=controller['Kp_y'], Ki=controller['Ki_y'], Kd=controller['Kd_y'],
-        dt=dt_outer, N=10, output_limit=0.35, integral_limit=0.3
-    )
-    pids['z'] = PID(
-        Kp=controller['Kp_z'], Ki=controller['Ki_z'], Kd=controller['Kd_z'],
-        dt=dt_outer, N=10, output_limit=10.0, integral_limit=3.0
-    )
+        self.int_Phi += Ts * e_Phi
+        self.int_Theta += Ts * e_Theta
+        self.int_Psi += Ts * e_Psi
 
-    return pids
+        # Anti-windup clamping
+        self.int_Phi = np.clip(self.int_Phi, -self.AW_Phi / self.KI_Phi, self.AW_Phi / self.KI_Phi)
+        self.int_Theta = np.clip(self.int_Theta, -self.AW_Theta / self.KI_Theta, self.AW_Theta / self.KI_Theta)
+        self.int_Psi = np.clip(self.int_Psi, -self.AW_Psi / self.KI_Psi, self.AW_Psi / self.KI_Psi)
+
+        # =============================================
+        # DERIVATIVE ON MEASUREMENT
+        # Uses actual rates P, Q, R instead of differentiating error
+        # =============================================
+
+        dPhi_meas = -P
+        dTheta_meas = -Q
+        dPsi_meas = -R
+
+        # =============================================
+        # PID OUTPUT — desired angular rates
+        # =============================================
+
+        rate_lim = self.yaw_rate_limit * 3
+
+        Pd_raw = self.KP_Phi * e_Phi + self.KI_Phi * self.int_Phi + self.KD_Phi * dPhi_meas
+        Qd_raw = self.KP_Theta * e_Theta + self.KI_Theta * self.int_Theta + self.KD_Theta * dTheta_meas
+        Rd_raw = self.KP_Psi * e_Psi + self.KI_Psi * self.int_Psi + self.KD_Psi * dPsi_meas
+
+        # Saturate output rates
+        Pd = np.clip(Pd_raw, -rate_lim, rate_lim)
+        Qd = np.clip(Qd_raw, -rate_lim, rate_lim)
+        Rd = np.clip(Rd_raw, -self.yaw_rate_limit, self.yaw_rate_limit)
+
+        return Pd, Qd, Rd
 
 
-# ============================================================
-#  MAIN SIMULATION FUNCTION
-# ============================================================
+class InnerRatePID:
+    """Inner loop rate controller (200 Hz)."""
+
+    def __init__(self, params, IXX, IYY, IZZ, L, K_thrust):
+        """Initialize inner rate controller."""
+
+        # Roll rate gains
+        self.KP_P = params['Kp_p']
+        self.KI_P = params['Ki_p']
+        self.KD_P = params['Kd_p']
+
+        # Pitch rate gains
+        self.KP_Q = params['Kp_q']
+        self.KI_Q = params['Ki_q']
+        self.KD_Q = params['Kd_q']
+
+        # Yaw rate gains
+        self.KP_R = params['Kp_r']
+        self.KI_R = params['Ki_r']
+        self.KD_R = params['Kd_r']
+
+        self.N_rate = params['N_rate']
+
+        self.M_max = L * K_thrust * params['omega_max']**2
+
+        # Inertias
+        self.IXX = IXX
+        self.IYY = IYY
+        self.IZZ = IZZ
+
+        # Persistent states
+        self.int_P = 0.0
+        self.int_Q = 0.0
+        self.int_R = 0.0
+        self.prev_eP = 0.0
+        self.prev_eQ = 0.0
+        self.prev_eR = 0.0
+
+
+    def compute(self, Pd, Qd, Rd, P, Q, R, Ts):
+        """
+        Compute torque commands.
+
+        Returns
+        -------
+        M_Phi, M_Theta, M_Psi : float
+            Torque commands [N.m]
+        """
+
+        # =============================================
+        # RATE ERRORS
+        # =============================================
+
+        eP = Pd - P
+        eQ = Qd - Q
+        eR = Rd - R
+
+        # =============================================
+        # INTEGRATOR UPDATE (Tustin)
+        # =============================================
+
+        self.int_P += (Ts / 2) * (eP + self.prev_eP)
+        self.int_Q += (Ts / 2) * (eQ + self.prev_eQ)
+        self.int_R += (Ts / 2) * (eR + self.prev_eR)
+
+        # =============================================
+        # DERIVATIVE WITH FILTER
+        # =============================================
+
+        denom_P = 1 + self.N_rate * Ts
+        denom_Q = 1 + self.N_rate * Ts
+        denom_R = 1 + self.N_rate * Ts
+
+        dP = self.N_rate * (eP - self.prev_eP) / denom_P
+        dQ = self.N_rate * (eQ - self.prev_eQ) / denom_Q
+        dR = self.N_rate * (eR - self.prev_eR) / denom_R
+
+        # =============================================
+        # PID OUTPUT — torque commands
+        # Multiply by inertia for physical units [N.m]
+        # =============================================
+
+        M_Phi_raw = self.IXX * (self.KP_P * eP + self.KI_P * self.int_P + self.KD_P * dP)
+        M_Theta_raw = self.IYY * (self.KP_Q * eQ + self.KI_Q * self.int_Q + self.KD_Q * dQ)
+        M_Psi_raw = self.IZZ * (self.KP_R * eR + self.KI_R * self.int_R + self.KD_R * dR)
+
+        # Saturate torques
+        M_Phi = np.clip(M_Phi_raw, -self.M_max, self.M_max)
+        M_Theta = np.clip(M_Theta_raw, -self.M_max, self.M_max)
+        M_Psi = np.clip(M_Psi_raw, -self.M_max, self.M_max)
+
+        # Back-calculation anti-windup
+        AW_gain = 0.1
+        self.int_P += AW_gain * (M_Phi - M_Phi_raw) / (self.IXX * self.KI_P + 1e-9)
+        self.int_Q += AW_gain * (M_Theta - M_Theta_raw) / (self.IYY * self.KI_Q + 1e-9)
+        self.int_R += AW_gain * (M_Psi - M_Psi_raw) / (self.IZZ * self.KI_R + 1e-9)
+
+        # =============================================
+        # UPDATE MEMORY
+        # =============================================
+
+        self.prev_eP = eP
+        self.prev_eQ = eQ
+        self.prev_eR = eR
+
+        return M_Phi, M_Theta, M_Psi
+
+
+class ControlAllocator:
+    """Control allocator: thrust + torques → motor speeds."""
+
+    def __init__(self, K_thrust, B_torque, L, omega_max):
+        """Initialize control allocator."""
+        self.K_thrust = K_thrust
+        self.B_torque = B_torque
+        self.L = L
+        self.omega_sq_min = 0.0           # min rotor speed squared [(rad/s)^2]
+        self.omega_sq_max = omega_max**2  # max rotor speed squared [(rad/s)^2]
+
+
+
+    def allocate(self, T_cmd, M_Phi, M_Theta, M_Psi):
+        """
+        Convert thrust and torques to motor speeds.
+
+        Parameters
+        ----------
+        T_cmd : float
+            Thrust command [N]
+        M_Phi : float
+            Roll torque command [N.m]
+        M_Theta : float
+            Pitch torque command [N.m]
+        M_Psi : float
+            Yaw torque command [N.m]
+
+        Returns
+        -------
+        w1, w2, w3, w4 : float
+            Rotor speeds [rad/s]
+        """
+
+        # =============================================
+        # STEP 1: Compute omega squared (Eq. 3.24)
+        # =============================================
+
+        T_over_4K = T_cmd / (4 * self.K_thrust)
+        M_theta_term = M_Theta / (2 * self.K_thrust * self.L)
+        M_phi_term = M_Phi / (2 * self.K_thrust * self.L)
+        M_psi_term = M_Psi / (4 * self.B_torque)
+
+        w1_sq = T_over_4K - M_theta_term - M_psi_term
+        w2_sq = T_over_4K - M_phi_term + M_psi_term
+        w3_sq = T_over_4K + M_theta_term - M_psi_term
+        w4_sq = T_over_4K + M_phi_term + M_psi_term
+
+        # =============================================
+        # STEP 2: Physical saturation
+        # omega squared cannot be negative
+        # =============================================
+
+        w1_sq = np.clip(w1_sq, self.omega_sq_min, self.omega_sq_max)
+        w2_sq = np.clip(w2_sq, self.omega_sq_min, self.omega_sq_max)
+        w3_sq = np.clip(w3_sq, self.omega_sq_min, self.omega_sq_max)
+        w4_sq = np.clip(w4_sq, self.omega_sq_min, self.omega_sq_max)
+
+        # =============================================
+        # STEP 3: Square root to get rotor speeds
+        # =============================================
+
+        w1 = np.sqrt(w1_sq)
+        w2 = np.sqrt(w2_sq)
+        w3 = np.sqrt(w3_sq)
+        w4 = np.sqrt(w4_sq)
+
+        return w1, w2, w3, w4
+
+
+def trajectory_generator(params):
+
+
+  t_sim = params['t_end']
+  Z_hover = params['z_ref']
+  A_fig8 = params['A']
+  B_fig8 = params['B']
+  w_fig8 = params['omega']
+
+
+  n_points = 10000
+  t_ref = np.linspace(0.0, t_sim, n_points)
+  N_ref = len(t_ref)
+
+  # ========================================================================
+  # 14. FIGURE-8 TRAJECTORY REFERENCE
+  # ========================================================================
+
+  # Figure-8 parameters
+  # A_fig8 = 4.0             # X amplitude [m]
+  # B_fig8 = 2.0             # Y amplitude [m]
+  # w_fig8 = 0.1             # angular frequency [rad/s]
+  #                           # One cycle = 2π/0.1 ≈ 62.8 seconds
+
+  # Phase durations
+  t_takeoff_duration = 8.0   # seconds to rise to hover altitude
+  t_land_duration = 8.0      # seconds to descend
+
+  # Generate reference trajectory (exact MATLAB stage behavior)
+  t_land_start = t_sim - t_land_duration
+
+  Xd_traj = np.zeros_like(t_ref)
+  Yd_traj = np.zeros_like(t_ref)
+  Zd_traj = np.zeros_like(t_ref)
+
+  for i, t_val in enumerate(t_ref):
+      if t_val <= t_takeoff_duration:
+          # PHASE 1: Takeoff using smooth S-curve (zero slope at endpoints)
+          frac = t_val / t_takeoff_duration
+          smooth_frac = 3.0 * frac**2 - 2.0 * frac**3
+          Xd_traj[i] = 0.0
+          Yd_traj[i] = 0.0
+          Zd_traj[i] = Z_hover * smooth_frac
+
+      elif t_val <= t_land_start:
+          # PHASE 2: Figure-8 with phase origin at end of takeoff
+          tau = t_val - t_takeoff_duration
+          Xd_traj[i] = A_fig8 * np.sin(w_fig8 * tau)
+          Yd_traj[i] = B_fig8 * np.sin(2.0 * w_fig8 * tau)
+          Zd_traj[i] = Z_hover
+
+      else:
+          # PHASE 3: Smooth landing and smooth XY return to origin
+          frac = (t_val - t_land_start) / t_land_duration
+          smooth_frac = 3.0 * frac**2 - 2.0 * frac**3
+
+          tau_land = t_land_start - t_takeoff_duration
+          x_land_start = A_fig8 * np.sin(w_fig8 * tau_land)
+          y_land_start = B_fig8 * np.sin(2.0 * w_fig8 * tau_land)
+
+          Xd_traj[i] = x_land_start * (1.0 - smooth_frac)
+          Yd_traj[i] = y_land_start * (1.0 - smooth_frac)
+          Zd_traj[i] = Z_hover * (1.0 - smooth_frac)
+
+
+  return t_ref, Xd_traj, Yd_traj, Zd_traj
+
 
 def run_fig8_pid(vehicle, trajectory, controller, sim):
-    """
-    Run the cascade PID quadcopter simulation.
+    """Run complete quadcopter cascade PID simulation."""
 
-    Parameters
-    ----------
-    vehicle : dict
-        'm'   : mass [kg]
-        'g'   : gravity [m/s²]
-        'Ixx' : roll inertia [kg.m²]
-        'Iyy' : pitch inertia [kg.m²]
-        'Izz' : yaw inertia [kg.m²]
-        'l'   : arm length [m]
-        'kT'  : thrust coefficient
-        'kQ'  : torque coefficient
+    print("Initializing Quadcopter Cascade PID Simulation...")
 
-    trajectory : dict
-        'A'     : figure-8 X amplitude [m]
-        'B'     : figure-8 Y amplitude [m]
-        'omega' : angular frequency [rad/s]
-        'z_ref' : hover altitude [m]
-        't_end' : simulation duration [s]
+    # ====================================================================
+    # 1. INITIALIZE PLANT AND CONTROLLERS
+    # ====================================================================
 
-    controller : dict
-        PID gains for all nine controllers.
-        Keys: Kp_p, Ki_p, Kd_p,
-              Kp_q, Ki_q, Kd_q,
-              Kp_r, Ki_r, Kd_r,
-              Kp_phi, Ki_phi, Kd_phi,
-              Kp_theta, Ki_theta, Kd_theta,
-              Kp_psi, Ki_psi, Kd_psi,
-              Kp_x, Ki_x, Kd_x,
-              Kp_y, Ki_y, Kd_y,
-              Kp_z, Ki_z, Kd_z,
-              Kff_x, Kff_y
+    plant = QuadcopterPlant(vehicle)
+    outer_controller = OuterPositionPID(controller,
+                                        vehicle['m'],
+                                        vehicle['g'],
+                                        vehicle['kT'])
+    middle_controller = MiddleAttitudePID(controller)
+    inner_controller = InnerRatePID(controller,
+                                    vehicle['Ixx'],
+                                    vehicle['Iyy'],
+                                    vehicle['Izz'],
+                                    vehicle['l'],
+                                    vehicle['kT'])
+    allocator = ControlAllocator(vehicle['kT'],
+                                 vehicle['kQ'],
+                                 vehicle['l'],
+                                 controller['omega_max'])
 
-    sim : dict
-        'dt'    : master timestep [s]
-        't_end' : simulation end time [s]
+    # ====================================================================
+    # 2. SETUP SIMULATION TIME AND REFERENCE TRAJECTORY
+    # ====================================================================
 
-    Returns
-    -------
-    results : dict with all simulation data for plotting and metrics
-    """
+    dt = sim.get('dt')
+    t_sim = sim.get('t_sim')
+    t = np.arange(0, t_sim + dt, dt)
+    N = len(t)
 
-    # ── Unpack vehicle parameters ──
-    m   = vehicle['m']
-    g   = vehicle.get('g', 9.81)
-    Ixx = vehicle['Ixx']
-    Iyy = vehicle['Iyy']
-    Izz = vehicle['Izz']
-    l   = vehicle['l']
-    kT  = vehicle.get('kT', 1.0)
-    kQ  = vehicle.get('kQ', 0.01)
-
-    # ── Unpack trajectory parameters ──
-    A        = trajectory['A']
-    B        = trajectory['B']
-    omega    = trajectory['omega']
-    z_ref    = trajectory['z_ref']
-    t_takeoff = trajectory.get('t_takeoff', 8.0)
-    t_land    = trajectory.get('t_land', 8.0)
-    t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
-    t_end     = t_sim
-
-    # ── Unpack simulation settings ──
-    dt    = sim['dt']
-
-    # ── Sample rates ──
-    mid_every   = 2
-    outer_every = 4
-    dt_inner = dt                    # 200 Hz — inner rate loop
-    dt_mid   = dt * mid_every        # 100 Hz — middle attitude loop
-    dt_outer = dt * outer_every      #  50 Hz — outer position loop
+    print(f"Simulation time: {t_sim} s, dt: {dt} s, N: {N} steps")
 
 
-    # ── Feedforward gains ──
-    Kff_x = controller.get('Kff_x', 0.2479)
-    Kff_y = controller.get('Kff_y', 0.35)
+    t_ref, Xd_traj, Yd_traj, Zd_traj = trajectory_generator(trajectory)
 
-    # ── Build control allocator ──
-    _, Gamma_inv = build_allocator(kT, kQ, l)
+    # Interpolate reference trajectory to simulation time grid
+    interp_X = interp1d(t_ref, Xd_traj, kind='linear', bounds_error=False, fill_value='extrapolate')
+    interp_Y = interp1d(t_ref, Yd_traj, kind='linear', bounds_error=False, fill_value='extrapolate')
+    interp_Z = interp1d(t_ref, Zd_traj, kind='linear', bounds_error=False, fill_value='extrapolate')
 
-    # ── Build PID controllers ──
-    pids = build_controllers(controller, dt_inner, dt_mid, dt_outer)
+    Xd_sim = interp_X(t)
+    Yd_sim = interp_Y(t)
+    Zd_sim = interp_Z(t)
 
-    # ── Initialize c4dynamics rigidbody ──
-    quad       = c4d.rigidbody(z=z_ref)
-    quad.mass  = m
-    quad.I     = [Ixx, Iyy, Izz]
-    quad.F         = m * g
-    quad.tau_phi   = 0.0
-    quad.tau_theta = 0.0
-    quad.tau_psi   = 0.0
+    # ========================================================================
+    # INITIAL CONDITIONS
+    # Quadcopter starts on ground, stationary, flat
+    # ========================================================================
 
-    # ── Desired values persistent across loop updates ──
-    theta_des = 0.0
-    phi_des   = 0.0
-    p_des     = 0.0
-    q_des     = 0.0
-    r_des     = 0.0
+    X0     = 0.0
+    Y0     = 0.0
+    Z0     = 0.0
+    U0     = 0.0
+    V0     = 0.0
+    W0     = 0.0
+    Phi0   = 0.0
+    Theta0 = 0.0
+    Psi0   = 0.0
+    P0     = 0.0
+    Q0     = 0.0
+    R0     = 0.0
 
-    # ── Main simulation loop ──
+    IC = np.array([P0, Q0, R0, Phi0, Theta0, Psi0, U0, V0, W0, X0, Y0, Z0])
 
-    for step, ti in enumerate(np.arange(0, t_end, dt)):
 
-        # Store state and control inputs at this timestep
-        quad.store(ti)
-        quad.storeparams(['F', 'tau_phi', 'tau_theta', 'tau_psi'], t=ti)
+    # ========================================================================
+    # 12. CONTROL LOOP RATES
+    # ========================================================================
 
-        # ── Outer loop — Position (50 Hz) ──
-        if step % outer_every == 0:
-            x_ref, y_ref, z_ref_t = get_reference(ti, A, B, omega, z_ref, t_takeoff, t_land, t_sim)
-            vx_ref, vy_ref        = get_reference_velocity(ti, A, B, omega, t_takeoff, t_land, t_sim)
+    f_outer  = 50.0          # Outer loop frequency [Hz]
+    f_middle = 100.0         # Middle loop frequency [Hz]
+    f_inner  = 200.0         # Inner loop frequency [Hz]
 
-            # Position PID + velocity feedforward
-            theta_des = (pids['x'].update(x_ref - quad.x)
-                         + Kff_x * vx_ref)
-            phi_des   = -(pids['y'].update(y_ref - quad.y)
-                         + Kff_y * vy_ref)
+    Ts_outer  = 1.0 / f_outer   # 0.020 s
+    Ts_middle = 1.0 / f_middle  # 0.010 s
+    Ts_inner  = 1.0 / f_inner   # 0.005 s
 
-            # Altitude PID with hover feedforward
-            delta_F = pids['z'].update(z_ref_t - quad.z, quad.vz)
-            quad.F  = m * g + delta_F
+    # ====================================================================
+    # 3. INITIALIZE STATE AND OUTPUT ARRAYS
+    # ====================================================================
 
-        # ── Middle loop — Attitude (100 Hz) ──
-        if step % mid_every == 0:
-            p_des = pids['phi'].update(phi_des     - quad.phi)
-            q_des = pids['theta'].update(theta_des - quad.theta)
-            r_des = pids['psi'].update(0.0         - quad.psi)
+    state = IC.copy()
+    states_log = np.zeros((N, 12))
+    states_log[0] = state
 
-        # ── Inner loop — Rate (200 Hz) ──
-        quad.tau_phi   = pids['p'].update(p_des - quad.p, quad.p)
-        quad.tau_theta = pids['q'].update(q_des - quad.q, quad.q)
-        quad.tau_psi   = pids['r'].update(r_des - quad.r, quad.r)
+    # Log control signals
+    T_log = np.zeros(N)
+    Phi_d_log = np.zeros(N)
+    Theta_d_log = np.zeros(N)
+    Psi_d_log = np.zeros(N)
+    Pd_log = np.zeros(N)
+    Qd_log = np.zeros(N)
+    Rd_log = np.zeros(N)
+    M_Phi_log = np.zeros(N)
+    M_Theta_log = np.zeros(N)
+    M_Psi_log = np.zeros(N)
+    w1_log = np.zeros(N)
+    w2_log = np.zeros(N)
+    w3_log = np.zeros(N)
+    w4_log = np.zeros(N)
 
-        # ── Control allocator — torques to rotor speeds ──
-        U         = np.array([quad.F,
-                               quad.tau_phi,
-                               quad.tau_theta,
-                               quad.tau_psi])
-        omega_sq  = np.clip(Gamma_inv @ U, 0, None)
-        _         = np.sqrt(omega_sq)   # rotor speeds (available if needed)
+    # ====================================================================
+    # 4. MAIN SIMULATION LOOP
+    # ====================================================================
 
-        # ── Integrate nonlinear dynamics (RK45) ──
-        sol    = solve_ivp(
-            quad_dynamics,
-            [ti, ti + dt],
-            quad.X,
-            args=(quad.F,
-                  quad.tau_phi,
-                  quad.tau_theta,
-                  quad.tau_psi,
-                  m, g, Ixx, Iyy, Izz),
-            method='RK45'
+    # Counters for cascade control rates (in seconds)
+    outer_time = 0.0
+    middle_time = 0.0
+    inner_time = 0.0
+
+    # Initialize state
+    state = IC.copy()
+    P, Q, R, Phi, Theta, Psi, U, V, W, X, Y, Z = state
+
+
+    Psi_d    = 0.0            # desired yaw angle [rad] — fixed
+
+    # ====================================================================
+    # INITIALIZE CONTROLLERS WITH FIRST CALL
+    # ====================================================================
+
+    Xd = Xd_sim[0]
+    Yd = Yd_sim[0]
+    Zd = Zd_sim[0]
+
+
+    T_cmd, Phi_d, Theta_d, Psi_d_out = outer_controller.compute(
+        Xd, Yd, Zd, Psi_d, X, Y, Z, U, V, W, Phi, Theta, Psi, Ts_outer
+    )
+
+    Pd, Qd, Rd = middle_controller.compute(
+        Phi_d, Theta_d, Psi_d_out, Phi, Theta, Psi, P, Q, R, Ts_middle
+    )
+
+    M_Phi, M_Theta, M_Psi = inner_controller.compute(Pd, Qd, Rd, P, Q, R, dt)
+    w1, w2, w3, w4 = allocator.allocate(T_cmd, M_Phi, M_Theta, M_Psi)
+
+
+
+
+    print(f"\n=== INITIALIZATION ===" )
+    print(f"Initial state: Z={Z:.3f}, Phi={np.rad2deg(Phi):.2f}°, Theta={np.rad2deg(Theta):.2f}°")
+    print(f"Reference: Zd={Zd:.3f}, Xd={Xd:.3f}, Yd={Yd:.3f}")
+    print(f"Thrust command: T_cmd={T_cmd:.3f} N (max {outer_controller.T_max})")
+    print(f"Desired attitude: Phi_d={np.rad2deg(Phi_d):.2f}°, Theta_d={np.rad2deg(Theta_d):.2f}°")
+    print(f"Desired rates: Pd={np.rad2deg(Pd):.2f}°/s, Qd={np.rad2deg(Qd):.2f}°/s")
+    print(f"Motor speeds: w1={w1:.1f}, w2={w2:.1f}, w3={w3:.1f}, w4={w4:.1f} rad/s\n")
+
+    # ====================================================================
+    # MAIN SIMULATION LOOP
+    # ====================================================================
+
+    for i in range(N - 1):
+        time = t[i]
+
+        # Unpack state
+        P, Q, R, Phi, Theta, Psi, U, V, W, X, Y, Z = state
+
+        # Reference trajectory at this time step
+        Xd = Xd_sim[i]
+        Yd = Yd_sim[i]
+        Zd = Zd_sim[i]
+
+        # ====================================================================
+        # OUTER LOOP  (50 Hz = Ts_outer = 0.02 s)
+        # ====================================================================
+
+        outer_time += dt
+        if outer_time >= Ts_outer:
+            T_cmd, Phi_d, Theta_d, Psi_d_out = outer_controller.compute(
+                Xd, Yd, Zd, Psi_d,
+                X, Y, Z, U, V, W, Phi, Theta, Psi,
+                Ts_outer
+            )
+            outer_time = 0.0
+
+        # ====================================================================
+        # MIDDLE LOOP (100 Hz = Ts_middle = 0.01 s)
+        # ====================================================================
+
+        middle_time += dt
+        if middle_time >= Ts_middle:
+            Pd, Qd, Rd = middle_controller.compute(
+                Phi_d, Theta_d, Psi_d_out,
+                Phi, Theta, Psi, P, Q, R,
+                Ts_middle
+            )
+            middle_time = 0.0
+
+        # ====================================================================
+        # INNER LOOP (200 Hz = dt = 0.005 s) — always runs
+        # ====================================================================
+
+        M_Phi, M_Theta, M_Psi = inner_controller.compute(
+            Pd, Qd, Rd,
+            P, Q, R,
+            dt
         )
-        quad.X = sol.y[:, -1]
 
-        
+        # ====================================================================
+        # CONTROL ALLOCATOR — runs every dt
+        # ====================================================================
 
-    # ── Pack and return results ──
+        w1, w2, w3, w4 = allocator.allocate(T_cmd, M_Phi, M_Theta, M_Psi)
+
+        # ====================================================================
+        # LOG SIGNALS
+        # ====================================================================
+
+        T_log[i] = T_cmd
+        Phi_d_log[i] = Phi_d
+        Theta_d_log[i] = Theta_d
+        Psi_d_log[i] = Psi_d_out
+        Pd_log[i] = Pd
+        Qd_log[i] = Qd
+        Rd_log[i] = Rd
+        M_Phi_log[i] = M_Phi
+        M_Theta_log[i] = M_Theta
+        M_Psi_log[i] = M_Psi
+        w1_log[i] = w1
+        w2_log[i] = w2
+        w3_log[i] = w3
+        w4_log[i] = w4
+
+        # ====================================================================
+        # PLANT DYNAMICS INTEGRATION (RK4)
+        # ====================================================================
+
+        rotor_speeds = np.array([w1, w2, w3, w4])
+        integration_substeps = 5
+        h = dt / integration_substeps
+        for _ in range(integration_substeps):
+            k1 = plant.derivatives(state, rotor_speeds)
+            k2 = plant.derivatives(state + 0.5 * h * k1, rotor_speeds)
+            k3 = plant.derivatives(state + 0.5 * h * k2, rotor_speeds)
+            k4 = plant.derivatives(state + h * k3, rotor_speeds)
+            state = state + (h / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
+        states_log[i + 1] = state
+
+    print("Simulation complete!")
+
+    # ====================================================================
+    # 5. RETURN RESULTS
+    # ====================================================================
+
     results = {
-        'quad'      : quad,
-        'trajectory': trajectory,
-        'vehicle'   : vehicle,
-        't_end'     : t_end,
-        'dt'        : dt,
+        't': t,
+        'states': states_log,
+        'Xd': Xd_sim,
+        'Yd': Yd_sim,
+        'Zd': Zd_sim,
+        'T_cmd': T_log,
+        'Phi_d': Phi_d_log,
+        'Theta_d': Theta_d_log,
+        'Psi_d': Psi_d_log,
+        'Pd': Pd_log,
+        'Qd': Qd_log,
+        'Rd': Rd_log,
+        'M_Phi': M_Phi_log,
+        'M_Theta': M_Theta_log,
+        'M_Psi': M_Psi_log,
+        'w1': w1_log,
+        'w2': w2_log,
+        'w3': w3_log,
+        'w4': w4_log,
     }
+
     return results
 
 
-# ============================================================
-#  PLOTTING HELPERS
-# ============================================================
-
 def plot_results(results):
-    """
-    Generate all result plots from simulation output.
+    """Plot simulation results."""
 
-    Produces:
-      1. Position vs time
-      2. Euler angles vs time
-      3. Control inputs vs time
-      4. 3D trajectory (steady state)
+    t = results['t']
+    states = results['states']
+    Xd = results['Xd']
+    Yd = results['Yd']
+    Zd = results['Zd']
 
-    Parameters
-    ----------
-    results : dict returned by run_fig8_pid()
-    """
-    quad       = results['quad']
-    trajectory = results['trajectory']
-    t_end      = results['t_end']
-    dt         = results['dt']
+    # Unpack states
+    Phi = states[:, 3]
+    Theta = states[:, 4]
+    Psi = states[:, 5]
+    X = states[:, 9]
+    Y = states[:, 10]
+    Z = states[:, 11]
 
-    A        = trajectory['A']
-    B        = trajectory['B']
-    omega    = trajectory['omega']
-    z_ref    = trajectory['z_ref']
-    t_takeoff = trajectory.get('t_takeoff', 8.0)
-    t_land    = trajectory.get('t_land', 8.0)
-    t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
+    # Compute tracking errors
+    eX = Xd - X
+    eY = Yd - Y
+    eZ = Zd - Z
+    pos_error = np.sqrt(eX**2 + eY**2 + eZ**2)
 
-    # ── Figure 1: Position, Euler Angles, Control Inputs ──
-    fig, axs = plt.subplots(3, 1, figsize=(10, 10))
-    plt.subplots_adjust(hspace=0.4)
+    # Create figure
+    fig = plt.figure(figsize=(16, 10))
+    fig.suptitle('Cascade PID Quadcopter — Simulation Results', fontsize=16, fontweight='bold')
 
-    # Position
-    axs[0].plot(*quad.data('x'), label='x')
-    axs[0].plot(*quad.data('y'), label='y')
-    axs[0].plot(*quad.data('z'), label='z')
-    axs[0].axhline(y=z_ref, color='gray', linestyle='--',
-                   linewidth=0.8, label='z_ref')
-    axs[0].legend()
-    c4d.plotdefaults(axs[0], 'Position', 'time [s]', 'm', fontsize=13)
+    # 3D trajectory
+    ax = fig.add_subplot(2, 3, 1, projection='3d')
+    ax.plot(X, Y, Z, 'b-', linewidth=2, label='Actual')
+    ax.plot(Xd, Yd, Zd, 'r--', linewidth=2, label='Reference')
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Z (m)')
+    ax.set_title('3D Trajectory')
+    ax.legend()
+    ax.grid(True)
 
-    # Euler angles
-    axs[1].plot(*quad.data('phi',   scale=c4d.r2d), label='roll φ')
-    axs[1].plot(*quad.data('theta', scale=c4d.r2d), label='pitch θ')
-    axs[1].plot(*quad.data('psi',   scale=c4d.r2d), label='yaw ψ')
-    axs[1].legend()
-    c4d.plotdefaults(axs[1], 'Euler Angles', 'time [s]', 'deg', fontsize=13)
+    # XY plane
+    ax = fig.add_subplot(2, 3, 2)
+    ax.plot(X, Y, 'b-', linewidth=2, label='Actual')
+    ax.plot(Xd, Yd, 'r--', linewidth=2, label='Reference')
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_title('XY Plane')
+    ax.legend()
+    ax.grid(True)
+    ax.axis('equal')
 
-    # Control inputs
-    axs[2].plot(*quad.data('F'),         label='F [N]')
-    axs[2].plot(*quad.data('tau_phi'),   label='τ_φ')
-    axs[2].plot(*quad.data('tau_theta'), label='τ_θ')
-    axs[2].plot(*quad.data('tau_psi'),   label='τ_ψ')
-    axs[2].legend()
-    c4d.plotdefaults(axs[2], 'Control Inputs',
-                     'time [s]', 'N / N.m', fontsize=13)
+    # Position tracking
+    ax = fig.add_subplot(2, 3, 3)
+    ax.plot(t, X, 'b-', label='X actual', linewidth=1.5)
+    ax.plot(t, Xd, 'r--', label='X ref', linewidth=1)
+    ax.plot(t, Y, 'g-', label='Y actual', linewidth=1.5)
+    ax.plot(t, Yd, 'm--', label='Y ref', linewidth=1)
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Position (m)')
+    ax.set_title('Horizontal Position Tracking')
+    ax.legend()
+    ax.grid(True)
+
+    # Altitude tracking
+    ax = fig.add_subplot(2, 3, 4)
+    ax.plot(t, Z, 'b-', label='Z actual', linewidth=2)
+    ax.plot(t, Zd, 'r--', label='Z ref', linewidth=1.5)
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Altitude (m)')
+    ax.set_title('Altitude Tracking')
+    ax.legend()
+    ax.grid(True)
+
+    # Position error
+    ax = fig.add_subplot(2, 3, 5)
+    ax.plot(t, pos_error, 'r-', linewidth=2)
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Error (m)')
+    ax.set_title('Position Tracking Error')
+    ax.grid(True)
+
+    # Attitude angles
+    ax = fig.add_subplot(2, 3, 6)
+    ax.plot(t, np.rad2deg(Phi), 'b-', label='Roll (Phi)', linewidth=1.5)
+    ax.plot(t, np.rad2deg(Theta), 'g-', label='Pitch (Theta)', linewidth=1.5)
+    ax.plot(t, np.rad2deg(Psi), 'r-', label='Yaw (Psi)', linewidth=1.5)
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Angle (deg)')
+    ax.set_title('Attitude Angles')
+    ax.legend()
+    ax.grid(True)
 
     plt.tight_layout()
     plt.show()
 
-    # ── Figure 2: 3D Trajectory (steady state only) ──
-    fig3d = plt.figure(figsize=(8, 6))
-    ax3d  = fig3d.add_subplot(111, projection='3d')
+    # Print statistics
+    print("\n" + "="*60)
+    print("SIMULATION STATISTICS")
+    print("="*60)
+    print(f"Max position error: {np.max(pos_error):.4f} m")
+    print(f"Mean position error: {np.mean(pos_error):.4f} m")
+    print(f"Final position: X={X[-1]:.3f}, Y={Y[-1]:.3f}, Z={Z[-1]:.3f} m")
+    print(f"Final reference: X={Xd[-1]:.3f}, Y={Yd[-1]:.3f}, Z={Zd[-1]:.3f} m")
+    print(f"Max roll angle: {np.max(np.abs(Phi)):.3f} rad ({np.max(np.abs(np.rad2deg(Phi))):.1f}°)")
+    print(f"Max pitch angle: {np.max(np.abs(Theta)):.3f} rad ({np.max(np.abs(np.rad2deg(Theta))):.1f}°)")
+    print("="*60 + "\n")
 
-    t_hist = quad.data('x')[0]
-    x_hist = quad.data('x')[1]
-    y_hist = quad.data('y')[1]
-    z_hist = quad.data('z')[1]
-
-    # Show only steady state (after ramp completes)
-    t_steady   = 17.0
-    steady_idx = t_hist >= t_steady
-
-    ax3d.plot(x_hist[steady_idx],
-              y_hist[steady_idx],
-              z_hist[steady_idx],
-              'b', linewidth=1.5, label='Actual')
-
-    t_vec = np.arange(t_steady, t_end, dt)
-    x_r   = [get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[0] for t in t_vec]
-    y_r   = [get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[1] for t in t_vec]
-    z_r   = np.full(len(t_vec), z_ref)
-
-    ax3d.plot(x_r, y_r, z_r, 'r--', linewidth=1.5, label='Reference')
-
-    ax3d.set_xlabel('x [m]')
-    ax3d.set_ylabel('y [m]')
-    ax3d.set_zlabel('z [m]')
-    ax3d.set_title('Figure-8 Trajectory Tracking (Steady State)')
-    ax3d.legend()
-    plt.show()
-
-
-# ============================================================
-#  PERFORMANCE METRICS
-# ============================================================
-
-def compute_metrics(results):
-    """
-    Compute and print RMSE tracking performance metrics.
-    Metrics are computed over steady-state portion only
-    (after the cosine ramp completes at t=17s).
-
-    Parameters
-    ----------
-    results : dict returned by run_fig8_pid()
-    """
-    quad       = results['quad']
-    trajectory = results['trajectory']
-    dt         = results['dt']
-
-    A        = trajectory['A']
-    B        = trajectory['B']
-    omega    = trajectory['omega']
-    z_ref    = trajectory['z_ref']
-    t_takeoff = trajectory.get('t_takeoff', 8.0)
-    t_land    = trajectory.get('t_land', 8.0)
-    t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
-
-    t_hist = quad.data('x')[0]
-    x_hist = quad.data('x')[1]
-    y_hist = quad.data('y')[1]
-    z_hist = quad.data('z')[1]
-
-    # Steady state indices
-    t_steady   = 17.0
-    steady_idx = t_hist >= t_steady
-    t_ss       = t_hist[steady_idx]
-
-    # Reference at steady state times
-    x_ref_ss = np.array([get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[0]
-                          for t in t_ss])
-    y_ref_ss = np.array([get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)[1]
-                          for t in t_ss])
-    z_ref_ss = np.full(len(t_ss), z_ref)
-
-    # RMSE
-    rmse_x = np.sqrt(np.mean((x_hist[steady_idx] - x_ref_ss) ** 2))
-    rmse_y = np.sqrt(np.mean((y_hist[steady_idx] - y_ref_ss) ** 2))
-    rmse_z = np.sqrt(np.mean((z_hist[steady_idx] - z_ref_ss) ** 2))
-
-    # Normalized errors
-    norm_x = rmse_x / A  * 100
-    norm_y = rmse_y / B  * 100
-    norm_z = rmse_z / z_ref * 100
-
-    # Max altitude deviation
-    max_z_dev = np.max(np.abs(z_hist[steady_idx] - z_ref))
-
-    print("=" * 45)
-    print("   TRACKING PERFORMANCE METRICS")
-    print("=" * 45)
-    print(f"  RMSE x : {rmse_x:.4f} m  ({norm_x:.1f}% of X amplitude)")
-    print(f"  RMSE y : {rmse_y:.4f} m  ({norm_y:.1f}% of Y amplitude)")
-    print(f"  RMSE z : {rmse_z:.6f} m  ({norm_z:.3f}% of altitude)")
-    print(f"  Max altitude deviation : {max_z_dev*100:.2f} cm")
-    print("=" * 45)
-
-    return {
-        'rmse_x'    : rmse_x,
-        'rmse_y'    : rmse_y,
-        'rmse_z'    : rmse_z,
-        'norm_x'    : norm_x,
-        'norm_y'    : norm_y,
-        'norm_z'    : norm_z,
-        'max_z_dev' : max_z_dev
-    }
