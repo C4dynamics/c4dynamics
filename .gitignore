@@ -135,3 +135,6 @@ docs/source/programs/mpc-steering_appendix.ipynb
 
 
 quad_simulation_results.npz
+out/mountaincar/checkpoint/
+
+docs/source/programs/pid_cascade_controller/quadcopter_pid_v0.ipynb
