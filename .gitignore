@@ -138,3 +138,5 @@ quad_simulation_results.npz
 out/mountaincar/checkpoint/
 
 docs/source/programs/pid_cascade_controller/quadcopter_pid_v0.ipynb
+docs/source/programs/pid_cascade_controller/quadcopter_pid_ziv.ipynb
+docs/source/programs/pid_cascade_controller/quad_pid_utils_ziv.py
