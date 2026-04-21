@@ -22,39 +22,61 @@ Contents:
 import numpy as np
 import c4dynamics as c4d
 from matplotlib import pyplot as plt
+from scipy.integrate import solve_ivp
 
 
 # ============================================================
 #  DYNAMICS  (called every integration step)
 # ============================================================
 
-def dynamics(quad, rotor_speeds, vehicle):
+def dynamics(t, y, quad, rotor_speeds):
     """
     Compute the 12-state derivatives for the quadcopter.
 
     Accepts and returns arrays compatible with c4d.rigidbody.X:
         X = [x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]
 
+
+
+    Frame and motor convention:
+
+    Body frame:
+    x forward
+    y right
+    z down   (NED convention)
+
+    Motor layout (plus configuration):
+    w1: front (+x)
+    w2: left  (+y)
+    w3: rear  (-x)
+    w4: right (-y)
+
+    Torque mapping:
+    roll  (phi)   = L * (T4 - T2)
+    pitch (theta) = L * (T3 - T1)
+    yaw   (psi)   = kQ * (-T1 + T2 - T3 + T4)
+
+
+
     Parameters
     ----------
-    quad         : c4d.rigidbody  — current state lives in quad.X
+    quad         : quadcopter physical parameters
     rotor_speeds : array [w1,w2,w3,w4]  rad/s
-    vehicle      : dict of physical parameters
 
     Returns
     -------
     dX : array (12,) — state derivatives
     """
 
-    x, y, z, vx, vy, vz, phi, theta, psi, p, q, r = quad.X
+    x, y, z, vx, vy, vz, phi, theta, psi, p, q, r = y
     w1, w2, w3, w4 = rotor_speeds
 
-    m   = vehicle['m'];   g   = vehicle['g']
-    L   = vehicle['l'];   kT  = vehicle['kT'];  kQ = vehicle['kQ']
-    IR  = vehicle['IR']
-    Ixx = vehicle['Ixx']; Iyy = vehicle['Iyy']; Izz = vehicle['Izz']
-    Ax  = vehicle['Ax'];  Ay  = vehicle['Ay'];  Az  = vehicle['Az']
-    Ar  = vehicle['Ar']
+    m   = quad.m;   g   = quad.g
+    L   = quad.l;   kT  = quad.kT;  kQ = quad.kQ
+    IR  = quad.IR
+    Ixx = quad.Ixx; Iyy = quad.Iyy; Izz = quad.Izz
+    Ax  = quad.Ax;  Ay  = quad.Ay;  Az  = quad.Az
+    Ar  = quad.Ar
 
     # Motor thrusts
     T1 = kT*w1**2;  T2 = kT*w2**2;  T3 = kT*w3**2;  T4 = kT*w4**2
@@ -94,7 +116,8 @@ def dynamics(quad, rotor_speeds, vehicle):
 def get_reference(t, A, B, omega, z_ref,
                   t_takeoff=8.0, t_land=8.0, t_sim=90.0):
     """
-    Three-phase reference trajectory: takeoff -> figure-8 -> landing.
+    Three-phase reference trajectory:
+        takeoff -> figure-8 -> landing.
 
     Phase 1  Takeoff  : Z rises from 0 to z_ref  (smooth S-curve)
     Phase 2  Figure-8 : x=A*sin(wt), y=B*sin(2wt), z=z_ref
@@ -102,18 +125,22 @@ def get_reference(t, A, B, omega, z_ref,
 
     Returns
     -------
-    x_ref, y_ref, z_ref_out
+    position: (x_ref, y_ref, z_ref_out)
+    velocity: (vx_ref, vy_ref, vz_ref)
+
     """
+
     t_land_start = t_sim - t_land
 
     if t <= t_takeoff:
         frac = t / t_takeoff
         s    = 3*frac**2 - 2*frac**3
-        return 0.0, 0.0, z_ref*s
+        return (0.0, 0.0, z_ref*s), (0.0, 0.0)
 
     elif t <= t_land_start:
         tau = t - t_takeoff
-        return A*np.sin(omega*tau), B*np.sin(2*omega*tau), z_ref
+        return (A*np.sin(omega*tau), B*np.sin(2*omega*tau), z_ref),   \
+                (A*omega*np.cos(omega*tau), 2*B*omega*np.cos(2*omega*tau))
 
     else:
         frac  = (t - t_land_start) / t_land
@@ -121,33 +148,29 @@ def get_reference(t, A, B, omega, z_ref,
         tau_l = t_land_start - t_takeoff
         xl    = A*np.sin(omega*tau_l)
         yl    = B*np.sin(2*omega*tau_l)
-        return xl*(1-s), yl*(1-s), z_ref*(1-s)
+        return (xl*(1-s), yl*(1-s), z_ref*(1-s)), (0.0, 0.0)
 
 
-def get_reference_velocity(t, A, B, omega,
-                           t_takeoff=8.0, t_land=8.0, t_sim=90.0):
-    """
-    Analytical time derivative of get_reference.
-    Used for velocity feedforward in the outer position loop.
-
-    Returns
-    -------
-    vx_ref, vy_ref
-    """
-    t_land_start = t_sim - t_land
-
-    if t <= t_takeoff:
-        return 0.0, 0.0
-    elif t <= t_land_start:
-        tau = t - t_takeoff
-        return A*omega*np.cos(omega*tau), 2*B*omega*np.cos(2*omega*tau)
-    else:
-        return 0.0, 0.0
 
 
 # ============================================================
 #  OUTER POSITION PID  (50 Hz)
 # ============================================================
+
+def InitializeControllers(controller, quad):
+
+    # Instantiate controllers
+    outer_ctrl = OuterPositionPID(controller, quad.m, quad.g, quad.kT)
+    mid_ctrl   = MiddleAttitudePID(controller)
+    inner_ctrl = InnerRatePID(controller,
+                            quad.Ixx, quad.Iyy, quad.Izz,
+                            quad.l,   quad.kT)
+    allocator  = ControlAllocator(quad.kT, quad.kQ, quad.l,
+                                controller['omega_max'])
+
+
+    return outer_ctrl, mid_ctrl, inner_ctrl, allocator
+
 
 class OuterPositionPID:
     """
@@ -173,11 +196,12 @@ class OuterPositionPID:
         self.int_Z = self.int_X = self.int_Y = 0.0
         self.Xd_prev = self.Yd_prev = 0.0
 
-    def compute(self, Xd, Yd, Zd, Psi_sp, quad, Ts):
+    def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts):
         """
         Parameters
         ----------
         Xd, Yd, Zd : reference position [m]
+        Vxd, Vyd   : reference velocities [m/s]
         Psi_sp      : desired yaw [rad]
         quad        : c4d.rigidbody — current state
         Ts          : sample time [s]
@@ -209,8 +233,8 @@ class OuterPositionPID:
         self.int_Y = np.clip(self.int_Y + Ts*e_V, -self.AW_Y, self.AW_Y)
 
         # Velocity feedforward
-        Xd_dot = (Xd - self.Xd_prev) / Ts if Ts > 0 else 0.0
-        Yd_dot = (Yd - self.Yd_prev) / Ts if Ts > 0 else 0.0
+        Xd_dot = Vxd # (Xd - self.Xd_prev) / Ts if Ts > 0 else 0.0
+        Yd_dot = Vyd # (Yd - self.Yd_prev) / Ts if Ts > 0 else 0.0
         ff_theta =  self.FF_X * (Xd_dot*np.cos(psi) + Yd_dot*np.sin(psi))
         ff_phi   = -self.FF_Y * (Yd_dot*np.cos(psi) - Xd_dot*np.sin(psi))
 
@@ -220,6 +244,7 @@ class OuterPositionPID:
                           -self.att_cmd_limit, self.att_cmd_limit)
 
         self.Xd_prev = Xd;  self.Yd_prev = Yd
+
         return T_cmd, phi_d, theta_d, Psi_sp
 
 
@@ -242,6 +267,7 @@ class MiddleAttitudePID:
         self.yaw_rate_limit = params['yaw_rate_limit']
 
         self.int_phi = self.int_theta = self.int_psi = 0.0
+
 
     def compute(self, phi_d, theta_d, psi_d, quad, Ts):
         """
@@ -383,6 +409,97 @@ class ControlAllocator:
 
 
 # ============================================================
+#  MAIN LOOP
+# ============================================================
+
+def run_fig8_pid(config):
+
+    # Initialize the rigidbody — quadcopter starts at rest on the ground
+    quad = c4d.rigidbody()
+
+    for k, v in config['quad'].items():
+        setattr(quad, k, v)
+
+    # Control inputs stored alongside state
+    quad.F         = quad.m * quad.g        # thrust [N]  — initialized to hover
+    quad.tau_phi   = 0.0                    # roll  torque [N.m]
+    quad.tau_theta = 0.0                    # pitch torque [N.m]
+    quad.tau_psi   = 0.0                    # yaw   torque [N.m]
+
+    # Trajectory parameters
+    A, B, omega, z_ref = config['trajectory']['A'], config['trajectory']['B'],      \
+                            config['trajectory']['omega'], config['trajectory']['z_ref']
+
+
+    # Initialize controllers
+
+    outer_ctrl, mid_ctrl,         \
+    inner_ctrl, allocator = InitializeControllers(config['controller'], quad)
+
+    # Loop rate counters
+    Ts_outer  = 1.0 / 50.0    # 0.020 s
+    Ts_middle = 1.0 / 100.0   # 0.010 s
+    outer_time = middle_time = 0.0
+
+
+    # Initial setpoints
+    dt, tf = config['sim']['dt'], config['sim']['tf']
+    psi_d   = 0.0   # desired yaw — fixed
+    phi_d   = theta_d = 0.0
+    p_d     = q_d = r_d = 0.0
+    T_cmd   = quad.m * quad.g   # start at hover thrust
+    rotor_speeds = np.array([np.sqrt(T_cmd / (4 * quad.kT))] * 4)
+
+    print(f'Simulation start  |  tf = {tf} s  |  dt = {dt} s')
+
+    for t in np.arange(0, tf, dt):
+
+        # ── Store state and control inputs ──
+        quad.store(t)
+        quad.storeparams(['F', 'tau_phi', 'tau_theta', 'tau_psi'], t=t)
+
+        # ── Reference at current time ──
+        pos_ref, vel_ref = get_reference(t, A, B, omega, z_ref, t_sim = tf)
+        xd, yd, zd, vxd_ff, vyd_ff = *pos_ref, *vel_ref
+
+        # ── Outer loop — Position  (50 Hz) ──
+        outer_time += dt
+        if outer_time >= Ts_outer:
+            T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
+                xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer)
+            quad.F = T_cmd
+            outer_time = 0.0
+
+        # ── Middle loop — Attitude  (100 Hz) ──
+        middle_time += dt
+        if middle_time >= Ts_middle:
+            p_d, q_d, r_d = mid_ctrl.compute(phi_d, theta_d, psi_d, quad, Ts_middle)
+            middle_time = 0.0
+
+        # ── Inner loop — Rate  (200 Hz, every step) ──
+        quad.tau_phi, quad.tau_theta, quad.tau_psi = inner_ctrl.compute(
+            p_d, q_d, r_d, quad, dt)
+
+        # ── Control allocation — torques to rotor speeds ──
+        rotor_speeds = np.array(allocator.allocate(
+            quad.F, quad.tau_phi, quad.tau_theta, quad.tau_psi))
+
+
+        sol = solve_ivp(dynamics,
+                        [t, t+dt],
+                        quad.X,
+                        args=(quad, rotor_speeds),
+                        )
+        quad.X = sol.y[:, -1]
+
+        t += dt
+
+
+    print('Simulation complete.')
+
+    return quad
+
+# ============================================================
 #  PLOTTING
 # ============================================================
 
@@ -402,8 +519,10 @@ def plot_results(quad, trajectory):
     quad       : c4d.rigidbody — populated by the main loop
     trajectory : dict
     """
-    A     = trajectory['A'];      B     = trajectory['B']
-    omega = trajectory['omega'];  z_ref = trajectory['z_ref']
+    A     = trajectory['A']
+    B     = trajectory['B']
+    omega = trajectory['omega']
+    z_ref = trajectory['z_ref']
     t_takeoff = trajectory.get('t_takeoff', 8.0)
     t_land    = trajectory.get('t_land',    8.0)
     t_sim     = trajectory.get('t_sim', trajectory.get('t_end', 90.0))
@@ -418,55 +537,22 @@ def plot_results(quad, trajectory):
     theta_hist = quad.data('theta', scale=c4d.r2d)[1]
     psi_hist   = quad.data('psi',   scale=c4d.r2d)[1]
 
-    F_hist         = quad.data('F')[1]
-    tau_phi_hist   = quad.data('tau_phi')[1]
-    tau_theta_hist = quad.data('tau_theta')[1]
-    tau_psi_hist   = quad.data('tau_psi')[1]
 
     # Reference at every stored time
-    ref    = np.array([get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)
-                       for t in t_hist])
-    x_ref  = ref[:, 0];  y_ref = ref[:, 1];  z_ref_hist = ref[:, 2]
+    ref = np.array([get_reference(t, A, B, omega, z_ref,
+                                     t_takeoff, t_land, t_sim)[0]
+                       for t in t_hist]
+                       )
+
+    x_ref  = ref[:, 0];
+    y_ref = ref[:, 1];
+    z_ref_hist = ref[:, 2]
 
     # Position error magnitude
     pos_err = np.sqrt((x_hist - x_ref)**2 + (y_hist - y_ref)**2 + (z_hist - z_ref_hist)**2)
 
     lw = 1.5   # linewidth
 
-    # ══════════════════════════════════════════════════════
-    #  FIGURE 1 — Time histories
-    #  3 stacked subplots: position | euler angles | control
-    # ══════════════════════════════════════════════════════
-    fig1, axs = plt.subplots(3, 1, figsize=(10, 10))
-    plt.subplots_adjust(hspace=0.4)
-
-    # -- Position --
-    axs[0].plot(t_hist, x_hist,   linewidth=lw,           label='x actual')
-    axs[0].plot(t_hist, x_ref,    linewidth=lw, ls='--',  label='x ref')
-    axs[0].plot(t_hist, y_hist,   linewidth=lw,           label='y actual')
-    axs[0].plot(t_hist, y_ref,    linewidth=lw, ls='--',  label='y ref')
-    axs[0].plot(t_hist, z_hist,   linewidth=lw,           label='z actual')
-    axs[0].plot(t_hist, z_ref_hist, linewidth=lw, ls='--', label='z ref')
-    axs[0].legend(fontsize=9)
-    c4d.plotdefaults(axs[0], 'Position', 'time [s]', 'm', fontsize=13)
-
-    # -- Euler angles --
-    axs[1].plot(t_hist, phi_hist,   linewidth=lw, label=r'$\varphi$ roll')
-    axs[1].plot(t_hist, theta_hist, linewidth=lw, label=r'$\theta$ pitch')
-    axs[1].plot(t_hist, psi_hist,   linewidth=lw, label=r'$\psi$ yaw')
-    axs[1].legend(fontsize=9)
-    c4d.plotdefaults(axs[1], 'Euler Angles', 'time [s]', 'deg', fontsize=13)
-
-    # -- Control inputs --
-    axs[2].plot(t_hist, F_hist,         linewidth=lw, label='F [N]')
-    axs[2].plot(t_hist, tau_phi_hist,   linewidth=lw, label=r'$\tau_\varphi$')
-    axs[2].plot(t_hist, tau_theta_hist, linewidth=lw, label=r'$\tau_\theta$')
-    axs[2].plot(t_hist, tau_psi_hist,   linewidth=lw, label=r'$\tau_\psi$')
-    axs[2].legend(fontsize=9)
-    c4d.plotdefaults(axs[2], 'Control Inputs', 'time [s]', 'N / N.m', fontsize=13)
-
-    plt.tight_layout()
-    plt.show()
 
     # ══════════════════════════════════════════════════════
     #  FIGURE 2 — Dashboard
@@ -567,28 +653,29 @@ def compute_metrics(quad, trajectory):
     idx  = (t_hist >= t_takeoff) & (t_hist <= t_land_start)
     t_ss = t_hist[idx]
 
-    ref_ss   = np.array([get_reference(t, A, B, omega, z_ref, t_takeoff, t_land, t_sim)
-                         for t in t_ss])
-    x_ref_ss = ref_ss[:,0];  y_ref_ss = ref_ss[:,1]
+    pos_ref_ss = np.array([get_reference(t, A, B, omega, z_ref,
+                                t_takeoff, t_land, t_sim)[0]
+                                for t in t_ss]
+                                )
+
+    x_ref_ss = pos_ref_ss[:,0]
+    y_ref_ss = pos_ref_ss[:,1]
     z_ref_ss = np.full(len(t_ss), z_ref)
 
     rmse_x    = np.sqrt(np.mean((x_hist[idx] - x_ref_ss)**2))
     rmse_y    = np.sqrt(np.mean((y_hist[idx] - y_ref_ss)**2))
     rmse_z    = np.sqrt(np.mean((z_hist[idx] - z_ref_ss)**2))
+
     norm_x    = rmse_x / A     * 100
     norm_y    = rmse_y / B     * 100
     norm_z    = rmse_z / z_ref * 100
+
     max_z_dev = np.max(np.abs(z_hist[idx] - z_ref))
 
-    print('=' * 45)
-    print('   TRACKING PERFORMANCE METRICS')
-    print('=' * 45)
-    print(f'  RMSE x : {rmse_x:.4f} m  ({norm_x:.1f}% of X amplitude)')
-    print(f'  RMSE y : {rmse_y:.4f} m  ({norm_y:.1f}% of Y amplitude)')
-    print(f'  RMSE z : {rmse_z:.6f} m  ({norm_z:.3f}% of altitude)')
-    print(f'  Max altitude deviation : {max_z_dev*100:.2f} cm')
-    print('=' * 45)
 
     return {'rmse_x': rmse_x, 'rmse_y': rmse_y, 'rmse_z': rmse_z,
             'norm_x': norm_x, 'norm_y': norm_y, 'norm_z': norm_z,
             'max_z_dev': max_z_dev}
+
+
+
