@@ -113,11 +113,10 @@ def dynamics(t, y, quad, rotor_speeds):
 #  REFERENCE TRAJECTORY
 # ============================================================
 
-def get_reference(t, A, B, omega, z_ref,
+def position_reference(t, A, B, omega, z_ref,
                   t_takeoff=8.0, t_land=8.0, t_sim=90.0):
     """
-    Three-phase reference trajectory:
-        takeoff -> figure-8 -> landing.
+    Three-phase reference trajectory: takeoff -> figure-8 -> landing.
 
     Phase 1  Takeoff  : Z rises from 0 to z_ref  (smooth S-curve)
     Phase 2  Figure-8 : x=A*sin(wt), y=B*sin(2wt), z=z_ref
@@ -125,22 +124,18 @@ def get_reference(t, A, B, omega, z_ref,
 
     Returns
     -------
-    position: (x_ref, y_ref, z_ref_out)
-    velocity: (vx_ref, vy_ref, vz_ref)
-
+    x_ref, y_ref, z_ref_out
     """
-
     t_land_start = t_sim - t_land
 
     if t <= t_takeoff:
         frac = t / t_takeoff
         s    = 3*frac**2 - 2*frac**3
-        return (0.0, 0.0, z_ref*s), (0.0, 0.0)
+        return 0.0, 0.0, z_ref*s
 
     elif t <= t_land_start:
         tau = t - t_takeoff
-        return (A*np.sin(omega*tau), B*np.sin(2*omega*tau), z_ref),   \
-                (A*omega*np.cos(omega*tau), 2*B*omega*np.cos(2*omega*tau))
+        return A*np.sin(omega*tau), B*np.sin(2*omega*tau), z_ref
 
     else:
         frac  = (t - t_land_start) / t_land
@@ -148,8 +143,28 @@ def get_reference(t, A, B, omega, z_ref,
         tau_l = t_land_start - t_takeoff
         xl    = A*np.sin(omega*tau_l)
         yl    = B*np.sin(2*omega*tau_l)
-        return (xl*(1-s), yl*(1-s), z_ref*(1-s)), (0.0, 0.0)
+        return xl*(1-s), yl*(1-s), z_ref*(1-s)
 
+
+def velocity_reference(t, A, B, omega,
+                           t_takeoff=8.0, t_land=8.0, t_sim=90.0):
+    """
+    Analytical time derivative of position_reference.
+    Used for velocity feedforward in the outer position loop.
+
+    Returns
+    -------
+    vx_ref, vy_ref
+    """
+    t_land_start = t_sim - t_land
+
+    if t <= t_takeoff:
+        return 0.0, 0.0
+    elif t <= t_land_start:
+        tau = t - t_takeoff
+        return A*omega*np.cos(omega*tau), 2*B*omega*np.cos(2*omega*tau)
+    else:
+        return 0.0, 0.0
 
 
 
@@ -459,8 +474,8 @@ def run_fig8_pid(config):
         quad.storeparams(['F', 'tau_phi', 'tau_theta', 'tau_psi'], t=t)
 
         # ── Reference at current time ──
-        pos_ref, vel_ref = get_reference(t, A, B, omega, z_ref, t_sim = tf)
-        xd, yd, zd, vxd_ff, vyd_ff = *pos_ref, *vel_ref
+        xd, yd, zd = position_reference(t, A, B, omega, z_ref, t_sim = tf)
+        vxd_ff, vyd_ff = velocity_reference(t, A, B, omega, t_sim = tf)
 
         # ── Outer loop — Position  (50 Hz) ──
         outer_time += dt
@@ -539,14 +554,15 @@ def plot_results(quad, trajectory):
 
 
     # Reference at every stored time
-    ref = np.array([get_reference(t, A, B, omega, z_ref,
-                                     t_takeoff, t_land, t_sim)[0]
+    ref = np.array([position_reference(t, A, B, omega, z_ref,
+                                     t_takeoff, t_land, t_sim)
                        for t in t_hist]
                        )
 
-    x_ref  = ref[:, 0];
-    y_ref = ref[:, 1];
+    x_ref  = ref[:, 0]
+    y_ref = ref[:, 1]
     z_ref_hist = ref[:, 2]
+
 
     # Position error magnitude
     pos_err = np.sqrt((x_hist - x_ref)**2 + (y_hist - y_ref)**2 + (z_hist - z_ref_hist)**2)
@@ -653,14 +669,15 @@ def compute_metrics(quad, trajectory):
     idx  = (t_hist >= t_takeoff) & (t_hist <= t_land_start)
     t_ss = t_hist[idx]
 
-    pos_ref_ss = np.array([get_reference(t, A, B, omega, z_ref,
-                                t_takeoff, t_land, t_sim)[0]
-                                for t in t_ss]
-                                )
+    pos_ref_ss = np.array([position_reference(t, A, B, omega, z_ref,
+                                     t_takeoff, t_land, t_sim)
+                       for t in t_ss]
+                       )
 
     x_ref_ss = pos_ref_ss[:,0]
     y_ref_ss = pos_ref_ss[:,1]
     z_ref_ss = np.full(len(t_ss), z_ref)
+
 
     rmse_x    = np.sqrt(np.mean((x_hist[idx] - x_ref_ss)**2))
     rmse_y    = np.sqrt(np.mean((y_hist[idx] - y_ref_ss)**2))
