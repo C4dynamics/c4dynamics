@@ -71,45 +71,41 @@ def dynamics(t, y, quad, rotor_speeds):
     x, y, z, vx, vy, vz, phi, theta, psi, p, q, r = y
     w1, w2, w3, w4 = rotor_speeds
 
-    m = quad.m
-    g = quad.g
-    L = quad.l
-    kT = quad.kT
-    kQ = quad.kQ
-    IR = quad.IR
+    m   = quad.m
+    g   = quad.g
+    L   = quad.l
+    kT  = quad.kT
+    kQ  = quad.kQ
+    IR  = quad.IR
     Ixx = quad.Ixx
     Iyy = quad.Iyy
     Izz = quad.Izz
-    Ax = quad.Ax
-    Ay = quad.Ay
-    Az = quad.Az
-    Ar = quad.Ar
+    Ax  = quad.Ax
+    Ay  = quad.Ay
+    Az  = quad.Az
+    Ar  = quad.Ar
 
     # Motor thrusts
     T1 = kT * w1**2
     T2 = kT * w2**2
     T3 = kT * w3**2
     T4 = kT * w4**2
+
     T = T1 + T2 + T3 + T4
     M_phi = L * (T4 - T2)
     M_theta = L * (T3 - T1)
     M_psi = kQ * (-T1 + T2 - T3 + T4)
     Omega = w1 - w2 + w3 - w4  # net rotor speed for gyro coupling
 
+
     # Angular accelerations  (Euler's equations + gyro + aero drag)
-    dp = (
-        ((Iyy - Izz) / Ixx) * q * r
-        - (IR / Ixx) * q * Omega
-        + M_phi / Ixx
-        - (Ar / Ixx) * p
-    )
-    dq = (
-        ((Izz - Ixx) / Iyy) * p * r
-        + (IR / Iyy) * p * Omega
-        + M_theta / Iyy
-        - (Ar / Iyy) * q
-    )
-    dr = ((Ixx - Iyy) / Izz) * p * q + M_psi / Izz - (Ar / Izz) * r
+    Mx = M_phi - IR * q * Omega - Ar * p
+    dp = (Mx - (Izz - Iyy) * q * r) / Ixx
+    My = M_theta - Ar * q + IR * p * Omega
+    dq = (My - (Ixx - Izz) * p * r) / Iyy
+    Mz = M_psi - Ar * r
+    dr = (Mz - (Iyy - Ixx) * p * q) / Izz
+
 
     # Euler angle kinematics
     dphi = p + np.sin(phi) * np.tan(theta) * q + np.cos(phi) * np.tan(theta) * r
