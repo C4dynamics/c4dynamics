@@ -23,6 +23,7 @@ import numpy as np
 import c4dynamics as c4d
 from matplotlib import pyplot as plt
 from scipy.integrate import solve_ivp
+from c4dynamics.rotmat import dcm321
 
 # ============================================================
 #  DYNAMICS  (called every integration step)
@@ -98,34 +99,50 @@ def dynamics(t, y, quad, rotor_speeds):
     Omega = w1 - w2 + w3 - w4  # net rotor speed for gyro coupling
 
 
-    # Angular accelerations  (Euler's equations + gyro + aero drag)
-    Mx = M_phi - IR * q * Omega - Ar * p
-    dp = (Mx - (Izz - Iyy) * q * r) / Ixx
-    My = M_theta - Ar * q + IR * p * Omega
-    dq = (My - (Ixx - Izz) * p * r) / Iyy
-    Mz = M_psi - Ar * r
-    dr = (Mz - (Iyy - Ixx) * p * q) / Izz
+    # Compute body from inertial rotation matrix for velocity and force transformations
+    BI = dcm321(phi, theta, psi) # body from inertial dcm
 
+
+    # =======================
+    #  TRANSLATIONAL DYNAMICS
+    # =======================
+
+    # Velocity in body frame
+    u, v, w = BI @ np.array([vx, vy, vz])
+
+    # Thrust and aerodynamic drag in body frame
+    Fb = np.array([-Ax * u, -Ay * v, T - Az * w])
+
+    # Forces back to inertial frame
+    Fi = BI.T @ Fb
+
+    dvx, dvy, dvz = Fi / m
+    # add gravity in the inertial frame (downward)
+    dvz -= g
+
+    # Position kinematics
+    dx = vx
+    dy = vy
+    dz = vz
+
+    # ====================
+    #  ROTATIONAL DYNAMICS
+    # ====================
 
     # Euler angle kinematics
     dphi = p + np.sin(phi) * np.tan(theta) * q + np.cos(phi) * np.tan(theta) * r
     dtheta = np.cos(phi) * q - np.sin(phi) * r
     dpsi = np.sin(phi) / np.cos(theta) * q + np.cos(phi) / np.cos(theta) * r
 
-    # Translational accelerations (inertial frame)
-    # Thrust projected from body to inertial via ZYX rotation
-    dvx = (
-        np.sin(phi) * np.sin(psi) + np.cos(phi) * np.sin(theta) * np.cos(psi)
-    ) * T / m - (Ax / m) * vx
-    dvy = (
-        -np.sin(phi) * np.cos(psi) + np.cos(phi) * np.sin(theta) * np.sin(psi)
-    ) * T / m - (Ay / m) * vy
-    dvz = -g + np.cos(phi) * np.cos(theta) * T / m - (Az / m) * vz
+    # Angular accelerations  (Euler's equations + gyro + aero drag)
+    Mx = M_phi - Ar * p - IR * q * Omega
+    My = M_theta - Ar * q + IR * p * Omega
+    Mz = M_psi - Ar * r
 
-    # Position kinematics
-    dx = vx
-    dy = vy
-    dz = vz
+    dp = (Mx - (Izz - Iyy) * q * r) / Ixx
+    dq = (My - (Ixx - Izz) * p * r) / Iyy
+    dr = (Mz - (Iyy - Ixx) * p * q) / Izz
+
 
     # Return in rigidbody order: [x,y,z, vx,vy,vz, phi,theta,psi, p,q,r]
     return np.array([dx, dy, dz, dvx, dvy, dvz, dphi, dtheta, dpsi, dp, dq, dr])
@@ -535,8 +552,12 @@ def run_fig8_pid(config):
     )
 
     # Instantiate controllers
-    outer_ctrl = OuterPositionPID(config["controller"], quad.m, quad.g, quad.kT)
-    mid_ctrl = MiddleAttitudePID(config["controller"])
+    outer_ctrl = OuterPositionPID(
+        config["controller"], quad.m, quad.g, quad.kT
+    )
+    mid_ctrl   = MiddleAttitudePID(
+        config["controller"]
+    )
     inner_ctrl = InnerRatePID(
         config["controller"], quad.Ixx, quad.Iyy, quad.Izz, quad.l, quad.kT
     )
