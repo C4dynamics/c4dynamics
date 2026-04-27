@@ -44,7 +44,7 @@ def dynamics(t, y, quad, rotor_speeds):
     Body frame:
     x forward
     y left
-    z up 
+    z up
 
     Inertial frame (ENU):
     x east
@@ -107,14 +107,34 @@ def dynamics(t, y, quad, rotor_speeds):
     Omega = w1 - w2 + w3 - w4  # net rotor speed for gyro coupling
 
 
-    # Compute body from inertial rotation matrix for velocity and force transformations
-    BI = dcm321(phi, theta, psi) # * dcm321(phi = np.pi) # body from inertial dcm
+
+    # ====================
+    #  ROTATIONAL DYNAMICS
+    # ====================
+
+    # Euler angle kinematics
+    dphi    = p + np.sin(phi) * np.tan(theta) * q + np.cos(phi) * np.tan(theta) * r
+    dtheta  =                     np.cos(phi) * q -                 np.sin(phi) * r
+    dpsi    =     np.sin(phi) / np.cos(theta) * q + np.cos(phi) / np.cos(theta) * r
+
+    # Angular accelerations  (Euler's equations + gyro + aero drag)
+    Mx = M_phi   - Ar * p - IR * q * Omega
+    My = M_theta - Ar * q + IR * p * Omega
+    Mz = M_psi   - Ar * r
+
+    dp = (Mx - (Izz - Iyy) * q * r) / Ixx
+    dq = (My - (Ixx - Izz) * p * r) / Iyy
+    dr = (Mz - (Iyy - Ixx) * p * q) / Izz
+
 
 
     # =======================
     #  TRANSLATIONAL DYNAMICS
     # =======================
 
+
+    # Compute body from inertial rotation matrix for velocity and force transformations
+    BI = dcm321(phi, theta, psi) # * dcm321(phi = np.pi) # body from inertial dcm
 
 
     # Velocity in body frame
@@ -135,25 +155,6 @@ def dynamics(t, y, quad, rotor_speeds):
 
     # add gravity in the inertial frame (downward)
     dvz -= g # -g -> inertial z points upward.
-
-
-    # ====================
-    #  ROTATIONAL DYNAMICS
-    # ====================
-
-    # Euler angle kinematics
-    dphi = p + np.sin(phi) * np.tan(theta) * q + np.cos(phi) * np.tan(theta) * r
-    dtheta = np.cos(phi) * q - np.sin(phi) * r
-    dpsi = np.sin(phi) / np.cos(theta) * q + np.cos(phi) / np.cos(theta) * r
-
-    # Angular accelerations  (Euler's equations + gyro + aero drag)
-    Mx = M_phi - Ar * p - IR * q * Omega
-    My = M_theta - Ar * q + IR * p * Omega
-    Mz = M_psi - Ar * r
-
-    dp = (Mx - (Izz - Iyy) * q * r) / Ixx
-    dq = (My - (Ixx - Izz) * p * r) / Iyy
-    dr = (Mz - (Iyy - Ixx) * p * q) / Izz
 
 
     # Return in rigidbody order: [x,y,z, vx,vy,vz, phi,theta,psi, p,q,r]
@@ -278,7 +279,10 @@ class OuterPositionPID:
         phi, theta, psi = quad.phi, quad.theta, quad.psi
 
 
-        # position error in inertial ENU frame.
+        # reference trajectory is given in inertial frame (ENU).
+        # compute errors in inertial frame and rotate them to body for the PID calculations.
+
+        # position error in inertial frame.
         e_X = Xd - x
         e_Y = Yd - y
         e_Z = Zd - z
@@ -287,8 +291,9 @@ class OuterPositionPID:
         # required z command in inertial frame
         self.int_Z = np.clip(self.int_Z + Ts * e_Z, -self.AW_Z, self.AW_Z)
         az_cmd = self.KP_Z * e_Z + self.KI_Z * self.int_Z + self.KD_Z * (-vz)
+        # project the force on the body frame to account for thrust limit
         BI = dcm321(phi = phi, theta = theta, psi = psi)
-        Tcmd_b = BI @ [0, 0, self.m * (self.g + az_cmd)]
+        Tcmd_b = BI @ [0, 0, self.m * (self.g + az_cmd)] # add g to compensate for gravity
 
         T_cmd = np.clip(
             Tcmd_b[2],
