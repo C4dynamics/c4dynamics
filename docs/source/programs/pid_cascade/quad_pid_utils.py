@@ -264,7 +264,7 @@ class OuterPositionPID:
         self.FF_Y = params["Kff_y"]
 
         self.int_Z = self.int_X = self.int_Y = 0.0
-        self.Xd_prev = self.Yd_prev = 0.0
+        # self.Xd_prev = self.Yd_prev = 0.0
 
     def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts, ENU_body=True):
         """
@@ -355,20 +355,28 @@ class OuterPositionPID:
 
         # theta_d → forward accel
         theta_d = np.clip(
-            pitch_factor * (self.KP_X * e_U + self.KI_X * self.int_X + self.KD_X * (-Vb[0]) + ff_theta),
+            pitch_factor * (self.KP_X * e_U +
+                            self.KI_X * self.int_X +
+                            self.KD_X * (Vff_b[0]-Vb[0]) +
+                            ff_theta
+                            ),
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
 
         # phi_d → lateral accel
         phi_d = np.clip(
-            phi_factor * (self.KP_Y * e_V + self.KI_Y * self.int_Y + self.KD_Y * (-Vb[1]) + ff_phi),
+            phi_factor * (self.KP_Y * e_V +
+                          self.KI_Y * self.int_Y +
+                          self.KD_Y * (Vff_b[1]-Vb[1]) +
+                          ff_phi
+                          ),
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
 
-        self.Xd_prev = Xd
-        self.Yd_prev = Yd
+        # self.Xd_prev = Xd
+        # self.Yd_prev = Yd
 
         return T_cmd, phi_d, theta_d, Psi_sp
 
