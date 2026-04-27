@@ -340,11 +340,11 @@ class OuterPositionPID:
         V = [vx, vy, 0]
         Vb = HE @ V
 
-        e_U = Xerr_b[0] - Vb[0]
-        e_V = Xerr_b[1] - Vb[1]
+        # e_U = Xerr_b[0] - Vb[0]
+        # e_V = Xerr_b[1] - Vb[1]
 
-        self.int_X = np.clip(self.int_X + Ts * e_U, -self.AW_X, self.AW_X)
-        self.int_Y = np.clip(self.int_Y + Ts * e_V, -self.AW_Y, self.AW_Y)
+        self.int_X = np.clip(self.int_X + Ts * Xerr_b[0], -self.AW_X, self.AW_X)
+        self.int_Y = np.clip(self.int_Y + Ts * Xerr_b[1], -self.AW_Y, self.AW_Y)
 
         # Velocity feedforward
         Vff = [Vxd, Vyd, 0]
@@ -355,9 +355,10 @@ class OuterPositionPID:
 
         # theta_d → forward accel
         theta_d = np.clip(
-            pitch_factor * (self.KP_X * e_U +
+            pitch_factor * (self.KP_X * Xerr_b[0] -
+                            self.KP_X * Vb[0] +
                             self.KI_X * self.int_X +
-                            self.KD_X * (Vff_b[0]-Vb[0]) +
+                            self.KD_X * (Vff_b[0] - Vb[0]) +
                             ff_theta
                             ),
             -self.att_cmd_limit,
@@ -366,9 +367,10 @@ class OuterPositionPID:
 
         # phi_d → lateral accel
         phi_d = np.clip(
-            phi_factor * (self.KP_Y * e_V +
+            phi_factor * (self.KP_Y * Xerr_b[1] -
+                          self.KP_Y * Vb[1] +
                           self.KI_Y * self.int_Y +
-                          self.KD_Y * (Vff_b[1]-Vb[1]) +
+                          self.KD_Y * (Vff_b[1] - Vb[1]) +
                           ff_phi
                           ),
             -self.att_cmd_limit,
