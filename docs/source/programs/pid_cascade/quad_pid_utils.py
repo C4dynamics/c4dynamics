@@ -43,8 +43,16 @@ def dynamics(t, y, quad, rotor_speeds):
 
     Body frame:
     x forward
-    y right
-    z down   (NED convention)
+    y left
+    z up 
+
+    Inertial frame (ENU):
+    x east
+    y north
+    z up
+
+    Rotation:
+    ZYX (yaw-pitch-roll)
 
     Motor layout (plus configuration):
     w1: front (+x)
@@ -100,12 +108,14 @@ def dynamics(t, y, quad, rotor_speeds):
 
 
     # Compute body from inertial rotation matrix for velocity and force transformations
-    BI = dcm321(phi, theta, psi) # body from inertial dcm
+    BI = dcm321(phi, theta, psi) # * dcm321(phi = np.pi) # body from inertial dcm
 
 
     # =======================
     #  TRANSLATIONAL DYNAMICS
     # =======================
+
+
 
     # Velocity in body frame
     u, v, w = BI @ np.array([vx, vy, vz])
@@ -116,14 +126,16 @@ def dynamics(t, y, quad, rotor_speeds):
     # Forces back to inertial frame
     Fi = BI.T @ Fb
 
-    dvx, dvy, dvz = Fi / m
-    # add gravity in the inertial frame (downward)
-    dvz -= g
-
     # Position kinematics
     dx = vx
     dy = vy
     dz = vz
+
+    dvx, dvy, dvz = Fi / m
+
+    # add gravity in the inertial frame (downward)
+    dvz -= g # -g -> inertial z points upward.
+
 
     # ====================
     #  ROTATIONAL DYNAMICS
@@ -163,7 +175,7 @@ def position_reference(t, A, B, omega, z_ref, t_takeoff=8.0, t_land=8.0, t_sim=9
 
     Returns
     -------
-    x_ref, y_ref, z_ref_out
+    x_ref, y_ref, z_ref_out in inertial ENU frame
     """
     t_land_start = t_sim - t_land
 
@@ -192,7 +204,7 @@ def velocity_reference(t, A, B, omega, t_takeoff=8.0, t_land=8.0, t_sim=90.0):
 
     Returns
     -------
-    vx_ref, vy_ref
+    vx_ref, vy_ref in inertial ENU frame
     """
     t_land_start = t_sim - t_land
 
@@ -246,10 +258,12 @@ class OuterPositionPID:
 
     def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts):
         """
+        Compute the control commands for the outer position loop.
+
         Parameters
         ----------
-        Xd, Yd, Zd : reference position [m]
-        Vxd, Vyd   : reference velocities [m/s]
+        Xd, Yd, Zd : reference position in inertial ENU frame [m]
+        Vxd, Vyd   : reference velocities in inertial ENU frame [m/s]
         Psi_sp      : desired yaw [rad]
         quad        : c4d.rigidbody — current state
         Ts          : sample time [s]
@@ -258,44 +272,62 @@ class OuterPositionPID:
         -------
         T_cmd, phi_d, theta_d, psi_d
         """
+
         x, y, z = quad.x, quad.y, quad.z
         vx, vy, vz = quad.vx, quad.vy, quad.vz
         phi, theta, psi = quad.phi, quad.theta, quad.psi
 
-        # Altitude PID
+
+        # position error in inertial ENU frame.
+        e_X = Xd - x
+        e_Y = Yd - y
         e_Z = Zd - z
+
+        # Altitude PID
+        # required z command in inertial frame
         self.int_Z = np.clip(self.int_Z + Ts * e_Z, -self.AW_Z, self.AW_Z)
         az_cmd = self.KP_Z * e_Z + self.KI_Z * self.int_Z + self.KD_Z * (-vz)
+        BI = dcm321(phi = phi, theta = theta, psi = psi)
+        Tcmd_b = BI @ [0, 0, self.m * (self.g + az_cmd)]
+
         T_cmd = np.clip(
-            self.m * (self.g + az_cmd) / max(0.5, np.cos(phi) * np.cos(theta)),
+            Tcmd_b[2],
             self.T_min,
             self.T_max,
         )
 
         # Horizontal PID — errors rotated to body frame
-        e_X_b = (Xd - x) * np.cos(psi) + (Yd - y) * np.sin(psi)
-        e_Y_b = (Yd - y) * np.cos(psi) - (Xd - x) * np.sin(psi)
-        vx_b = vx * np.cos(psi) + vy * np.sin(psi)
-        vy_b = -vx * np.sin(psi) + vy * np.cos(psi)
-        e_U = e_X_b - vx_b
-        e_V = e_Y_b - vy_b
+        HE = dcm321(psi = psi) # body from inertial for horizontal error rotation
+
+        Xerr = [e_X, e_Y, 0]
+        Xerr_b = HE @ Xerr
+
+        V = [vx, vy, 0]
+        Vb = HE @ V
+
+        e_U = Xerr_b[0] - Vb[0]
+        e_V = Xerr_b[1] - Vb[1]
 
         self.int_X = np.clip(self.int_X + Ts * e_U, -self.AW_X, self.AW_X)
         self.int_Y = np.clip(self.int_Y + Ts * e_V, -self.AW_Y, self.AW_Y)
 
         # Velocity feedforward
-        Xd_dot = Vxd  # (Xd - self.Xd_prev) / Ts if Ts > 0 else 0.0
-        Yd_dot = Vyd  # (Yd - self.Yd_prev) / Ts if Ts > 0 else 0.0
-        ff_theta = self.FF_X * (Xd_dot * np.cos(psi) + Yd_dot * np.sin(psi))
-        ff_phi = -self.FF_Y * (Yd_dot * np.cos(psi) - Xd_dot * np.sin(psi))
+        Vff = [Vxd, Vyd, 0]
+        Vff_b = HE @ Vff
+        ff_theta = self.FF_X * Vff_b[0]
+        ff_phi = -self.FF_Y * Vff_b[1]
 
+
+        # theta_d → forward accel
         theta_d = np.clip(
-            self.KP_X * e_U + self.KI_X * self.int_X + self.KD_X * (-vx_b) + ff_theta,
+            self.KP_X * e_U + self.KI_X * self.int_X + self.KD_X * (-Vb[0]) + ff_theta,
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
+
+        # phi_d   → lateral accel
         phi_d = np.clip(
-            -(self.KP_Y * e_V + self.KI_Y * self.int_Y + self.KD_Y * (-vy_b)) + ff_phi,
+            -(self.KP_Y * e_V + self.KI_Y * self.int_Y + self.KD_Y * (-Vb[1])) + ff_phi,
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
@@ -349,6 +381,7 @@ class MiddleAttitudePID:
         """
         e_phi = phi_d - quad.phi
         e_theta = theta_d - quad.theta
+        # wrapping on circle:
         e_psi = np.arctan2(np.sin(psi_d - quad.psi), np.cos(psi_d - quad.psi))
 
         self.int_phi = np.clip(
@@ -386,6 +419,7 @@ class MiddleAttitudePID:
             self.yaw_rate_limit,
         )
 
+        # desired body rates
         return p_d, q_d, r_d
 
 
@@ -471,6 +505,8 @@ class InnerRatePID:
         self.ep_prev = ep
         self.eq_prev = eq
         self.er_prev = er
+
+        # torques in body axes
         return tau_phi, tau_theta, tau_psi
 
 
@@ -484,8 +520,12 @@ class ControlAllocator:
     Converts thrust + torques to individual rotor speeds.
 
     Motor layout — plus (+) configuration:
-      w1: front (+x)  CW     w2: left  (+y)  CCW
-      w3: rear  (-x)  CW     w4: right (-y)  CCW
+
+      w1: front (+x)  CW
+      w2: left  (+y)  CCW
+      w3: rear  (-x)  CW
+      w4: right (-y)  CCW
+
     """
 
     def __init__(self, kT, kQ, L, omega_max):
@@ -500,8 +540,8 @@ class ControlAllocator:
         Parameters
         ----------
         T_cmd     : total thrust [N]
-        tau_phi   : roll  torque [N.m]
-        tau_theta : pitch torque [N.m]
+        tau_phi   : roll  torque [N.m] (difference between left and right motors)
+        tau_theta : pitch torque [N.m] (difference between front and rear motors)
         tau_psi   : yaw   torque [N.m]
 
         Returns
