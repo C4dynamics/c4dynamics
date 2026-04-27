@@ -25,12 +25,14 @@ from matplotlib import pyplot as plt
 from scipy.integrate import solve_ivp
 from c4dynamics.rotmat import dcm321
 
+
+
 # ============================================================
 #  DYNAMICS  (called every integration step)
 # ============================================================
 
 
-def dynamics(t, y, quad, rotor_speeds):
+def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
     """
     Compute the 12-state derivatives for the quadcopter.
 
@@ -134,7 +136,14 @@ def dynamics(t, y, quad, rotor_speeds):
 
 
     # Compute body from inertial rotation matrix for velocity and force transformations
-    BI = dcm321(phi, theta, psi) # * dcm321(phi = np.pi) # body from inertial dcm
+    if ENU_body:
+        BI = dcm321(phi, theta, psi) # @ dcm321(phi = np.pi) # body from inertial dcm
+    else:
+        BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi) # body from inertial dcm
+        T = -T
+
+
+
 
 
     # Velocity in body frame
@@ -257,7 +266,7 @@ class OuterPositionPID:
         self.int_Z = self.int_X = self.int_Y = 0.0
         self.Xd_prev = self.Yd_prev = 0.0
 
-    def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts):
+    def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts, ENU_body=True):
         """
         Compute the control commands for the outer position loop.
 
@@ -282,6 +291,27 @@ class OuterPositionPID:
         # reference trajectory is given in inertial frame (ENU).
         # compute errors in inertial frame and rotate them to body for the PID calculations.
 
+
+        # project the force on the body frame to account for thrust limit
+        if ENU_body:
+            BI = dcm321(phi, theta, psi) # @ dcm321(phi = np.pi)
+            HE = dcm321(psi = psi) # body from inertial for horizontal error rotation
+            Tmin = self.T_min
+            Tmax = self.T_max
+            Tfactor = 1
+            pitch_factor = 1
+            phi_factor = -1
+        else:
+            BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi)
+            HE = dcm321(psi = psi) @ dcm321(phi = np.pi) # body from inertial for horizontal error rotation
+            Tmin = -self.T_max
+            Tmax = self.T_min
+            Tfactor = -1
+            pitch_factor = -1
+            phi_factor = 1
+
+
+
         # position error in inertial frame.
         e_X = Xd - x
         e_Y = Yd - y
@@ -291,18 +321,18 @@ class OuterPositionPID:
         # required z command in inertial frame
         self.int_Z = np.clip(self.int_Z + Ts * e_Z, -self.AW_Z, self.AW_Z)
         az_cmd = self.KP_Z * e_Z + self.KI_Z * self.int_Z + self.KD_Z * (-vz)
+
+
         # project the force on the body frame to account for thrust limit
-        BI = dcm321(phi = phi, theta = theta, psi = psi)
         Tcmd_b = BI @ [0, 0, self.m * (self.g + az_cmd)] # add g to compensate for gravity
 
-        T_cmd = np.clip(
+        T_cmd = Tfactor * np.clip(
             Tcmd_b[2],
-            self.T_min,
-            self.T_max,
+            Tmin,
+            Tmax,
         )
 
         # Horizontal PID — errors rotated to body frame
-        HE = dcm321(psi = psi) # body from inertial for horizontal error rotation
 
         Xerr = [e_X, e_Y, 0]
         Xerr_b = HE @ Xerr
@@ -325,14 +355,14 @@ class OuterPositionPID:
 
         # theta_d → forward accel
         theta_d = np.clip(
-            self.KP_X * e_U + self.KI_X * self.int_X + self.KD_X * (-Vb[0]) + ff_theta,
+            pitch_factor * (self.KP_X * e_U + self.KI_X * self.int_X + self.KD_X * (-Vb[0]) + ff_theta),
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
 
-        # phi_d   → lateral accel
+        # phi_d → lateral accel
         phi_d = np.clip(
-            -(self.KP_Y * e_V + self.KI_Y * self.int_Y + self.KD_Y * (-Vb[1])) + ff_phi,
+            phi_factor * (self.KP_Y * e_V + self.KI_Y * self.int_Y + self.KD_Y * (-Vb[1]) + ff_phi),
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
@@ -574,7 +604,7 @@ class ControlAllocator:
 # ============================================================
 
 
-def run_fig8_pid(config):
+def run_fig8_pid(config, enu = True):
 
     # Initialize the rigidbody — quadcopter starts at rest on the ground
     quad = c4d.rigidbody()
@@ -583,7 +613,11 @@ def run_fig8_pid(config):
         setattr(quad, k, v)
 
     # Control inputs stored alongside state
-    quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
+    if enu:
+        quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
+    else:
+        quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
+
     quad.tau_phi = 0.0  # roll  torque [N.m]
     quad.tau_theta = 0.0  # pitch torque [N.m]
     quad.tau_psi = 0.0  # yaw   torque [N.m]
@@ -639,7 +673,7 @@ def run_fig8_pid(config):
         outer_time += dt
         if outer_time >= Ts_outer:
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
-                xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer
+                xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer, enu
             )
             quad.F = T_cmd
             outer_time = 0.0
@@ -660,7 +694,7 @@ def run_fig8_pid(config):
             allocator.allocate(quad.F, quad.tau_phi, quad.tau_theta, quad.tau_psi)
         )
 
-        sol = solve_ivp(dynamics, [t, t + dt], quad.X, args=(quad, rotor_speeds))
+        sol = solve_ivp(dynamics, [t, t + dt], quad.X, args=(quad, rotor_speeds, enu))
         quad.X = sol.y[:, -1]
 
         t += dt
