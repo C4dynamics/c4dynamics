@@ -32,7 +32,7 @@ from c4dynamics.rotmat import dcm321
 # ============================================================
 
 
-def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
+def dynamics(t, y, quad, rotor_speeds):
     """
     Compute the 12-state derivatives for the quadcopter.
 
@@ -40,13 +40,12 @@ def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
         X = [x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]
 
 
-
     Frame and motor convention:
 
-    Body frame:
-    x forward
-    y left
-    z up
+    Body frame (right handed):
+    x forward (between motors 1 and 3)
+    y right
+    z down
 
     Inertial frame (ENU):
     x east
@@ -56,17 +55,16 @@ def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
     Rotation:
     ZYX (yaw-pitch-roll)
 
-    Motor layout (plus configuration):
-    w1: front (+x)
-    w2: left  (+y)
-    w3: rear  (-x)
-    w4: right (-y)
+    Motor layout: x configuration
+    w1: front CCW   (+)
+    w2: rear  CCW   (+)
+    w3: left  CW    (-)
+    w4: right CW    (-)
 
     Torque mapping:
-    roll  (phi)   = L * (T4 - T2)
-    pitch (theta) = L * (T3 - T1)
-    yaw   (psi)   = kQ * (-T1 + T2 - T3 + T4)
-
+    roll  (phi)   = L * (F4 - F2)
+    pitch (theta) = L * (F3 - F1)
+    yaw   (psi)   = kQ * (-F1 + F2 - F3 + F4)
 
 
     Parameters
@@ -82,32 +80,50 @@ def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
     x, y, z, vx, vy, vz, phi, theta, psi, p, q, r = y
     w1, w2, w3, w4 = rotor_speeds
 
-    m   = quad.m
-    g   = quad.g
-    L   = quad.l
-    kT  = quad.kT
-    kQ  = quad.kQ
-    IR  = quad.IR
-    Ixx = quad.Ixx
-    Iyy = quad.Iyy
-    Izz = quad.Izz
-    Ax  = quad.Ax
-    Ay  = quad.Ay
-    Az  = quad.Az
-    Ar  = quad.Ar
+    m   = quad.m    # mass [kg]
+    g   = quad.g    # gravity [m/s^2]
+    L   = quad.l    # arm length [m]
+    kT  = quad.kT   # thrust coefficient
+    kM  = quad.kQ   # torque coefficient
+    IR  = quad.IR   # rotor inertia [kg.m^2]
+    Ixx = quad.Ixx  # roll inertia [kg.m^2]
+    Iyy = quad.Iyy  # pitch inertia [kg.m^2]
+    Izz = quad.Izz  # yaw inertia [kg.m^2]
+    Ax  = quad.Ax   # drag coefficient (x)
+    Ay  = quad.Ay   # drag coefficient (y)
+    Az  = quad.Az   # drag coefficient (z)
+    Ar  = quad.Ar   # angular drag coefficient
+
+    gamma = kM / kT
 
     # Motor thrusts
-    T1 = kT * w1**2
-    T2 = kT * w2**2
-    T3 = kT * w3**2
-    T4 = kT * w4**2
+    # M1 = kM * w1**2
+    # M2 = kM * w2**2
+    # M3 = kM * w3**2
+    # M4 = kM * w4**2
 
-    T = T1 + T2 + T3 + T4
-    M_phi = L * (T4 - T2)
-    M_theta = L * (T3 - T1)
-    M_psi = kQ * (-T1 + T2 - T3 + T4)
-    Omega = w1 - w2 + w3 - w4  # net rotor speed for gyro coupling
+    F1 = kT * w1**2
+    F2 = kT * w2**2
+    F3 = kT * w3**2
+    F4 = kT * w4**2
+    # u = [F1, F2, F3, F4]
 
+
+
+
+    # A = np.array([[1, 1, 1, 1],
+    #                 [-L, y2, y3, y4],
+    #                 [x1, -x2, x3, -x4],
+    #                 [-gamma, gamma, -gamma, gamma]
+    # ])
+
+    # W = A @ u
+    T     =          F1 + F2 + F3 + F4
+    tau_x =    L * (-F1 + F2 + F3 - F4)
+    tau_y =     L * (F1 - F2 + F3 - F4)
+    tau_z = gamma * (F1 + F2 - F3 - F4)
+
+    Omega = w1 + w2 - w3 - w4  # net rotor speed for gyro coupling
 
 
     # ====================
@@ -119,10 +135,10 @@ def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
     dtheta  =                     np.cos(phi) * q -                 np.sin(phi) * r
     dpsi    =     np.sin(phi) / np.cos(theta) * q + np.cos(phi) / np.cos(theta) * r
 
-    # Angular accelerations  (Euler's equations + gyro + aero drag)
-    Mx = M_phi   - Ar * p - IR * q * Omega
-    My = M_theta - Ar * q + IR * p * Omega
-    Mz = M_psi   - Ar * r
+    # Angular accelerations  (Euler's equations + aero drag + gyro)
+    Mx = tau_x - Ar * p - IR * q * Omega
+    My = tau_y - Ar * q + IR * p * Omega
+    Mz = tau_z - Ar * r
 
     dp = (Mx - (Izz - Iyy) * q * r) / Ixx
     dq = (My - (Ixx - Izz) * p * r) / Iyy
@@ -136,11 +152,8 @@ def dynamics(t, y, quad, rotor_speeds, ENU_body=True):
 
 
     # Compute body from inertial rotation matrix for velocity and force transformations
-    if ENU_body:
-        BI = dcm321(phi, theta, psi) # @ dcm321(phi = np.pi) # body from inertial dcm
-    else:
-        BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi) # body from inertial dcm
-        T = -T
+    BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi) # for z up in body frame, remove flip of pi in phi
+    T = -T  # when z is up in body frame, T should be positive.
 
 
 
@@ -266,7 +279,7 @@ class OuterPositionPID:
         self.int_Z = self.int_X = self.int_Y = 0.0
         # self.Xd_prev = self.Yd_prev = 0.0
 
-    def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts, ENU_body=True):
+    def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts):
         """
         Compute the control commands for the outer position loop.
 
@@ -287,30 +300,18 @@ class OuterPositionPID:
         vx, vy, vz = quad.vx, quad.vy, quad.vz
         phi, theta, psi = quad.phi, quad.theta, quad.psi
 
-
         # reference trajectory is given in inertial frame (ENU).
         # compute errors in inertial frame and rotate them to body for the PID calculations.
 
-
-        # project the force on the body frame to account for thrust limit
-        if ENU_body:
-            BI = dcm321(phi, theta, psi) # @ dcm321(phi = np.pi)
-            HE = dcm321(psi = psi) # body from inertial for horizontal error rotation
-            Tmin = self.T_min
-            Tmax = self.T_max
-            Tfactor = 1
-            pitch_factor = 1
-            phi_factor = -1
-        else:
-            BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi)
-            HE = dcm321(psi = psi) @ dcm321(phi = np.pi) # body from inertial for horizontal error rotation
-            Tmin = -self.T_max
-            Tmax = self.T_min
-            Tfactor = -1
-            pitch_factor = -1
-            phi_factor = 1
-
-
+        # when z is up in body frame, phi isnt rotated by pi and T min max are flipped.
+        # also, the sign of the pitch and roll commands are flipped because the body frame is rotated by pi around x from the ENU convention.
+        BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi)
+        HE = dcm321(psi = psi) @ dcm321(phi = np.pi) # body from inertial for horizontal error rotation
+        Tmin = -self.T_max
+        Tmax = self.T_min
+        Tfactor = -1
+        pitch_factor = -1
+        phi_factor = 1
 
         # position error in inertial frame.
         e_X = Xd - x
@@ -321,7 +322,6 @@ class OuterPositionPID:
         # required z command in inertial frame
         self.int_Z = np.clip(self.int_Z + Ts * e_Z, -self.AW_Z, self.AW_Z)
         az_cmd = self.KP_Z * e_Z + self.KI_Z * self.int_Z + self.KD_Z * (-vz)
-
 
         # project the force on the body frame to account for thrust limit
         Tcmd_b = BI @ [0, 0, self.m * (self.g + az_cmd)] # add g to compensate for gravity
@@ -339,9 +339,6 @@ class OuterPositionPID:
 
         V = [vx, vy, 0]
         Vb = HE @ V
-
-        # e_U = Xerr_b[0] - Vb[0]
-        # e_V = Xerr_b[1] - Vb[1]
 
         self.int_X = np.clip(self.int_X + Ts * Xerr_b[0], -self.AW_X, self.AW_X)
         self.int_Y = np.clip(self.int_Y + Ts * Xerr_b[1], -self.AW_Y, self.AW_Y)
@@ -376,9 +373,6 @@ class OuterPositionPID:
             -self.att_cmd_limit,
             self.att_cmd_limit,
         )
-
-        # self.Xd_prev = Xd
-        # self.Yd_prev = Yd
 
         return T_cmd, phi_d, theta_d, Psi_sp
 
@@ -564,12 +558,12 @@ class ControlAllocator:
     """
     Converts thrust + torques to individual rotor speeds.
 
-    Motor layout — plus (+) configuration:
+    Motor layout: x configuration:
 
-      w1: front (+x)  CW
-      w2: left  (+y)  CCW
-      w3: rear  (-x)  CW
-      w4: right (-y)  CCW
+      w1: front CCW
+      w2: rear  CCW
+      w3: left  CW
+      w4: right CW
 
     """
 
@@ -592,21 +586,51 @@ class ControlAllocator:
         Returns
         -------
         w1, w2, w3, w4 : rotor speeds [rad/s]
-        """
-        T4K = T_cmd / (4 * self.kT)
-        Mt = tau_theta / (2 * self.kT * self.L)
-        Mp = tau_phi / (2 * self.kT * self.L)
-        My = tau_psi / (4 * self.kQ)
 
+
+        https://cookierobotics.com/066/
+        """
         def cl(v):
             return np.clip(v, self.sq_min, self.sq_max)
 
-        return (
-            np.sqrt(cl(T4K - Mt - My)),
-            np.sqrt(cl(T4K - Mp + My)),
-            np.sqrt(cl(T4K + Mt - My)),
-            np.sqrt(cl(T4K + Mp + My)),
-        )
+        # # Motor thrusts
+        # T       = kT * (w1**2 + w2**2 + w3**2 + w4**2)
+
+        # M_phi   = kT * L * (w4**2 - w2**2)
+        # M_theta = kT * L * (w3**2 - w1**2)
+        # M_psi   = kQ * (-w1**2 + w2**2 - w3**2 + w4**2)
+
+        if False:
+            T4K = T_cmd / (4 * self.kT)
+
+            Mr = tau_phi / (2 * self.kT * self.L)
+            Mp = tau_theta / (2 * self.kT * self.L)
+            My = tau_psi / (4 * self.kQ)
+
+
+            w1 = np.sqrt(cl(T4K - Mr + Mp + My))
+            w2 = np.sqrt(cl(T4K + Mr - Mp + My))
+            w3 = np.sqrt(cl(T4K + Mr + Mp - My))
+            w4 = np.sqrt(cl(T4K - Mr - Mp - My))
+        else:
+            gamma = self.kQ / self.kT
+            A1 = np.array([[1, -1, 1, 1],
+                            [1, 1, -1, 1],
+                            [1, 1, 1, -1],
+                            [1, -1, -1, -1]])
+            A2 = np.eye(4) / 4
+            A3 = np.array([[1, 0, 0, 0],
+                            [0, 1 / self.L, 0, 0],
+                            [0, 0, 1 / self.L, 0],
+                            [0, 0, 0, 1 / gamma]])
+            F = A1 @ A2 @ A3 @ np.array([T_cmd, tau_phi, tau_theta, tau_psi])
+
+            w1 = np.sqrt(cl(F[0] / self.kT))
+            w2 = np.sqrt(cl(F[1] / self.kT))
+            w3 = np.sqrt(cl(F[2] / self.kT))
+            w4 = np.sqrt(cl(F[3] / self.kT))
+
+        return w1, w2, w3, w4
 
 
 # ============================================================
@@ -614,7 +638,7 @@ class ControlAllocator:
 # ============================================================
 
 
-def run_fig8_pid(config, enu = True):
+def run_fig8_pid(config):
 
     # Initialize the rigidbody — quadcopter starts at rest on the ground
     quad = c4d.rigidbody()
@@ -623,10 +647,7 @@ def run_fig8_pid(config, enu = True):
         setattr(quad, k, v)
 
     # Control inputs stored alongside state
-    if enu:
-        quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
-    else:
-        quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
+    quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
 
     quad.tau_phi = 0.0  # roll  torque [N.m]
     quad.tau_theta = 0.0  # pitch torque [N.m]
@@ -671,6 +692,9 @@ def run_fig8_pid(config, enu = True):
 
     for t in np.arange(0, tf, dt):
 
+        if t % 10 < dt / 2:
+            print(f"Simulation run  |  t = {t} s")
+
         # ── Store state and control inputs ──
         quad.store(t)
         quad.storeparams(["F", "tau_phi", "tau_theta", "tau_psi"], t=t)
@@ -683,7 +707,7 @@ def run_fig8_pid(config, enu = True):
         outer_time += dt
         if outer_time >= Ts_outer:
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
-                xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer, enu
+                xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer
             )
             quad.F = T_cmd
             outer_time = 0.0
@@ -704,7 +728,7 @@ def run_fig8_pid(config, enu = True):
             allocator.allocate(quad.F, quad.tau_phi, quad.tau_theta, quad.tau_psi)
         )
 
-        sol = solve_ivp(dynamics, [t, t + dt], quad.X, args=(quad, rotor_speeds, enu))
+        sol = solve_ivp(dynamics, [t, t + dt], quad.X, args=(quad, rotor_speeds))
         quad.X = sol.y[:, -1]
 
         t += dt
@@ -797,9 +821,7 @@ def plot_results(quad, trajectory):
     ax = fig2.add_subplot(2, 3, 2)
     ax.plot(x_hist, y_hist, "b-", linewidth=lw, label="Actual")
     ax.plot(x_ref, y_ref, "r--", linewidth=lw, label="Reference")
-    ax.set_xlabel("X (m)")
-    ax.set_ylabel("Y (m)")
-    ax.set_title("XY Plane")
+    c4d.plotdefaults(ax, 'XY Plane', xlabel='X (m)', ylabel='Y (m)')
     ax.legend(fontsize=8)
     ax.grid(True)
     ax.axis("equal")
