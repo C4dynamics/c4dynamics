@@ -96,28 +96,12 @@ def dynamics(t, y, quad, rotor_speeds):
 
     gamma = kM / kT
 
-    # Motor thrusts
-    # M1 = kM * w1**2
-    # M2 = kM * w2**2
-    # M3 = kM * w3**2
-    # M4 = kM * w4**2
-
     F1 = kT * w1**2
     F2 = kT * w2**2
     F3 = kT * w3**2
     F4 = kT * w4**2
-    # u = [F1, F2, F3, F4]
 
 
-
-
-    # A = np.array([[1, 1, 1, 1],
-    #                 [-L, y2, y3, y4],
-    #                 [x1, -x2, x3, -x4],
-    #                 [-gamma, gamma, -gamma, gamma]
-    # ])
-
-    # W = A @ u
     T     =          F1 + F2 + F3 + F4
     tau_x =    L * (-F1 + F2 + F3 - F4)
     tau_y =     L * (F1 - F2 + F3 - F4)
@@ -145,19 +129,13 @@ def dynamics(t, y, quad, rotor_speeds):
     dr = (Mz - (Iyy - Ixx) * p * q) / Izz
 
 
-
     # =======================
     #  TRANSLATIONAL DYNAMICS
     # =======================
 
-
     # Compute body from inertial rotation matrix for velocity and force transformations
     BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi) # for z up in body frame, remove flip of pi in phi
     T = -T  # when z is up in body frame, T should be positive.
-
-
-
-
 
     # Velocity in body frame
     u, v, w = BI @ np.array([vx, vy, vz])
@@ -177,7 +155,6 @@ def dynamics(t, y, quad, rotor_speeds):
 
     # add gravity in the inertial frame (downward)
     dvz -= g # -g -> inertial z points upward.
-
 
     # Return in rigidbody order: [x,y,z, vx,vy,vz, phi,theta,psi, p,q,r]
     return np.array([dx, dy, dz, dvx, dvy, dvz, dphi, dtheta, dpsi, dp, dq, dr])
@@ -277,7 +254,6 @@ class OuterPositionPID:
         self.FF_Y = params["Kff_y"]
 
         self.int_Z = self.int_X = self.int_Y = 0.0
-        # self.Xd_prev = self.Yd_prev = 0.0
 
     def compute(self, Xd, Yd, Zd, Vxd, Vyd, Psi_sp, quad, Ts):
         """
@@ -303,7 +279,7 @@ class OuterPositionPID:
         # reference trajectory is given in inertial frame (ENU).
         # compute errors in inertial frame and rotate them to body for the PID calculations.
 
-        # when z is up in body frame, phi isnt rotated by pi and T min max are flipped.
+        # when z is up in body frame, phi isn't rotated by pi and T min max are flipped.
         # also, the sign of the pitch and roll commands are flipped because the body frame is rotated by pi around x from the ENU convention.
         BI = dcm321(phi, theta, psi) @ dcm321(phi = np.pi)
         HE = dcm321(psi = psi) @ dcm321(phi = np.pi) # body from inertial for horizontal error rotation
@@ -587,48 +563,25 @@ class ControlAllocator:
         -------
         w1, w2, w3, w4 : rotor speeds [rad/s]
 
-
-        https://cookierobotics.com/066/
         """
-        def cl(v):
-            return np.clip(v, self.sq_min, self.sq_max)
 
-        # # Motor thrusts
-        # T       = kT * (w1**2 + w2**2 + w3**2 + w4**2)
+        gamma = self.kQ / self.kT
+        A1 = np.array([[1, -1, 1, 1],
+                        [1, 1, -1, 1],
+                        [1, 1, 1, -1],
+                        [1, -1, -1, -1]]
+            ) / 4
+        A2 = np.array([[1, 0, 0, 0],
+                        [0, 1 / self.L, 0, 0],
+                        [0, 0, 1 / self.L, 0],
+                        [0, 0, 0, 1 / gamma]]
+            )
+        F = A1 @ A2 @ np.array([T_cmd, tau_phi, tau_theta, tau_psi])
 
-        # M_phi   = kT * L * (w4**2 - w2**2)
-        # M_theta = kT * L * (w3**2 - w1**2)
-        # M_psi   = kQ * (-w1**2 + w2**2 - w3**2 + w4**2)
-
-        if False:
-            T4K = T_cmd / (4 * self.kT)
-
-            Mr = tau_phi / (2 * self.kT * self.L)
-            Mp = tau_theta / (2 * self.kT * self.L)
-            My = tau_psi / (4 * self.kQ)
-
-
-            w1 = np.sqrt(cl(T4K - Mr + Mp + My))
-            w2 = np.sqrt(cl(T4K + Mr - Mp + My))
-            w3 = np.sqrt(cl(T4K + Mr + Mp - My))
-            w4 = np.sqrt(cl(T4K - Mr - Mp - My))
-        else:
-            gamma = self.kQ / self.kT
-            A1 = np.array([[1, -1, 1, 1],
-                            [1, 1, -1, 1],
-                            [1, 1, 1, -1],
-                            [1, -1, -1, -1]])
-            A2 = np.eye(4) / 4
-            A3 = np.array([[1, 0, 0, 0],
-                            [0, 1 / self.L, 0, 0],
-                            [0, 0, 1 / self.L, 0],
-                            [0, 0, 0, 1 / gamma]])
-            F = A1 @ A2 @ A3 @ np.array([T_cmd, tau_phi, tau_theta, tau_psi])
-
-            w1 = np.sqrt(cl(F[0] / self.kT))
-            w2 = np.sqrt(cl(F[1] / self.kT))
-            w3 = np.sqrt(cl(F[2] / self.kT))
-            w4 = np.sqrt(cl(F[3] / self.kT))
+        w1 = np.sqrt(np.clip(F[0] / self.kT, self.sq_min, self.sq_max))
+        w2 = np.sqrt(np.clip(F[1] / self.kT, self.sq_min, self.sq_max))
+        w3 = np.sqrt(np.clip(F[2] / self.kT, self.sq_min, self.sq_max))
+        w4 = np.sqrt(np.clip(F[3] / self.kT, self.sq_min, self.sq_max))
 
         return w1, w2, w3, w4
 
