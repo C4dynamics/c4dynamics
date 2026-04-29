@@ -645,8 +645,8 @@ def run_fig8_pid(config):
 
     for t in np.arange(0, tf, dt):
 
-        if t % 10 < dt / 2:
-            print(f"Simulation run  |  t = {t} s")
+        # if t % 10 < dt / 2:
+        #     print(f"Simulation run  |  t = {t} s")
 
         # ── Store state and control inputs ──
         quad.store(t)
