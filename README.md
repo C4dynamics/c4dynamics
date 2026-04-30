@@ -81,7 +81,7 @@ Across:
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:16px;">
 
 <a href="docs/source/programs/dof6sim.html" target="_blank" style="display:flex;align-items:center;gap:16px; background:linear-gradient(180deg,#f7f8fa,#eef1f5); border-radius:14px;padding:14px 16px; text-decoration:none;color:#222; border:1px solid #e1e4e8; box-shadow:0 10px 22px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
-<img src="docs/source/_images/missdistance.png" width="70">
+<img src="docs/source/_static/missdistance.png" width="70">
 <div>
 <strong>6-DOF Simulation</strong><br>
 <span style="font-size:13px;color:#555;">Proportional navigation guidance</span>
