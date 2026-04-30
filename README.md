@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/C4dynamics/C4dynamics/blob/main/docs/source/_icon/c4dlogotext.svg">
+  <img src="https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/_icon/c4dlogotext.svg">
 </div>
 
 
@@ -232,7 +232,8 @@ s.store(t=1)
 
 ## Installation
 
-For detailed instructions on installing c4dynamics, including setup for virtual environments, Python version requirements, and troubleshooting, refer to the [c4dynamics setup guide](c4dynamics_setup.ipynb).
+For detailed instructions on installing c4dynamics, including setup for virtual environments, Python version requirements, and troubleshooting, refer to the [c4dynamics setup guide](https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/tutorials/setup_guide.ipynb).
+
 
 * [PIP](https://pypi.org/project/c4dynamics/)
 
