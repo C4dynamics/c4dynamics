@@ -82,19 +82,51 @@ Across:
 
 <div align="center">
 
-<table> <tr> <td width="300">
+<table>
+<tr>
 
-<a href="docs/source/programs/dof6sim.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/missdistance.png" width="100"><br><br> <b>6-DOF Simulation</b><br> <span style="color:#555;">Proportional navigation guidance</span> </div> </a> </td> <td width="300">
+<td width="300">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/dof6sim.html">
+    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
+    <img src="docs/source/_static/missdistance.png" width="100"><br><br>
+    <b>6-DOF Simulation</b><br>
+    <span style="color:#555;">Proportional navigation guidance</span>
+    </div>
+</a>
+</td>
 
-<a href="docs/source/programs/ballistic_coefficient.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/ballistic_trajectory.png" width="100"><br><br> <b>Extended Kalman Filter</b><br> <span style="color:#555;">Ballistic coefficient estimation</span> </div> </a> </td> <td width="300">
+<td width="300">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/ballistic_coefficient.html">
+    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
+    <img src="docs/source/_static/ballistic_trajectory.png" width="100"><br><br>
+    <b>Extended Kalman Filter</b><br>
+    <span style="color:#555;">Ballistic coefficient estimation</span>
+    </div>
+</a>
+</td>
 
-<a href="docs/source/programs/car_tracker.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/drifting_car_snapshot.png" width="100"><br><br> <b>Detection + Kalman Filter</b><br> <span style="color:#555;">Vehicle tracking</span> </div> </a> </td> </tr> <tr> <td width="300">
+<td width="300">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/car_tracker.html">
+    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
+    <img src="docs/source/_static/drifting_car_snapshot.png" width="100"><br><br>
+    <b>Detection + Kalman Filter</b><br>
+    <span style="color:#555;">Vehicle tracking</span>
+    </div>
+</a>
+</td>
 
-<a href="docs/source/programs/mpc_steering.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/mpc_diagram.png" width="100"><br><br> <b>Model Predictive Control</b><br> <span style="color:#555;">Vehicle steering</span> </div> </a> </td> <td width="300">
+<td width="300">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/mpc_steering.html">
+    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
+    <img src="docs/source/_static/mpc_diagram.png" width="100"><br><br>
+    <b>Model Predictive Control</b><br>
+    <span style="color:#555;">Vehicle steering</span>
+    </div>
+</a>
+</td>
 
-
+</tr>
 </table>
-
 </div>
 
 
