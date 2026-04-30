@@ -78,41 +78,25 @@ Across:
 > These are not isolated demos.
 > They all follow the same structure.
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:16px;">
 
-<a href="docs/source/programs/dof6sim.html" target="_blank" style="display:flex;align-items:center;gap:16px; background:linear-gradient(180deg,#f7f8fa,#eef1f5); border-radius:14px;padding:14px 16px; text-decoration:none;color:#222; border:1px solid #e1e4e8; box-shadow:0 10px 22px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
-<img src="docs/source/_static/missdistance.png" width="70">
-<div>
-<strong>6-DOF Simulation</strong><br>
-<span style="font-size:13px;color:#555;">Proportional navigation guidance</span>
-</div>
-</a>
 
-<a href="docs/source/programs/ballistic_coefficient.html" target="_blank" style="display:flex;align-items:center;gap:16px; background:linear-gradient(180deg,#f7f8fa,#eef1f5); border-radius:14px;padding:14px 16px; text-decoration:none;color:#222; border:1px solid #e1e4e8; box-shadow:0 10px 22px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
-<img src="docs/source/_static/ballistic_trajectory.png" width="70">
-<div>
-<strong>Extended Kalman Filter</strong><br>
-<span style="font-size:13px;color:#555;">Ballistic coefficient estimation</span>
-</div>
-</a>
+<div align="center">
 
-<a href="docs/source/programs/car_tracker.html" target="_blank" style="display:flex;align-items:center;gap:16px; background:linear-gradient(180deg,#f7f8fa,#eef1f5); border-radius:14px;padding:14px 16px; text-decoration:none;color:#222; border:1px solid #e1e4e8; box-shadow:0 10px 22px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
-<img src="docs/source/_static/drifting_car_snapshot.png" width="70">
-<div>
-<strong>Detection + Kalman Filter</strong><br>
-<span style="font-size:13px;color:#555;">Vehicle tracking</span>
-</div>
-</a>
+<table> <tr> <td width="300">
 
-<a href="docs/source/programs/mpc_steering.html" target="_blank" style="display:flex;align-items:center;gap:16px; background:linear-gradient(180deg,#f7f8fa,#eef1f5); border-radius:14px;padding:14px 16px; text-decoration:none;color:#222; border:1px solid #e1e4e8; box-shadow:0 10px 22px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);">
-<img src="docs/source/_static/mpc_diagram.png" width="70">
-<div>
-<strong>Model Predictive Control</strong><br>
-<span style="font-size:13px;color:#555;">Vehicle steering</span>
-</div>
-</a>
+<a href="docs/source/programs/dof6sim.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/missdistance.png" width="100"><br><br> <b>6-DOF Simulation</b><br> <span style="color:#555;">Proportional navigation guidance</span> </div> </a> </td> <td width="300">
+
+<a href="docs/source/programs/ballistic_coefficient.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/ballistic_trajectory.png" width="100"><br><br> <b>Extended Kalman Filter</b><br> <span style="color:#555;">Ballistic coefficient estimation</span> </div> </a> </td> <td width="300">
+
+<a href="docs/source/programs/car_tracker.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/drifting_car_snapshot.png" width="100"><br><br> <b>Detection + Kalman Filter</b><br> <span style="color:#555;">Vehicle tracking</span> </div> </a> </td> </tr> <tr> <td width="300">
+
+<a href="docs/source/programs/mpc_steering.html"> <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;"> <img src="docs/source/_static/mpc_diagram.png" width="100"><br><br> <b>Model Predictive Control</b><br> <span style="color:#555;">Vehicle steering</span> </div> </a> </td> <td width="300">
+
+
+</table>
 
 </div>
+
 
 ---
 
