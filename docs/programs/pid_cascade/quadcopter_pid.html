@@ -1,0 +1,1188 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quadcopter Cascade PID — Figure-8 Trajectory Tracking &#8212; C4DYNAMICS v2.3</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../../_static/style.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=3ecf1c2d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-LKRZFXZKQP"></script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-LKRZFXZKQP');
+            </script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-LKRZFXZKQP');
+            </script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'programs/pid_cascade/quadcopter_pid';</script>
+    <link rel="icon" href="../../_static/c4dlogo.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+    <meta name="docbuild:last-update" content="Apr 30, 2026"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">C4DYNAMICS v2.3</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Home
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gettingstarted.html">Getting Started</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/states.html">State Objects</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/kinematics.html">Kinematics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/transformations.html">Rigid Body Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/sensors.html">Sensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/filters.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/rl_env.html">Reinforcement Learning Enviroenment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Toturials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/setup_guide.html">Setup Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/introduction_guide.html">Interactive Guide to State Space and State Objects Modeling</a></li>
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="../car_tracker.html">Car Tracker – Objects Detection and Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../api/introduction.html">Introduction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/States.html">State Objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/states.state.html">The State Class</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.X.html">c4dynamics.states.state.state.X</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.X0.html">c4dynamics.states.state.state.X0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.norm.html">c4dynamics.states.state.state.norm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.normalize.html">c4dynamics.states.state.state.normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.Position.html">c4dynamics.states.state.state.Position</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.Velocity.html">c4dynamics.states.state.state.Velocity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.addvars.html">c4dynamics.states.state.state.addvars</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.dist.html">c4dynamics.states.state.state.dist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.vel_mag.html">c4dynamics.states.state.state.vel_mag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.store.html">c4dynamics.states.state.state.store</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.storeparams.html">c4dynamics.states.state.state.storeparams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.data.html">c4dynamics.states.state.state.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.timestate.html">c4dynamics.states.state.state.timestate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.plot.html">c4dynamics.states.state.state.plot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/states.lib.html">States Library</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.datapoint.html">Datapoint</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.mass.html">c4dynamics.states.lib.datapoint.datapoint.mass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.inteqm.html">c4dynamics.states.lib.datapoint.datapoint.inteqm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.plot.html">c4dynamics.states.lib.datapoint.datapoint.plot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.rigidbody.html">Rigidbody</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.mass.html">c4dynamics.states.lib.rigidbody.rigidbody.mass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.I.html">c4dynamics.states.lib.rigidbody.rigidbody.I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.angles.html">c4dynamics.states.lib.rigidbody.rigidbody.angles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.ang_rates.html">c4dynamics.states.lib.rigidbody.rigidbody.ang_rates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.BR.html">c4dynamics.states.lib.rigidbody.rigidbody.BR</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.RB.html">c4dynamics.states.lib.rigidbody.rigidbody.RB</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.inteqm.html">c4dynamics.states.lib.rigidbody.rigidbody.inteqm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.plot.html">c4dynamics.states.lib.rigidbody.rigidbody.plot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.animate.html">c4dynamics.states.lib.rigidbody.rigidbody.animate</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.pixelpoint.html">Pixelpoint</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.fsize.html">c4dynamics.states.lib.pixelpoint.pixelpoint.fsize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.class_id.html">c4dynamics.states.lib.pixelpoint.pixelpoint.class_id</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.box.html">c4dynamics.states.lib.pixelpoint.pixelpoint.box</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Sensors.html">Sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.seeker.html">Seeker</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.bias.html">c4dynamics.sensors.seeker.seeker.bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.scale_factor.html">c4dynamics.sensors.seeker.seeker.scale_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.measure.html">c4dynamics.sensors.seeker.seeker.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.radar.html">Radar</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Detectors.html">Detectors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/detectors.yolov3.html">YOLOv3</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.nms_th.html">c4dynamics.detectors.yolo3_opencv.yolov3.nms_th</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.confidence_th.html">c4dynamics.detectors.yolo3_opencv.yolov3.confidence_th</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.detect.html">c4dynamics.detectors.yolo3_opencv.yolov3.detect</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Filters.html">Filters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.kalman.html">Kalman filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.predict.html">c4dynamics.filters.kalman.kalman.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.update.html">c4dynamics.filters.kalman.kalman.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.store.html">c4dynamics.filters.kalman.kalman.store</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.ekf.html">Extended Kalman filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.predict.html">c4dynamics.filters.ekf.ekf.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.update.html">c4dynamics.filters.ekf.ekf.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.store.html">c4dynamics.filters.ekf.ekf.store</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.lpf.html">Lowpass filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/lpf/c4dynamics.filters.lowpass.lowpass.sample.html">c4dynamics.filters.lowpass.lowpass.sample</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/eqm.html">Kinematics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.derivs.eqm3.html">c4dynamics.eqm.derivs.eqm3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.derivs.eqm6.html">c4dynamics.eqm.derivs.eqm6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.integrate.int3.html">c4dynamics.eqm.integrate.int3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.integrate.int6.html">c4dynamics.eqm.integrate.int6</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/rotmat.html">Rotations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.rotx.html">c4dynamics.rotmat.rotmat.rotx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.roty.html">c4dynamics.rotmat.rotmat.roty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.rotz.html">c4dynamics.rotmat.rotmat.rotz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.dcm321.html">c4dynamics.rotmat.rotmat.dcm321</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.dcm321euler.html">c4dynamics.rotmat.rotmat.dcm321euler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.animate.animate.html">c4dynamics.rotmat.animate.animate</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Utils.html">Utils</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.tictoc.tic.html">c4dynamics.utils.tictoc.tic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.tictoc.toc.html">c4dynamics.utils.tictoc.toc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.cprint.cprint.html">c4dynamics.utils.cprint.cprint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.gen_gif.gif.html">c4dynamics.utils.gen_gif.gif</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.plottools.plotdefaults.html">c4dynamics.utils.plottools.plotdefaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.math.html">Math Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.const.html">Constants</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Datasets.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.image.html">c4dynamics.datasets.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.video.html">c4dynamics.datasets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.nn_model.html">c4dynamics.datasets.nn_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.d3_model.html">c4dynamics.datasets.d3_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.download_all.html">c4dynamics.datasets.download_all</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.clear_cache.html">c4dynamics.datasets.clear_cache</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/programs/pid_cascade/quadcopter_pid.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Quadcopter Cascade PID — Figure-8 Trajectory Tracking</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Goal">Goal</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Notebook-Overview">Notebook Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Quadcopter">2. Quadcopter</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Variables">State Variables</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamics">Dynamics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Config">Config</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Trajectory">3. Trajectory</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Physical-Meanings">Physical Meanings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#3-Phase-Flight">3-Phase Flight</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Config</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Cascade-PID-Control">4. Cascade PID Control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Why-Cascade-PID?">Why Cascade PID?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Law">Control Law</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Allocation">Control Allocation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Config</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Simulation">5. Simulation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Config</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Main-Loop">Main Loop</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Run-Simulation">Run Simulation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Results">8. Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#What-to-Expect">What to Expect</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Trajectories-and-Angles">Trajectories and Angles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Tracking-Metrics">Tracking Metrics</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Quadcopter-Cascade-PID-—-Figure-8-Trajectory-Tracking">
+<h1>Quadcopter Cascade PID — Figure-8 Trajectory Tracking<a class="headerlink" href="#Quadcopter-Cascade-PID-—-Figure-8-Trajectory-Tracking" title="Link to this heading">#</a></h1>
+<p>This notebook presents a three-loop cascade PID simulation of a quadcopter tracking a figure-8 (<span class="math notranslate nohighlight">\(\infty\)</span>) trajectory. It models the quadcopter dynamics, builds the control hierarchy, and runs the simulation using <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/">c4dynamics</a>.</p>
+<hr class="docutils" />
+<section id="Goal">
+<h2>Goal<a class="headerlink" href="#Goal" title="Link to this heading">#</a></h2>
+<p>Understand the following example and adjust it to simulate your drone parameters tracking figure-8.</p>
+<hr class="docutils" />
+</section>
+<section id="Notebook-Overview">
+<h2>Notebook Overview<a class="headerlink" href="#Notebook-Overview" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Quadcopter initialization</p></li>
+<li><p>Figure-8 dimensions setting</p></li>
+<li><p>Cascade PID overview and architecture</p></li>
+<li><p>Simulation</p></li>
+<li><p>Results</p></li>
+</ol>
+<ul class="simple">
+<li><p>At the end of every section, a code snippet is configuring the simulating objects.</p></li>
+<li><p>After running the example, change the quadcopter and the figure-8 configurations to support your own system.</p></li>
+</ul>
+<p><strong>To keep the notebook focused on tuning and results, the implementation details are collected in a supporting utility file, ``quad_pid_utils.py``.</strong></p>
+<hr class="docutils" />
+</section>
+<section id="1.-Setup">
+<h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="k">if</span> <span class="s1">&#39;google.colab&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+    <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>c4dynamics
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">quad_pid_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">run_fig8_pid</span><span class="p">,</span>
+                             <span class="n">plot_results</span><span class="p">,</span>
+                             <span class="n">compute_metrics</span>
+                             <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="2.-Quadcopter">
+<h2>2. Quadcopter<a class="headerlink" href="#2.-Quadcopter" title="Link to this heading">#</a></h2>
+<section id="State-Variables">
+<h3>State Variables<a class="headerlink" href="#State-Variables" title="Link to this heading">#</a></h3>
+<p>The quadcopter is a 12-state rigid body object with position, velocity, Euler angles, and body angular rates:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{X} = [x,\ y,\ z,\ v_x,\ v_y,\ v_z,\ \varphi,\ \theta,\ \psi,\ p,\ q,\ r]^T\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x, y, z\)</span>: position of the quadcopter in the inertial frame [m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(v_x, v_y, v_z\)</span>: linear velocity components in the inertial frame [m/s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\varphi\)</span> (phi): roll angle — rotation about the body X-axis [rad]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta\)</span> (theta): pitch angle — rotation about the body Y-axis [rad]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\psi\)</span> (psi): yaw angle — rotation about the body Z-axis [rad]</p></li>
+<li><p><span class="math notranslate nohighlight">\(p, q, r\)</span>: angular rate components about the body X, Y, Z axes respectively [rad/s]</p></li>
+</ul>
+<p>The four control inputs are:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{U} = [F,\ \tau_\varphi,\ \tau_\theta,\ \tau_\psi]^T\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(F\)</span>: total thrust force produced by all four rotors combined [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_\varphi\)</span>: roll torque — differential thrust between left and right motors [N·m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_\theta\)</span>: pitch torque — differential thrust between front and rear motors [N·m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_\psi\)</span>: yaw torque — differential drag torque from counter-rotating motor pairs [N·m]</p></li>
+</ul>
+<p>The quadcopter starts on the ground stationary level. A <code class="docutils literal notranslate"><span class="pre">quad</span></code> <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/states.lib.rigidbody.html">object</a> initializes the state, stores every sample during the simulation, and provides history retrieval for plotting and metrics via <code class="docutils literal notranslate"><span class="pre">quad.data()</span></code>.</p>
+</section>
+</section>
+<section id="Reference-Frame">
+<h2>Reference Frame<a class="headerlink" href="#Reference-Frame" title="Link to this heading">#</a></h2>
+<div class="line-block">
+<div class="line">In this work we adopt the FRD (front-right-down) for the body referece frame and ENU (east-north-up) for the inertial frame (see figure 1).</div>
+<div class="line">In this body frame convention, the thurst acts along the negative body z-axis (<span class="math notranslate nohighlight">\(-z_b\)</span>).</div>
+<div class="line">Positive rates about an axis is given by curling the right-hand fingers.</div>
+<div class="line">Propellers rotation:</div>
+<div class="line">Rotor 1: CCW (counter=clockwise)</div>
+<div class="line">Rotor 2: CCW</div>
+<div class="line">Rotor 3: CW</div>
+<div class="line">Rotor 4: CW</div>
+<div class="line">Yaw torque arises from the reaction torques of the rotors, with clockwise propeller causes a counter-clockwise moment on the quadcopter.</div>
+</div>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/quad_frame.png" /></p>
+<figcaption><p>Figure 1: Reference systems. Inertial system: ENU (east, north, up). Body frame: (forward, right, down). Positive rotation about an axis is given by curling the right-hand fingers. Propellers rotation: 1: CCW (counter=clockwise) , 2: CCW, 3: CW, 4: CW.</p>
+</figcaption></div><section id="Dynamics">
+<h3>Dynamics<a class="headerlink" href="#Dynamics" title="Link to this heading">#</a></h3>
+<p>The quadcopter is modeled by the full nonlinear Newton-Euler equations.</p>
+<p><strong>Translational dynamics</strong> (inertial frame):</p>
+<div class="math notranslate nohighlight">
+\[m \ddot{\mathbf{r}} = \mathbf{F}_{thrust} + \mathbf{F}_{drag} + \mathbf{F}_{gravity}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(m\)</span>: total mass of the quadcopter [kg]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\ddot{\mathbf{r}}\)</span>: linear acceleration vector in the inertial frame [m/s²]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{F}_{thrust}\)</span>: total rotor thrust force, projected from body frame to inertial frame [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{F}_{drag}\)</span>: aerodynamic drag force, proportional to velocity [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{F}_{gravity}\)</span>: gravitational force acting downward on the quadcopter [N]</p></li>
+</ul>
+<p>The thrust <span class="math notranslate nohighlight">\(F\)</span> acts along <span class="math notranslate nohighlight">\(-Z_b\)</span> and is projected to the inertial frame via the ZYX rotation matrix.</p>
+<p><strong>Rotational dynamics</strong> (Euler’s equations in body frame):</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{I}\dot{\boldsymbol{\omega}} + \boldsymbol{\omega} \times \mathbf{I}\boldsymbol{\omega} = \boldsymbol{\tau}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathbf{I}\)</span>: inertia tensor of the quadcopter body, diagonal with entries <span class="math notranslate nohighlight">\(I_{xx}, I_{yy}, I_{zz}\)</span> [kg·m²]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\dot{\boldsymbol{\omega}}\)</span>: angular acceleration vector in the body frame [rad/s²]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\omega} = [p, q, r]^T\)</span>: angular velocity vector in the body frame [rad/s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\omega} \times \mathbf{I}\boldsymbol{\omega}\)</span>: gyroscopic (Coriolis) term arising from the rotating body frame — couples the three rotation axes</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\tau} = [\tau_\varphi,\ \tau_\theta,\ \tau_\psi]^T\)</span>: torque vector produced by differential rotor thrust [N·m]. A gyroscopic coupling term from rotor angular momentum is also included.</p></li>
+</ul>
+<div class="line-block">
+<div class="line">The <code class="docutils literal notranslate"><span class="pre">dynamics(t,</span> <span class="pre">y,</span> <span class="pre">quad,</span> <span class="pre">rotor_speeds)</span></code> function computes the 12 state derivatives.</div>
+<div class="line">Integration is carried out by using scipy’s <code class="docutils literal notranslate"><span class="pre">solve_ivp</span></code>.</div>
+</div>
+<p>For the full theoretical background on rigid-body kinematics and the state representation used by c4dynamics, see the <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/concepts/kinematics.html">c4dynamics kinematics page</a>.</p>
+</section>
+<section id="Config">
+<h3>Config<a class="headerlink" href="#Config" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quadcopter</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;m&#39;</span>  <span class="p">:</span> <span class="mf">0.468</span><span class="p">,</span>      <span class="c1"># mass [kg]</span>
+    <span class="s1">&#39;g&#39;</span>  <span class="p">:</span> <span class="mf">9.81</span><span class="p">,</span>       <span class="c1"># gravity [m/s^2]</span>
+    <span class="s1">&#39;l&#39;</span>  <span class="p">:</span> <span class="mf">0.225</span><span class="p">,</span>      <span class="c1"># arm length — center to motor [m]</span>
+    <span class="s1">&#39;kT&#39;</span> <span class="p">:</span> <span class="mf">2.98e-6</span><span class="p">,</span>    <span class="c1"># thrust coefficient  [N/(rad/s)^2]</span>
+    <span class="s1">&#39;kQ&#39;</span> <span class="p">:</span> <span class="mf">0.0382</span><span class="p">,</span>     <span class="c1"># torque coefficient  [N.m/(rad/s)^2]</span>
+    <span class="s1">&#39;Ixx&#39;</span><span class="p">:</span> <span class="mf">4.856e-3</span><span class="p">,</span>   <span class="c1"># roll  inertia [kg.m^2]</span>
+    <span class="s1">&#39;Iyy&#39;</span><span class="p">:</span> <span class="mf">4.856e-3</span><span class="p">,</span>   <span class="c1"># pitch inertia [kg.m^2]</span>
+    <span class="s1">&#39;Izz&#39;</span><span class="p">:</span> <span class="mf">8.801e-3</span><span class="p">,</span>   <span class="c1"># yaw   inertia [kg.m^2]</span>
+    <span class="s1">&#39;Ax&#39;</span> <span class="p">:</span> <span class="mf">0.30</span><span class="p">,</span>       <span class="c1"># aero drag — x</span>
+    <span class="s1">&#39;Ay&#39;</span> <span class="p">:</span> <span class="mf">0.30</span><span class="p">,</span>       <span class="c1"># aero drag — y</span>
+    <span class="s1">&#39;Az&#39;</span> <span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>       <span class="c1"># aero drag — z</span>
+    <span class="s1">&#39;Ar&#39;</span> <span class="p">:</span> <span class="mf">0.20</span><span class="p">,</span>       <span class="c1"># rotational drag — angular rates</span>
+    <span class="s1">&#39;IR&#39;</span> <span class="p">:</span> <span class="mf">3.357e-5</span><span class="p">,</span>   <span class="c1"># rotor inertia [kg.m^2]</span>
+<span class="p">}</span>
+<br/><br/></pre></div>
+</div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="3.-Trajectory">
+<h2>3. Trajectory<a class="headerlink" href="#3.-Trajectory" title="Link to this heading">#</a></h2>
+<p>The reference to the flight is a <strong>Lissajous figure-8</strong> in the horizontal plane at a fixed altitude:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}x_{ref}(t) = A \cdot \sin(\omega \cdot \tau) \\
+y_{ref}(t) = B \cdot \sin(2\omega \cdot \tau) \\
+z_{ref}(t) = z_{ref}\end{split}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_{ref}, y_{ref}, z_{ref}\)</span>: desired position the quadcopter must track [m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(A\)</span>: trajectory amplitude in the X direction [m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(B\)</span>: trajectory amplitude in the Y direction [m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\omega\)</span>: angular frequency of the trajectory [rad/s]; period <span class="math notranslate nohighlight">\(= 2\pi/\omega\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau = t - t_{takeoff}\)</span>: time elapsed since the figure-8 phase started [s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(t_{takeoff}\)</span>: time at which the figure-8 phase begins [s]</p></li>
+</ul>
+<p>This is a standard benchmark for trajectory tracking controllers because it combines simultaneous motion in both horizontal axes, continuous direction reversals, and a non-trivial curvature profile — all of which stress-test the controller’s ability to reject coupling errors and follow a dynamic reference.</p>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/Fig_8_Marked.png" /></p>
+<figcaption><p>Figure 2: top view of a figure-8 trajectory with marks of the <span class="math notranslate nohighlight">\(A\)</span> and <span class="math notranslate nohighlight">\(B\)</span> dimensions.</p>
+</figcaption></div><section id="Physical-Meanings">
+<h3>Physical Meanings<a class="headerlink" href="#Physical-Meanings" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">A</span></code></p></td>
+<td><p>Half-width of the figure-8 in the X direction [m]. Larger values mean a wider trajectory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
+<td><p>Half-width in the Y direction [m]. Controls the “height” of each lobe of the figure-8.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">omega</span></code></p></td>
+<td><p>Angular frequency [rad/s]. Controls how fast the quadcopter flies the path. Period = <span class="math notranslate nohighlight">\(2\pi/\omega\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">z_ref</span></code></p></td>
+<td><p>Constant hover altitude [m]. The quadcopter holds this height throughout the maneuver.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="3-Phase-Flight">
+<h3>3-Phase Flight<a class="headerlink" href="#3-Phase-Flight" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Phase</p></th>
+<th class="head"><p>Duration</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Takeoff</strong></p></td>
+<td><p>0 — 8s</p></td>
+<td><p>Z rises from 0 to <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> on a smooth S-curve</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Figure-8</strong></p></td>
+<td><p>8s — (end-8s)</p></td>
+<td><p>X/Y track the Lissajous at constant altitude</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Landing</strong></p></td>
+<td><p>last 8s</p></td>
+<td><p>X/Y return to origin, Z descends to 0</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p>In the utility file <code class="docutils literal notranslate"><span class="pre">quad_pid_utils.py</span></code>, the functions <code class="docutils literal notranslate"><span class="pre">position_reference(t,</span> <span class="pre">...)</span></code> and <code class="docutils literal notranslate"><span class="pre">velocity_reference(t,</span> <span class="pre">...)</span></code> return the instantaneous reference position and velocity at any time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+</ul>
+</section>
+<section id="id1">
+<h3>Config<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;A&#39;</span>    <span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>    <span class="c1"># figure-8 X amplitude [m]</span>
+    <span class="s1">&#39;B&#39;</span>    <span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>    <span class="c1"># figure-8 Y amplitude [m]</span>
+    <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>    <span class="c1"># angular frequency [rad/s]  (period ~ 62.8 s)</span>
+    <span class="s1">&#39;z_ref&#39;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>    <span class="c1"># hover altitude [m]</span>
+    <span class="s1">&#39;t_end&#39;</span><span class="p">:</span> <span class="mf">90.0</span><span class="p">,</span>   <span class="c1"># total simulation time [s]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="4.-Cascade-PID-Control">
+<h2>4. Cascade PID Control<a class="headerlink" href="#4.-Cascade-PID-Control" title="Link to this heading">#</a></h2>
+<section id="Why-Cascade-PID?">
+<h3>Why Cascade PID?<a class="headerlink" href="#Why-Cascade-PID?" title="Link to this heading">#</a></h3>
+<p>A quadcopter is <strong>underactuated</strong> — 6 degrees of freedom, only 4 control inputs. To move horizontally the quadcopter must tilt, which means position and attitude are tightly coupled. A single PID loop cannot handle this. The cascade structure separates the problem by bandwidth:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Loop</p></th>
+<th class="head"><p>Rate</p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Outer</strong> — Position</p></td>
+<td><p>50 Hz</p></td>
+<td><p>Position error <span class="math notranslate nohighlight">\((x, y, z)\)</span></p></td>
+<td><p>Desired angles <span class="math notranslate nohighlight">\(\varphi_d, \theta_d\)</span> + thrust <span class="math notranslate nohighlight">\(F\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Middle</strong> — Attitude</p></td>
+<td><p>100 Hz</p></td>
+<td><p>Angle error <span class="math notranslate nohighlight">\((\varphi, \theta, \psi)\)</span></p></td>
+<td><p>Desired body rates <span class="math notranslate nohighlight">\((p_d, q_d, r_d)\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Inner</strong> — Rate</p></td>
+<td><p>200 Hz</p></td>
+<td><p>Rate error <span class="math notranslate nohighlight">\((p, q, r)\)</span></p></td>
+<td><p>Torques <span class="math notranslate nohighlight">\((\tau_\varphi, \tau_\theta, \tau_\psi)\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Tuning order:</strong> always tune inner first, then middle, then outer. Each loop must be stable before the next loop is closed around it.</p>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/Cascade_PID.png" /></p>
+<figcaption><p>Figure 3: cascade PID with 3 loops - to control position (outer), attitude (middle), and rates (inner).</p>
+</figcaption></div></section>
+<section id="Control-Law">
+<h3>Control Law<a class="headerlink" href="#Control-Law" title="Link to this heading">#</a></h3>
+<p>Each controller implements:</p>
+<div class="math notranslate nohighlight">
+\[u = K_p \cdot e + K_i \cdot \int e\, dt - K_d \cdot \dot{m}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(u\)</span>: control output — setpoint to the next inner loop, or actuator command for the innermost loop</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_p, K_i, K_d\)</span>: proportional, integral, and derivative gains</p></li>
+<li><p><span class="math notranslate nohighlight">\(e\)</span>: error — difference between the desired setpoint and the current measured value</p></li>
+<li><p><span class="math notranslate nohighlight">\(\int e\, dt\)</span>: accumulated error over time</p></li>
+<li><p><span class="math notranslate nohighlight">\(\dot{m}\)</span>: time derivative of the measurement (not the error), to avoid derivative kick on setpoint changes</p></li>
+</ul>
+<p>The derivative acts on the <strong>measurement</strong> <span class="math notranslate nohighlight">\(\dot{m}\)</span>, not on the error — this eliminates derivative kick when the setpoint changes. All integrators include anti-windup clamping. The outer loop adds a <strong>velocity feedforward</strong> term to reduce phase lag on curved trajectories.</p>
+</section>
+<section id="Control-Allocation">
+<h3>Control Allocation<a class="headerlink" href="#Control-Allocation" title="Link to this heading">#</a></h3>
+<p>The motor layout is (x) configuration.</p>
+<p>The four control inputs <span class="math notranslate nohighlight">\([F, \tau_\varphi, \tau_\theta, \tau_\psi]\)</span> are mapped to individual rotor speeds by inverting the thrust-torque mixing matrix:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix} \Omega_1^2 \\ \Omega_2^2 \\ \Omega_3^2 \\ \Omega_4^2 \end{bmatrix} = \mathbf{\Gamma}^{-1} \begin{bmatrix} F \\ \tau_\varphi \\ \tau_\theta \\ \tau_\psi \end{bmatrix}\end{split}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\Omega_1, \Omega_2, \Omega_3, \Omega_4\)</span>: individual rotor angular speeds [rad/s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{\Gamma}^{-1}\)</span>: inverse of the thrust-torque mixing matrix — maps desired thrust and torques to individual rotor speeds</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span>: total desired thrust [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_\varphi, \tau_\theta, \tau_\psi\)</span>: desired roll, pitch, and yaw torques [N·m]</p></li>
+</ul>
+<p>The normalized (geometric factors are handled separately) mixer matrix <span class="math notranslate nohighlight">\(\mathbf{\Gamma}^{-1}\)</span> for an x configuration with prepellents 1, 2 CCW and 3, 4 CW is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{bmatrix}
+1 &amp; -1 &amp;  \ \ \ 1 &amp; \ \ \  1 \\
+1 &amp; \ \ \ 1 &amp; -1 &amp;  \ \ \ 1 \\
+1 &amp; \ \ \ 1 &amp; \ \ \ 1 &amp; -1 \\
+1 &amp; -1 &amp; -1 &amp; -1
+\end{bmatrix}\end{split}\]</div>
+<div class="line-block">
+<div class="line">This matrix is the inverse of the force–torque mapping derived from rotor positions and spin directions.</div>
+<div class="line">Each row corresponds to one motor, and each column represents the contribution of thrust, roll, pitch, and yaw.</div>
+</div>
+<p>The method <code class="docutils literal notranslate"><span class="pre">allocate</span></code> of <code class="docutils literal notranslate"><span class="pre">ControlAllocator</span></code> clamps <span class="math notranslate nohighlight">\(\Omega_i^2 \geq 0\)</span> (rotors cannot pull) and <span class="math notranslate nohighlight">\(\Omega_i \leq \Omega_{max}\)</span> before taking the square root.</p>
+</section>
+<section id="id2">
+<h3>Config<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">controller</span> <span class="o">=</span> <span class="p">{</span>
+
+    <span class="c1"># Inner loop — angular rate (200 Hz)</span>
+    <span class="s1">&#39;Kp_p&#39;</span><span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>  <span class="s1">&#39;Ki_p&#39;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>  <span class="s1">&#39;Kd_p&#39;</span><span class="p">:</span> <span class="mf">0.010</span><span class="p">,</span>
+    <span class="s1">&#39;Kp_q&#39;</span><span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>  <span class="s1">&#39;Ki_q&#39;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>  <span class="s1">&#39;Kd_q&#39;</span><span class="p">:</span> <span class="mf">0.010</span><span class="p">,</span>
+    <span class="s1">&#39;Kp_r&#39;</span><span class="p">:</span> <span class="mf">0.60</span><span class="p">,</span>  <span class="s1">&#39;Ki_r&#39;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>  <span class="s1">&#39;Kd_r&#39;</span><span class="p">:</span> <span class="mf">0.008</span><span class="p">,</span>
+
+    <span class="c1"># Middle loop — attitude (100 Hz)</span>
+    <span class="s1">&#39;Kp_phi&#39;</span>  <span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>  <span class="s1">&#39;Ki_phi&#39;</span>  <span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>  <span class="s1">&#39;Kd_phi&#39;</span>  <span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>  <span class="s1">&#39;AW_phi&#39;</span>  <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s1">&#39;Kp_theta&#39;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>  <span class="s1">&#39;Ki_theta&#39;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>  <span class="s1">&#39;Kd_theta&#39;</span><span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>  <span class="s1">&#39;AW_theta&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s1">&#39;Kp_psi&#39;</span>  <span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>  <span class="s1">&#39;Ki_psi&#39;</span>  <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>     <span class="s1">&#39;Kd_psi&#39;</span>  <span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>  <span class="s1">&#39;AW_psi&#39;</span>  <span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+
+    <span class="c1"># Outer loop — position (50 Hz)</span>
+    <span class="s1">&#39;Kp_x&#39;</span><span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>  <span class="s1">&#39;Ki_x&#39;</span><span class="p">:</span> <span class="mf">0.00</span><span class="p">,</span>  <span class="s1">&#39;Kd_x&#39;</span><span class="p">:</span> <span class="mf">0.50</span><span class="p">,</span>  <span class="s1">&#39;AW_x&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s1">&#39;Kp_y&#39;</span><span class="p">:</span> <span class="mf">1.00</span><span class="p">,</span>  <span class="s1">&#39;Ki_y&#39;</span><span class="p">:</span> <span class="mf">0.00</span><span class="p">,</span>  <span class="s1">&#39;Kd_y&#39;</span><span class="p">:</span> <span class="mf">0.70</span><span class="p">,</span>  <span class="s1">&#39;AW_y&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="s1">&#39;Kp_z&#39;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>  <span class="s1">&#39;Ki_z&#39;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>  <span class="s1">&#39;Kd_z&#39;</span><span class="p">:</span> <span class="mf">1.50</span><span class="p">,</span>  <span class="s1">&#39;AW_z&#39;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+
+    <span class="c1"># Velocity feedforward</span>
+    <span class="s1">&#39;Kff_x&#39;</span><span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>  <span class="s1">&#39;Kff_y&#39;</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">,</span>
+
+    <span class="c1"># Limits</span>
+    <span class="s1">&#39;N_rate&#39;</span>        <span class="p">:</span> <span class="mi">50</span><span class="p">,</span>       <span class="c1"># Filter coefficient for derivative term in rate controller</span>
+    <span class="s1">&#39;omega_max&#39;</span>     <span class="p">:</span> <span class="mf">1000.0</span><span class="p">,</span>   <span class="c1"># max rotor speed [rad/s]</span>
+    <span class="s1">&#39;T_max_factor&#39;</span>  <span class="p">:</span> <span class="mi">4</span><span class="p">,</span>        <span class="c1"># max thrust factor: T_max = T_max_factor * K_thrust * omega_max**2 [N]</span>
+    <span class="s1">&#39;T_min&#39;</span>         <span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>      <span class="c1"># min thrust [N]</span>
+    <span class="s1">&#39;att_cmd_limit&#39;</span> <span class="p">:</span> <span class="mf">0.314</span><span class="p">,</span>    <span class="c1"># Max attitude command [rad] = 18deg</span>
+    <span class="s1">&#39;yaw_rate_limit&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>      <span class="c1"># Max yaw rate command [rad/s]</span>
+<span class="p">}</span>
+<br/><br/></pre></div>
+</div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="5.-Simulation">
+<h2>5. Simulation<a class="headerlink" href="#5.-Simulation" title="Link to this heading">#</a></h2>
+<p>The simulation loop advances the quadcopter state from <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">tf</span></code>.</p>
+<p>At each timestep the three cascade loops fire at their respective rates:</p>
+<ul class="simple">
+<li><p>the outer position loop every 4 steps (50 Hz)</p></li>
+<li><p>the middle attitude loop every 2 steps (100 Hz)</p></li>
+<li><p>the inner rate loop every step (200 Hz).</p></li>
+</ul>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">quad.store(t)</span></code> logs the full state vector.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">quad.storeparams(...)</span></code> logs the control inputs.</div>
+<div class="line">After the loop, all histories are available via <code class="docutils literal notranslate"><span class="pre">quad.data()</span></code>.</div>
+</div>
+<section id="id3">
+<h3>Config<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mf">5e-3</span><span class="p">,</span>    <span class="c1"># master timestep [s] = inner loop (200 Hz)</span>
+    <span class="s1">&#39;tf&#39;</span><span class="p">:</span> <span class="mf">90.0</span><span class="p">,</span>    <span class="c1"># simulation end time [s]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Main-Loop">
+<h3>Main Loop<a class="headerlink" href="#Main-Loop" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plug all the config files for the simulation entry:</span>
+<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;quad&#39;</span><span class="p">:</span> <span class="n">quadcopter</span><span class="p">,</span>
+    <span class="s1">&#39;controller&#39;</span><span class="p">:</span> <span class="n">controller</span><span class="p">,</span>
+    <span class="s1">&#39;trajectory&#39;</span><span class="p">:</span> <span class="n">trajectory</span><span class="p">,</span>
+    <span class="s1">&#39;sim&#39;</span><span class="p">:</span> <span class="n">simulation</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Run-Simulation">
+<h3>Run Simulation<a class="headerlink" href="#Run-Simulation" title="Link to this heading">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quad</span> <span class="o">=</span> <span class="n">run_fig8_pid</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Simulation start  |  tf = 90.0 s  |  dt = 0.005 s
+Simulation run  |  t = 0.0 s
+Simulation run  |  t = 10.0 s
+Simulation run  |  t = 20.0 s
+Simulation run  |  t = 30.0 s
+Simulation run  |  t = 40.0 s
+Simulation run  |  t = 50.0 s
+Simulation run  |  t = 60.0 s
+Simulation run  |  t = 70.0 s
+Simulation run  |  t = 80.0 s
+Simulation complete.
+</pre></div></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="8.-Results">
+<h2>8. Results<a class="headerlink" href="#8.-Results" title="Link to this heading">#</a></h2>
+<section id="What-to-Expect">
+<h3>What to Expect<a class="headerlink" href="#What-to-Expect" title="Link to this heading">#</a></h3>
+<p>A well-tuned cascade PID on this trajectory should show:</p>
+<ul class="simple">
+<li><p><strong>Position</strong> — X and Y closely follow the sinusoidal references. Small amplitude and phase lag are normal.</p></li>
+<li><p><strong>Altitude</strong> — Z rises sharply during takeoff, holds <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> with very small deviation, and descends smoothly.</p></li>
+<li><p><strong>Euler angles</strong> — roll and pitch stay within ±15°. Yaw remains near zero.</p></li>
+<li><p><strong>3D trajectory</strong> — a clean takeoff lobe, the figure-8 loops, and a straight descent to origin.</p></li>
+</ul>
+<p>All plots are generated from <code class="docutils literal notranslate"><span class="pre">quad.data()</span></code> — the stored histories in the <code class="docutils literal notranslate"><span class="pre">rigidbody</span></code> object.</p>
+</section>
+<section id="Trajectories-and-Angles">
+<h3>Trajectories and Angles<a class="headerlink" href="#Trajectories-and-Angles" title="Link to this heading">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_results</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;trajectory&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_pid_cascade_quadcopter_pid_33_0.png" src="../../_images/programs_pid_cascade_quadcopter_pid_33_0.png" />
+</div>
+</div>
+</section>
+<section id="Tracking-Metrics">
+<h3>Tracking Metrics<a class="headerlink" href="#Tracking-Metrics" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code> computes RMSE for X, Y, Z tracking over the **figure-8 phase only. Normalized RMSE expresses tracking error as a percentage of trajectory amplitude.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Normalized RMSE</p></th>
+<th class="head"><p>Interpretation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>&lt; 5%</p></td>
+<td><p>Excellent</p></td>
+</tr>
+<tr class="row-odd"><td><p>5 – 15%</p></td>
+<td><p>Acceptable</p></td>
+</tr>
+<tr class="row-even"><td><p>&gt; 15%</p></td>
+<td><p>Retune from inner loop, or reduce <code class="docutils literal notranslate"><span class="pre">omega</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">45</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   TRACKING PERFORMANCE METRICS&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">45</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE x : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_x&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_x&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% of X amplitude)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE y : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_y&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_y&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% of Y amplitude)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE z : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_z&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_z&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">% of altitude)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  Max altitude deviation : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;max_z_dev&quot;</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> cm&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">45</span><span class="p">)</span>
+<br/><br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+=============================================
+   TRACKING PERFORMANCE METRICS
+=============================================
+  RMSE x : 0.1992 m  (5.0% of X amplitude)
+  RMSE y : 0.3831 m  (19.2% of Y amplitude)
+  RMSE z : 0.002137 m  (0.142% of altitude)
+  Max altitude deviation : 2.53 cm
+=============================================
+</pre></div></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Goal">Goal</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Notebook-Overview">Notebook Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Quadcopter">2. Quadcopter</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Variables">State Variables</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamics">Dynamics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Config">Config</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Trajectory">3. Trajectory</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Physical-Meanings">Physical Meanings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#3-Phase-Flight">3-Phase Flight</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Config</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Cascade-PID-Control">4. Cascade PID Control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Why-Cascade-PID?">Why Cascade PID?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Law">Control Law</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Allocation">Control Allocation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Config</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Simulation">5. Simulation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Config</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Main-Loop">Main Loop</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Run-Simulation">Run Simulation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Results">8. Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#What-to-Expect">What to Expect</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Trajectories-and-Angles">Trajectories and Angles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Tracking-Metrics">Tracking Metrics</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By c4dynamics
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, c4dynamics.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="last-updated">
+  Last updated on Apr 30, 2026.
+  <br/>
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
