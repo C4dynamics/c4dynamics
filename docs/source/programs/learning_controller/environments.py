@@ -25,11 +25,33 @@ class helicopter(state):
 
 
     def __init__(self, theta=0.0, psi=0.0, dtheta=0.0, dpsi=0.0):
+        """Initialize the helicopter state.
+
+        Args:
+            theta: Initial pitch angle, in radians.
+            psi: Initial yaw angle, in radians.
+            dtheta: Initial pitch rate, in radians per second.
+            dpsi: Initial yaw rate, in radians per second.
+
+        Returns:
+            None.
+        """
 
         super().__init__(theta=theta, psi=psi, dtheta=dtheta, dpsi=dpsi)
 
 
     def F(self, X = None):
+        """Compute the nonlinear drift dynamics.
+
+        Args:
+            X: Optional state vector ordered as
+                ``[theta, psi, dtheta, dpsi]``. If omitted, the current
+                object state is used.
+
+        Returns:
+            A two-element array containing the uncontrolled pitch and yaw
+            angular accelerations.
+        """
 
         theta, psi, dtheta, dpsi = self.X if X is None else X
 
@@ -50,6 +72,17 @@ class helicopter(state):
 
 
     def G(self, X = None):
+        """Compute the control-effectiveness matrix.
+
+        Args:
+            X: Optional state vector ordered as
+                ``[theta, psi, dtheta, dpsi]``. If omitted, the current
+                object state is used.
+
+        Returns:
+            A 2-by-2 matrix that maps the control input vector to pitch and
+            yaw angular accelerations.
+        """
 
         theta, psi, dtheta, dpsi = self.X if X is None else X
 
@@ -63,6 +96,17 @@ class helicopter(state):
 
 
     def dynamics(self, t: float, y: np.ndarray, u: np.ndarray):
+        """Evaluate the helicopter state derivative for integration.
+
+        Args:
+            t: Current simulation time, in seconds.
+            y: State vector ordered as ``[theta, psi, dtheta, dpsi]``.
+            u: Two-element control input vector.
+
+        Returns:
+            The time derivative of ``y`` as ``[dtheta, dpsi, ddtheta, ddpsi]``.
+        """
+
         x1, x2 = self.split(y)
 
         # F, G  = helicopter_dynamics_matrices(x1, x2)
@@ -72,6 +116,15 @@ class helicopter(state):
 
 
     def reference(self, t: float):
+        """Evaluate the desired pitch and yaw reference trajectory.
+
+        Args:
+            t: Current simulation time, in seconds.
+
+        Returns:
+            A tuple ``(xd, xd_d, xd_dd)`` containing desired angles, desired
+            angular rates, and desired angular accelerations.
+        """
 
         xd      = np.array([ 10 * np.sin(t),
                             15 * np.cos(t)]) * d2r # degrees to readians
@@ -86,6 +139,16 @@ class helicopter(state):
     
     
     def split(self, X=None):
+        """Split a full state vector into position and velocity components.
+
+        Args:
+            X: Optional full state vector. If omitted, the current object
+                state is used.
+
+        Returns:
+            A tuple ``(x1, x2)`` where ``x1`` contains angle states and ``x2``
+            contains angular-rate states.
+        """
 
         x = self.X if X is None else X
         n = len(x) // 2
