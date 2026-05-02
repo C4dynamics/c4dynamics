@@ -64,9 +64,11 @@
     <link rel="icon" href="../../_static/c4dlogo.svg"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API Reference" href="../../api/introduction.html" />
+    <link rel="prev" title="Vehicle Steering - Model Predictive Control" href="../mpc_steering.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Apr 30, 2026"/>
+    <meta name="docbuild:last-update" content="May 02, 2026"/>
   </head>
   
   
@@ -126,8 +128,6 @@
     <div class="bd-container__inner bd-page-width">
       
       
-      
-        
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -209,7 +209,7 @@
 
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
@@ -217,6 +217,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../car_tracker.html">Car Tracker – Objects Detection and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -494,6 +495,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Author">Author</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Goal">Goal</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Notebook-Overview">Notebook Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
@@ -512,8 +514,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Config</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Cascade-PID-Control">4. Cascade PID Control</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Why-Cascade-PID?">Why Cascade PID?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Cascade-PID-Control">4. Cascade <em>PID</em> Control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Why-Cascade-PID?">Why Cascade <em>PID</em>?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Law">Control Law</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Allocation">Control Allocation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Config</a></li>
@@ -542,13 +544,23 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Quadcopter-Cascade-PID-—-Figure-8-Trajectory-Tracking">
-<h1>Quadcopter Cascade PID — Figure-8 Trajectory Tracking<a class="headerlink" href="#Quadcopter-Cascade-PID-—-Figure-8-Trajectory-Tracking" title="Link to this heading">#</a></h1>
-<p>This notebook presents a three-loop cascade PID simulation of a quadcopter tracking a figure-8 (<span class="math notranslate nohighlight">\(\infty\)</span>) trajectory. It models the quadcopter dynamics, builds the control hierarchy, and runs the simulation using <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/">c4dynamics</a>.</p>
+  <ul class="simple">
+<li><p><a class="reference external" href="https://colab.research.google.com/github/c4dynamics/c4dynamics/blob/main/docs/source/programs/pid_cascade/quadcopter_pid.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a> ← Click to open in Google Colab</p></li>
+<li><p>To download this notebook, click the download icon in the toolbar above and select the .ipynb format.</p></li>
+<li><p>For any questions or comments, please open an issue on the <a class="reference external" href="https://github.com/c4dynamics/c4dynamics/issues">c4dynamics issues page</a>.</p></li>
+</ul>
+<section id="Quadcopter-Cascade-PID-—-Figure-8-Trajectory-Tracking">
+<h1>Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking<a class="headerlink" href="#Quadcopter-Cascade-PID-—-Figure-8-Trajectory-Tracking" title="Link to this heading">#</a></h1>
+<p>This notebook presents a three-loop cascade <em>PID</em> simulation of a quadcopter tracking a <em>figure-8</em> (<span class="math notranslate nohighlight">\(\infty\)</span>) trajectory. It models the quadcopter dynamics, builds the control hierarchy, and runs the simulation using <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/">c4dynamics</a>.</p>
 <hr class="docutils" />
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/fig8_quad.png" /></p>
+</div><section id="Author">
+<h2>Author<a class="headerlink" href="#Author" title="Link to this heading">#</a></h2>
+<p>This notebook was developed by Usama Khan (<a class="reference external" href="https://github.com/usama-k-mech">&#64;usama-k-mech</a>) as part of the c4dynamics project, under the guidance of the <em>c4dynamics maintainers</em>.</p>
+</section>
 <section id="Goal">
 <h2>Goal<a class="headerlink" href="#Goal" title="Link to this heading">#</a></h2>
-<p>Understand the following example and adjust it to simulate your drone parameters tracking figure-8.</p>
+<p>Understand the following example and adjust it to simulate your drone parameters tracking <em>figure-8</em>.</p>
 <hr class="docutils" />
 </section>
 <section id="Notebook-Overview">
@@ -556,13 +568,13 @@ document.write(`
 <ol class="arabic simple">
 <li><p>Quadcopter initialization</p></li>
 <li><p>Figure-8 dimensions setting</p></li>
-<li><p>Cascade PID overview and architecture</p></li>
+<li><p>Cascade <em>PID</em> overview and architecture</p></li>
 <li><p>Simulation</p></li>
 <li><p>Results</p></li>
 </ol>
 <ul class="simple">
 <li><p>At the end of every section, a code snippet is configuring the simulating objects.</p></li>
-<li><p>After running the example, change the quadcopter and the figure-8 configurations to support your own system.</p></li>
+<li><p>After running the example, change the quadcopter and the <em>figure-8</em> configurations to support your own system.</p></li>
 </ul>
 <p><strong>To keep the notebook focused on tuning and results, the implementation details are collected in a supporting utility file, ``quad_pid_utils.py``.</strong></p>
 <hr class="docutils" />
@@ -576,6 +588,9 @@ document.write(`
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="k">if</span> <span class="s1">&#39;google.colab&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
     <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>c4dynamics
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib</span><span class="w"> </span><span class="kn">import</span> <span class="n">request</span>
+<span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/dof6_modules.py&#39;</span><span class="p">,</span> <span class="s1">&#39;dof6_modules.py&#39;</span><span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">quad_pid_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">run_fig8_pid</span><span class="p">,</span>
                              <span class="n">plot_results</span><span class="p">,</span>
@@ -618,14 +633,14 @@ document.write(`
 <section id="Reference-Frame">
 <h2>Reference Frame<a class="headerlink" href="#Reference-Frame" title="Link to this heading">#</a></h2>
 <div class="line-block">
-<div class="line">In this work we adopt the FRD (front-right-down) for the body referece frame and ENU (east-north-up) for the inertial frame (see figure 1).</div>
+<div class="line">In this work we adopt the <em>FRD</em> (front-right-down) for the body referece frame and <em>ENU</em> (east-north-up) for the inertial frame (see figure 1).</div>
 <div class="line">In this body frame convention, the thurst acts along the negative body z-axis (<span class="math notranslate nohighlight">\(-z_b\)</span>).</div>
 <div class="line">Positive rates about an axis is given by curling the right-hand fingers.</div>
 <div class="line">Propellers rotation:</div>
-<div class="line">Rotor 1: CCW (counter=clockwise)</div>
-<div class="line">Rotor 2: CCW</div>
-<div class="line">Rotor 3: CW</div>
-<div class="line">Rotor 4: CW</div>
+<div class="line">Rotor 1: <em>CCW</em> (counter-clockwise)</div>
+<div class="line">Rotor 2: <em>CCW</em></div>
+<div class="line">Rotor 3: <em>CW</em></div>
+<div class="line">Rotor 4: <em>CW</em></div>
 <div class="line">Yaw torque arises from the reaction torques of the rotors, with clockwise propeller causes a counter-clockwise moment on the quadcopter.</div>
 </div>
 <div style="text-align: center;"><p><img alt="alt text" src="../../_images/quad_frame.png" /></p>
@@ -693,17 +708,19 @@ document.write(`
 <h2>3. Trajectory<a class="headerlink" href="#3.-Trajectory" title="Link to this heading">#</a></h2>
 <p>The reference to the flight is a <strong>Lissajous figure-8</strong> in the horizontal plane at a fixed altitude:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}x_{ref}(t) = A \cdot \sin(\omega \cdot \tau) \\
-y_{ref}(t) = B \cdot \sin(2\omega \cdot \tau) \\
-z_{ref}(t) = z_{ref}\end{split}\]</div>
+\[\begin{split}x_{ref}(t) = A \cdot \sin(\omega \cdot \tau) \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}y_{ref}(t) = B \cdot \sin(2\omega \cdot \tau) \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[z_{ref}(t) = z_{ref}\]</div>
 <p>Where:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(x_{ref}, y_{ref}, z_{ref}\)</span>: desired position the quadcopter must track [m]</p></li>
 <li><p><span class="math notranslate nohighlight">\(A\)</span>: trajectory amplitude in the X direction [m]</p></li>
 <li><p><span class="math notranslate nohighlight">\(B\)</span>: trajectory amplitude in the Y direction [m]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\omega\)</span>: angular frequency of the trajectory [rad/s]; period <span class="math notranslate nohighlight">\(= 2\pi/\omega\)</span></p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau = t - t_{takeoff}\)</span>: time elapsed since the figure-8 phase started [s]</p></li>
-<li><p><span class="math notranslate nohighlight">\(t_{takeoff}\)</span>: time at which the figure-8 phase begins [s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau = t - t_{takeoff}\)</span>: time elapsed since the <em>figure-8</em> phase started [s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(t_{takeoff}\)</span>: time at which the <em>figure-8</em> phase begins [s]</p></li>
 </ul>
 <p>This is a standard benchmark for trajectory tracking controllers because it combines simultaneous motion in both horizontal axes, continuous direction reversals, and a non-trivial curvature profile — all of which stress-test the controller’s ability to reject coupling errors and follow a dynamic reference.</p>
 <div style="text-align: center;"><p><img alt="alt text" src="../../_images/Fig_8_Marked.png" /></p>
@@ -718,10 +735,10 @@ z_{ref}(t) = z_{ref}\end{split}\]</div>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">A</span></code></p></td>
-<td><p>Half-width of the figure-8 in the X direction [m]. Larger values mean a wider trajectory.</p></td>
+<td><p>Half-width of the <em>figure-8</em> in the X direction [m]. Larger values mean a wider trajectory.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
-<td><p>Half-width in the Y direction [m]. Controls the “height” of each lobe of the figure-8.</p></td>
+<td><p>Half-width in the Y direction [m]. Controls the “height” of each lobe of the <em>figure-8</em>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">omega</span></code></p></td>
 <td><p>Angular frequency [rad/s]. Controls how fast the quadcopter flies the path. Period = <span class="math notranslate nohighlight">\(2\pi/\omega\)</span>.</p></td>
@@ -782,10 +799,10 @@ z_{ref}(t) = z_{ref}\end{split}\]</div>
 </section>
 <hr class="docutils" />
 <section id="4.-Cascade-PID-Control">
-<h2>4. Cascade PID Control<a class="headerlink" href="#4.-Cascade-PID-Control" title="Link to this heading">#</a></h2>
+<h2>4. Cascade <em>PID</em> Control<a class="headerlink" href="#4.-Cascade-PID-Control" title="Link to this heading">#</a></h2>
 <section id="Why-Cascade-PID?">
-<h3>Why Cascade PID?<a class="headerlink" href="#Why-Cascade-PID?" title="Link to this heading">#</a></h3>
-<p>A quadcopter is <strong>underactuated</strong> — 6 degrees of freedom, only 4 control inputs. To move horizontally the quadcopter must tilt, which means position and attitude are tightly coupled. A single PID loop cannot handle this. The cascade structure separates the problem by bandwidth:</p>
+<h3>Why Cascade <em>PID</em>?<a class="headerlink" href="#Why-Cascade-PID?" title="Link to this heading">#</a></h3>
+<p>A quadcopter is <strong>underactuated</strong> — 6 degrees of freedom, only 4 control inputs. To move horizontally the quadcopter must tilt, which means position and attitude are tightly coupled. A single <em>PID</em> loop cannot handle this. The cascade structure separates the problem by bandwidth:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Loop</p></th>
@@ -845,7 +862,7 @@ z_{ref}(t) = z_{ref}\end{split}\]</div>
 <li><p><span class="math notranslate nohighlight">\(F\)</span>: total desired thrust [N]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\tau_\varphi, \tau_\theta, \tau_\psi\)</span>: desired roll, pitch, and yaw torques [N·m]</p></li>
 </ul>
-<p>The normalized (geometric factors are handled separately) mixer matrix <span class="math notranslate nohighlight">\(\mathbf{\Gamma}^{-1}\)</span> for an x configuration with prepellents 1, 2 CCW and 3, 4 CW is given by:</p>
+<p>The normalized (geometric factors are handled separately) mixer matrix <span class="math notranslate nohighlight">\(\mathbf{\Gamma}^{-1}\)</span> for an x configuration with prepellents 1, 2 <em>CCW</em> and 3, 4 <em>CW</em> is given by:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{bmatrix}
 1 &amp; -1 &amp;  \ \ \ 1 &amp; \ \ \  1 \\
@@ -904,9 +921,9 @@ z_{ref}(t) = z_{ref}\end{split}\]</div>
 <p>The simulation loop advances the quadcopter state from <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">tf</span></code>.</p>
 <p>At each timestep the three cascade loops fire at their respective rates:</p>
 <ul class="simple">
-<li><p>the outer position loop every 4 steps (50 Hz)</p></li>
-<li><p>the middle attitude loop every 2 steps (100 Hz)</p></li>
-<li><p>the inner rate loop every step (200 Hz).</p></li>
+<li><p>the outer position loop every <span class="math notranslate nohighlight">\(4\)</span> steps (<span class="math notranslate nohighlight">\(50 Hz\)</span>)</p></li>
+<li><p>the middle attitude loop every <span class="math notranslate nohighlight">\(2\)</span> steps (<span class="math notranslate nohighlight">\(100 Hz\)</span>)</p></li>
+<li><p>the inner rate loop every step (<span class="math notranslate nohighlight">\(200 Hz\)</span>).</p></li>
 </ul>
 <div class="line-block">
 <div class="line"><code class="docutils literal notranslate"><span class="pre">quad.store(t)</span></code> logs the full state vector.</div>
@@ -960,15 +977,6 @@ z_{ref}(t) = z_{ref}\end{split}\]</div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Simulation start  |  tf = 90.0 s  |  dt = 0.005 s
-Simulation run  |  t = 0.0 s
-Simulation run  |  t = 10.0 s
-Simulation run  |  t = 20.0 s
-Simulation run  |  t = 30.0 s
-Simulation run  |  t = 40.0 s
-Simulation run  |  t = 50.0 s
-Simulation run  |  t = 60.0 s
-Simulation run  |  t = 70.0 s
-Simulation run  |  t = 80.0 s
 Simulation complete.
 </pre></div></div>
 </div>
@@ -979,12 +987,12 @@ Simulation complete.
 <h2>8. Results<a class="headerlink" href="#8.-Results" title="Link to this heading">#</a></h2>
 <section id="What-to-Expect">
 <h3>What to Expect<a class="headerlink" href="#What-to-Expect" title="Link to this heading">#</a></h3>
-<p>A well-tuned cascade PID on this trajectory should show:</p>
+<p>A well-tuned cascade <em>PID</em> on this trajectory should show:</p>
 <ul class="simple">
 <li><p><strong>Position</strong> — X and Y closely follow the sinusoidal references. Small amplitude and phase lag are normal.</p></li>
 <li><p><strong>Altitude</strong> — Z rises sharply during takeoff, holds <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> with very small deviation, and descends smoothly.</p></li>
-<li><p><strong>Euler angles</strong> — roll and pitch stay within ±15°. Yaw remains near zero.</p></li>
-<li><p><strong>3D trajectory</strong> — a clean takeoff lobe, the figure-8 loops, and a straight descent to origin.</p></li>
+<li><p><strong>Euler angles</strong> — roll and pitch stay within <span class="math notranslate nohighlight">\(±15°\)</span>. Yaw remains near zero.</p></li>
+<li><p><strong>3D trajectory</strong> — a clean takeoff lobe, the <em>figure-8</em> loops, and a straight descent to origin.</p></li>
 </ul>
 <p>All plots are generated from <code class="docutils literal notranslate"><span class="pre">quad.data()</span></code> — the stored histories in the <code class="docutils literal notranslate"><span class="pre">rigidbody</span></code> object.</p>
 </section>
@@ -1002,16 +1010,19 @@ Simulation complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_pid_cascade_quadcopter_pid_33_0.png" src="../../_images/programs_pid_cascade_quadcopter_pid_33_0.png" />
+<img alt="../../_images/programs_pid_cascade_quadcopter_pid_36_0.png" src="../../_images/programs_pid_cascade_quadcopter_pid_36_0.png" />
 </div>
 </div>
 </section>
 <section id="Tracking-Metrics">
 <h3>Tracking Metrics<a class="headerlink" href="#Tracking-Metrics" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code> computes RMSE for X, Y, Z tracking over the **figure-8 phase only. Normalized RMSE expresses tracking error as a percentage of trajectory amplitude.</p>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code> computes <em>RMSE</em> for <span class="math notranslate nohighlight">\(X, Y, Z\)</span> tracking over the <em>figure-8</em> phase only.</div>
+<div class="line">Normalized <em>RMSE</em> expresses tracking error as a percentage of trajectory amplitude.</div>
+</div>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Normalized RMSE</p></th>
+<tr class="row-odd"><th class="head"><p>Normalized <em>RMSE</em></p></th>
 <th class="head"><p>Interpretation</p></th>
 </tr>
 </thead>
@@ -1075,6 +1086,24 @@ Simulation complete.
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="../mpc_steering.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Vehicle Steering - Model Predictive Control</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../api/introduction.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -1091,6 +1120,7 @@ Simulation complete.
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Author">Author</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Goal">Goal</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Notebook-Overview">Notebook Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
@@ -1109,8 +1139,8 @@ Simulation complete.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Config</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Cascade-PID-Control">4. Cascade PID Control</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Why-Cascade-PID?">Why Cascade PID?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Cascade-PID-Control">4. Cascade <em>PID</em> Control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Why-Cascade-PID?">Why Cascade <em>PID</em>?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Law">Control Law</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Allocation">Control Allocation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Config</a></li>
@@ -1161,7 +1191,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Apr 30, 2026.
+  Last updated on May 02, 2026.
   <br/>
 </p>
   </div>

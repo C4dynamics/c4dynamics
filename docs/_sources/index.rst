@@ -234,6 +234,7 @@ The documentation is organized as follows:
   programs/ballistic_coefficient.ipynb
   programs/car_tracker.ipynb
   programs/mpc_steering.ipynb
+  programs/pid_cascade/quadcopter_pid.ipynb
 
 
 .. toctree::
