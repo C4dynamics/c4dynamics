@@ -1,79 +1,81 @@
 # include in the version
 # ======================
-#   c4dynamics 
-#   datasets 
-#   docs 
+#   c4dynamics
+#   datasets
+#   docs
 #     html
 #     source
-#     .nojekyll  
-#   examples 
-#     !out 
-#   programs 
-#     !out    
-#   tests 
-#   make.bat 
-#   code of conduct 
-#   conda installation ? 
-#   contributing.md 
-#   readme.md 
+#     .nojekyll
+#   examples
+#     !out
+#   programs
+#     !out
+#   tests
+#   make.bat
+#   code of conduct
+#   conda installation ?
+#   contributing.md
+#   readme.md
 #   requirements.txt
-#   c4dynamics_env.yaml ?    
+#   c4dynamics_env.yaml ?
 
 
 
-# folders in the base 
+# folders in the base
 # ===================
-__pycache__ 
-.pytest_cache/ 
-.venv/ 
+__pycache__
+.pytest_cache/
+.venv/
 venv_basic/
-venv_vision/ 
+venv_vision/
 venv_dev/
-.vscode/ 
-untracked/ 
+.vscode/
+untracked/
 build/
 c4dynamics.egg-info/
 dist/
 .venv (Ignored Item Conflict)/
 c4dynamics-*/**
 
-# files in the base 
+# files in the base
 # =================
-Thumbs.db 
-.gitignore 
+Thumbs.db
+.gitignore
 .gitattributes
-x.png 
-pyrightconfig.json 
+x.png
+pyrightconfig.json
 gitstatus.txt
 carbon-config.json
 pend_video.avi
 changes.txt
 
-# subfolders 
+# subfolders
 # ==========
-examples/_out 
-programs/_out 
-tests/_out  
-examples/temp 
-programs/temp 
+examples/_out
+programs/_out
+tests/_out
+examples/temp
+programs/temp
 programs/zarchan_guidance
+docs/source/programs/pid_cascade_controller/matlab_files/
+docs/source/programs/pid_cascade_controller/python_files/
 
 
-# files in subfolders 
+# files in subfolders
 # ===================
-examples/docs_examples.ipynb 
-examples/run_examples.ipynb 
-examples/filters/07-Kalman*.ipynb 
+examples/docs_examples.ipynb
+examples/run_examples.ipynb
+examples/filters/07-Kalman*.ipynb
 examples/filters/04-One-Dimensional-Kalman-Filters.ipynb
 paper/c4dynamics - paper.docx
-paper/c4dynamics - paper.pdf 
-paper/paper_v0.md 
+paper/c4dynamics - paper.pdf
+paper/paper_v0.md
 paper/~$dynamics - paper.docx
 
 
-# 
+#
 # docs
-# ==== 
+# ====
 # docs/.buildinfo
 # docs/objects.inv
 docs/source/programs/car_detected.mp4
@@ -84,7 +86,7 @@ docs/doctrees
 # docs/_sphinx_design_static
 # docs/_static
 # docs/api
-# docs/programs 
+# docs/programs
 docs/source/programs/ballistic_coefficient_drawing.docx
 docs/source/programs/~$llistic_coefficient_drawing.docx
 docs/source/programs/ballistic_coefficient_py.py
@@ -131,3 +133,13 @@ state objects vs numpy arrays.pdf
 state objects vs numpy arrays.pptx
 docs/source/programs/mpc-steering_appendix.ipynb
 
+
+quad_simulation_results.npz
+out/mountaincar/checkpoint/
+
+docs/source/programs/pid_cascade_controller/quadcopter_pid_v0.ipynb
+docs/source/programs/pid_cascade_controller/quadcopter_pid_ziv.ipynb
+docs/source/programs/pid_cascade_controller/quad_pid_utils_ziv.py
+optimize_gains.py
+theoretical_gains.py
+docs/source/programs/pid_cascade/quad_frame - Copy.png
