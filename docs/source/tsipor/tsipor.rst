@@ -300,11 +300,11 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_static/mpc_diagram.png" class="sim-img">
+    <a href="../programs/pid_cascade/quadcopter_pid.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/fig8_quad.png" class="sim-img">
         <div class="sim-text">
-            <h3>Model Predictive Control</h3>
-            <p>Vehicle steering</p>
+            <h3>Quadcopter Cascade PID</h3>
+            <p>Figure-8 Trajectory Tracking</p>
         </div>
     </a>
 

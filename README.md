@@ -125,6 +125,16 @@ Across:
 </a>
 </td>
 
+<td width="300">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html">
+    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
+    <img src="docs/source/_static/fig8_quad.png" width="100"><br><br>
+    <b>Quadcopter Cascade PID</b><br>
+    <span style="color:#555;">Figure-8 Trajectory Tracking</span>
+    </div>
+</a>
+</td>
+
 </tr>
 </table>
 </div>
