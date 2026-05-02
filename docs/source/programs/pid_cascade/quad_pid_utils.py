@@ -62,10 +62,9 @@ def dynamics(t, y, quad, rotor_speeds):
     w4: right CW    (-)
 
     Torque mapping:
-    roll  (phi)   = L * (F4 - F2)
-    pitch (theta) = L * (F3 - F1)
-    yaw   (psi)   = kQ * (-F1 + F2 - F3 + F4)
-
+    roll (phi):       L * (-F1 + F2 + F3 - F4)
+    pitch (theta):    L * (F1 - F2 + F3 - F4)
+    yaw (psi):        kM / kT * (F1 + F2 - F3 - F4)
 
     Parameters
     ----------
