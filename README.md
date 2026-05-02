@@ -78,60 +78,73 @@ Across:
 > These are not isolated demos.
 > They all follow the same structure.
 
-
-
 <div align="center">
 
 <table>
 <tr>
 
-<td width="300">
+<td width="260">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/dof6sim.html">
-    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
-    <img src="docs/source/_static/missdistance.png" width="100"><br><br>
+<div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;text-align:center;">
+    <div style="height:100px;display:flex;align-items:center;justify-content:center;">
+        <img src="docs/source/_static/missdistance.png" style="max-height:100px;max-width:100%;">
+    </div>
+    <br>
     <b>6-DOF Simulation</b><br>
     <span style="color:#555;">Proportional navigation guidance</span>
-    </div>
+</div>
 </a>
 </td>
 
-<td width="300">
+<td width="260">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/ballistic_coefficient.html">
-    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
-    <img src="docs/source/_static/ballistic_trajectory.png" width="100"><br><br>
+<div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;text-align:center;">
+    <div style="height:100px;display:flex;align-items:center;justify-content:center;">
+        <img src="docs/source/_static/ballistic_trajectory.png" style="max-height:100px;max-width:100%;">
+    </div>
+    <br>
     <b>Extended Kalman Filter</b><br>
     <span style="color:#555;">Ballistic coefficient estimation</span>
-    </div>
+</div>
 </a>
 </td>
 
-<td width="300">
+<td width="260">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/car_tracker.html">
-    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
-    <img src="docs/source/_static/drifting_car_snapshot.png" width="100"><br><br>
+<div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;text-align:center;">
+    <div style="height:100px;display:flex;align-items:center;justify-content:center;">
+        <img src="docs/source/_static/drifting_car_snapshot.png" style="max-height:100px;max-width:100%;">
+    </div>
+    <br>
     <b>Detection + Kalman Filter</b><br>
     <span style="color:#555;">Vehicle tracking</span>
-    </div>
+</div>
 </a>
 </td>
 
-<td width="300">
+<td width="260">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/mpc_steering.html">
-    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
-    <img src="docs/source/_static/mpc_diagram.png" width="100"><br><br>
+<div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;text-align:center;">
+    <div style="height:100px;display:flex;align-items:center;justify-content:center;">
+        <img src="docs/source/_static/mpc_diagram.png" style="max-height:100px;max-width:100%;">
+    </div>
+    <br>
     <b>Model Predictive Control</b><br>
     <span style="color:#555;">Vehicle steering</span>
-    </div>
+</div>
 </a>
 </td>
 
-<td width="300">
+<td width="260">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html">
-    <div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;">
-    <img src="docs/source/_static/fig8_quad.png" width="100"><br><br>
-    <b>Quadcopter Cascade PID</b><br>
-    <span style="color:#555;">Figure-8 Trajectory Tracking</span>
+<div style="padding:16px;border-radius:12px;background:#f3f4f6;border:1px solid #d0d7de;text-align:center;">
+    <div style="height:100px;display:flex;align-items:center;justify-content:center;">
+        <img src="docs/source/_static/fig8_quad.png" style="max-height:100px;max-width:100%;">
     </div>
+    <br>
+    <b>Quadcopter Cascade PID</b><br>
+    <span style="color:#555;">Figure-8 trajectory tracking</span>
+</div>
 </a>
 </td>
 

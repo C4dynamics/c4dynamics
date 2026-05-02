@@ -582,7 +582,7 @@ document.write(`
 <section id="1.-Setup">
 <h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Link to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
@@ -590,7 +590,7 @@ document.write(`
     <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>c4dynamics
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib</span><span class="w"> </span><span class="kn">import</span> <span class="n">request</span>
-<span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/quad_pid_utils.py&#39;</span><span class="p">,</span> <span class="s1">&#39;quad_pid_utils.py&#39;</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/pid_cascade/quad_pid_utils.py&#39;</span><span class="p">,</span> <span class="s1">&#39;quad_pid_utils.py&#39;</span><span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">quad_pid_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">run_fig8_pid</span><span class="p">,</span>
                              <span class="n">plot_results</span><span class="p">,</span>
@@ -680,7 +680,7 @@ document.write(`
 <section id="Config">
 <h3>Config<a class="headerlink" href="#Config" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quadcopter</span> <span class="o">=</span> <span class="p">{</span>
@@ -782,7 +782,7 @@ document.write(`
 <section id="id1">
 <h3>Config<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory</span> <span class="o">=</span> <span class="p">{</span>
@@ -879,7 +879,7 @@ document.write(`
 <section id="id2">
 <h3>Config<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">controller</span> <span class="o">=</span> <span class="p">{</span>
@@ -933,7 +933,7 @@ document.write(`
 <section id="id3">
 <h3>Config<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span> <span class="o">=</span> <span class="p">{</span>
@@ -947,7 +947,7 @@ document.write(`
 <section id="Main-Loop">
 <h3>Main Loop<a class="headerlink" href="#Main-Loop" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plug all the config files for the simulation entry:</span>
@@ -964,7 +964,7 @@ document.write(`
 <section id="Run-Simulation">
 <h3>Run Simulation<a class="headerlink" href="#Run-Simulation" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quad</span> <span class="o">=</span> <span class="n">run_fig8_pid</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -999,7 +999,7 @@ Simulation complete.
 <section id="Trajectories-and-Angles">
 <h3>Trajectories and Angles<a class="headerlink" href="#Trajectories-and-Angles" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_results</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;trajectory&#39;</span><span class="p">])</span>
@@ -1040,7 +1040,7 @@ Simulation complete.
 </table>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">)</span>
