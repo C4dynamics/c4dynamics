@@ -81,55 +81,10 @@ Across:
 
 
 
-<div align="center">
-
-<table>
-<tr>
-
-<td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html">
-<img src="docs/source/_static/missdistance.png" width="100"><br><br>
-<b>6-DOF Simulation</b><br>
-<span style="color:#555;">Proportional navigation guidance</span>
-</a>
-</td>
-
-<td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html">
-<img src="docs/source/_static/ballistic_trajectory.png" width="100"><br><br>
-<b>Extended Kalman Filter</b><br>
-<span style="color:#555;">Ballistic coefficient estimation</span>
-</a>
-</td>
-
-<td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html">
-<img src="docs/source/_static/drifting_car_snapshot.png" width="100"><br><br>
-<b>Detection + Kalman Filter</b><br>
-<span style="color:#555;">Vehicle tracking</span>
-</a>
-</td>
-
-<td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html">
-<img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"><br><br>
-<b>Model Predictive Control</b><br>
-<span style="color:#555;">Vehicle steering</span>
-</a>
-</td>
-
-<td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html">
-<img src="docs/source/_static/fig8_quad.png" width="100"><br><br>
-<b>Quadcopter Cascade PID</b><br>
-<span style="color:#555;">Figure-8 trajectory tracking</span>
-</a>
-</td>
-
-</tr>
-</table>
-</div>
-
+| [6-DOF Simulation](https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html) | [Extended Kalman Filter](https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html) | [Detection + Kalman Filter](https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html) | [Model Predictive Control](https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html) | [Quadcopter Cascade PID](https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html) |
+|:-:|:-:|:-:|:-:|:-:|
+| <img src="docs/source/_static/missdistance.png" width="100"> | <img src="docs/source/_static/ballistic_trajectory.png" width="100"> | <img src="docs/source/_static/drifting_car_snapshot.png" width="100"> | <img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"> | <img src="docs/source/_static/fig8_quad.png" width="100"> |
+| Proportional navigation guidance | Ballistic coefficient estimation | Vehicle tracking | Vehicle steering | Figure-8 trajectory tracking |
 
 
 
