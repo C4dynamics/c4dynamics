@@ -88,11 +88,7 @@ Across:
 
 <td width="260" align="center">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html">
-<table height="140">
-<tr><td align="center" valign="middle">
-<img src="docs/source/_static/missdistance.png" width="100">
-</td></tr>
-</table>
+<img src="docs/source/_static/missdistance.png" width="100"><br><br>
 <b>6-DOF Simulation</b><br>
 <span style="color:#555;">Proportional navigation guidance</span>
 </a>
@@ -100,11 +96,7 @@ Across:
 
 <td width="260" align="center">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html">
-<table height="140">
-<tr><td align="center" valign="middle">
-<img src="docs/source/_static/ballistic_trajectory.png" width="100">
-</td></tr>
-</table>
+<img src="docs/source/_static/ballistic_trajectory.png" width="100"><br><br>
 <b>Extended Kalman Filter</b><br>
 <span style="color:#555;">Ballistic coefficient estimation</span>
 </a>
@@ -112,11 +104,7 @@ Across:
 
 <td width="260" align="center">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html">
-<table height="140">
-<tr><td align="center" valign="middle">
-<img src="docs/source/_static/drifting_car_snapshot.png" width="100">
-</td></tr>
-</table>
+<img src="docs/source/_static/drifting_car_snapshot.png" width="100"><br><br>
 <b>Detection + Kalman Filter</b><br>
 <span style="color:#555;">Vehicle tracking</span>
 </a>
@@ -124,11 +112,7 @@ Across:
 
 <td width="260" align="center">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html">
-<table height="140">
-<tr><td align="center" valign="middle">
-<img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100">
-</td></tr>
-</table>
+<img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"><br><br>
 <b>Model Predictive Control</b><br>
 <span style="color:#555;">Vehicle steering</span>
 </a>
@@ -136,11 +120,7 @@ Across:
 
 <td width="260" align="center">
 <a href="https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html">
-<table height="140">
-<tr><td align="center" valign="middle">
-<img src="docs/source/_static/fig8_quad.png" width="100">
-</td></tr>
-</table>
+<img src="docs/source/_static/fig8_quad.png" width="100"><br><br>
 <b>Quadcopter Cascade PID</b><br>
 <span style="color:#555;">Figure-8 trajectory tracking</span>
 </a>
