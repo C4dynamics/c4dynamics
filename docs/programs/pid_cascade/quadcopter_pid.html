@@ -65,10 +65,10 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="API Reference" href="../../api/introduction.html" />
-    <link rel="prev" title="Vehicle Steering - Model Predictive Control" href="../mpc_steering.html" />
+    <link rel="prev" title="Vehicle Steering - Model Predictive Control" href="../mpc_steering/mpc_steering.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="May 03, 2026"/>
+    <meta name="docbuild:last-update" content="May 06, 2026"/>
   </head>
   
   
@@ -210,12 +210,12 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../car_tracker.html">Car Tracker – Objects Detection and Kalman Filter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../car_tracker/car_tracker.html">Car Tracker – Objects Detection and Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 </ul>
@@ -501,6 +501,8 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Quadcopter">2. Quadcopter</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Variables">State Variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Controls">Controls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Measurements">Measurements</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a><ul class="nav section-nav flex-column">
@@ -617,6 +619,9 @@ document.write(`
 <li><p><span class="math notranslate nohighlight">\(\psi\)</span> (psi): yaw angle — rotation about the body Z-axis [rad]</p></li>
 <li><p><span class="math notranslate nohighlight">\(p, q, r\)</span>: angular rate components about the body X, Y, Z axes respectively [rad/s]</p></li>
 </ul>
+</section>
+<section id="Controls">
+<h3>Controls<a class="headerlink" href="#Controls" title="Link to this heading">#</a></h3>
 <p>The four control inputs are:</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{U} = [F,\ \tau_\varphi,\ \tau_\theta,\ \tau_\psi]^T\]</div>
@@ -627,6 +632,11 @@ document.write(`
 <li><p><span class="math notranslate nohighlight">\(\tau_\theta\)</span>: pitch torque — differential thrust between front and rear motors [N·m]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\tau_\psi\)</span>: yaw torque — differential drag torque from counter-rotating motor pairs [N·m]</p></li>
 </ul>
+</section>
+<section id="Measurements">
+<h3>Measurements<a class="headerlink" href="#Measurements" title="Link to this heading">#</a></h3>
+<p>In this example, we assume ideal measurements (i.e., zero noise) and focus mainly on the PID logic. In practical applications, various sensors (e.g., IMU, GPS, camera) and/or a Kalman filter would be used to measure or estimate the position and attitude of the vehicle.</p>
+<hr class="docutils" />
 <p>The quadcopter starts on the ground stationary level. A <code class="docutils literal notranslate"><span class="pre">quad</span></code> <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/states.lib.rigidbody.html">object</a> initializes the state, stores every sample during the simulation, and provides history retrieval for plotting and metrics via <code class="docutils literal notranslate"><span class="pre">quad.data()</span></code>.</p>
 </section>
 </section>
@@ -1087,7 +1097,7 @@ Simulation complete.
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../mpc_steering.html"
+       href="../mpc_steering/mpc_steering.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
@@ -1126,6 +1136,8 @@ Simulation complete.
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Quadcopter">2. Quadcopter</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Variables">State Variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Controls">Controls</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Measurements">Measurements</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a><ul class="nav section-nav flex-column">
@@ -1191,7 +1203,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on May 03, 2026.
+  Last updated on May 06, 2026.
   <br/>
 </p>
   </div>

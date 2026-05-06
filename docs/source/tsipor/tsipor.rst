@@ -277,7 +277,7 @@ Real implementations of **guidance, estimation, and control algorithms**
     <div class="sim-grid">
 
     <a href="../programs/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_images/missdistance.png" class="sim-img">
+        <img src="../_static/missdistance.png" class="sim-img">
         <div class="sim-text">
             <h3>6-DOF</h3>
             <p>Proportional navigation guidance</p>
@@ -300,8 +300,8 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_static/mpc_diagram.png" class="sim-img">
+    <a href="../programs/mpc_steering/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/mpc_diagram_thumbnail.png" class="sim-img">
         <div class="sim-text">
             <h3>Model Predictive Control</h3>
             <p>Vehicle steering</p>

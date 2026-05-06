@@ -1,0 +1,1396 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Proportional Navigation Guidance - 6 Degrees of Freedom Simulation &#8212; C4DYNAMICS v2.3</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../../_static/style.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=3ecf1c2d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-LKRZFXZKQP"></script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-LKRZFXZKQP');
+            </script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-LKRZFXZKQP');
+            </script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'programs/pn_guidance/dof6sim';</script>
+    <link rel="icon" href="../../_static/c4dlogo.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Ballistic Coefficient Estimation - Extended Kalman Filter" href="../ballistic_ekf/ballistic_coefficient.html" />
+    <link rel="prev" title="Interactive Guide to State Space and State Objects Modeling" href="../../tutorials/introduction_guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+    <meta name="docbuild:last-update" content="May 06, 2026"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">C4DYNAMICS v2.3</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Home
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gettingstarted.html">Getting Started</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/states.html">State Objects</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/kinematics.html">Kinematics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/transformations.html">Rigid Body Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/sensors.html">Sensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/filters.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/rl_env.html">Reinforcement Learning Enviroenment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Toturials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/setup_guide.html">Setup Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/introduction_guide.html">Interactive Guide to State Space and State Objects Modeling</a></li>
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="../car_tracker/car_tracker.html">Car Tracker – Objects Detection and Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../api/introduction.html">Introduction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/States.html">State Objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/states.state.html">The State Class</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.X.html">c4dynamics.states.state.state.X</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.X0.html">c4dynamics.states.state.state.X0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.norm.html">c4dynamics.states.state.state.norm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.normalize.html">c4dynamics.states.state.state.normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.Position.html">c4dynamics.states.state.state.Position</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.Velocity.html">c4dynamics.states.state.state.Velocity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.addvars.html">c4dynamics.states.state.state.addvars</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.dist.html">c4dynamics.states.state.state.dist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.vel_mag.html">c4dynamics.states.state.state.vel_mag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.store.html">c4dynamics.states.state.state.store</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.storeparams.html">c4dynamics.states.state.state.storeparams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.data.html">c4dynamics.states.state.state.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.timestate.html">c4dynamics.states.state.state.timestate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.plot.html">c4dynamics.states.state.state.plot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/states.lib.html">States Library</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.datapoint.html">Datapoint</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.mass.html">c4dynamics.states.lib.datapoint.datapoint.mass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.inteqm.html">c4dynamics.states.lib.datapoint.datapoint.inteqm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.plot.html">c4dynamics.states.lib.datapoint.datapoint.plot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.rigidbody.html">Rigidbody</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.mass.html">c4dynamics.states.lib.rigidbody.rigidbody.mass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.I.html">c4dynamics.states.lib.rigidbody.rigidbody.I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.angles.html">c4dynamics.states.lib.rigidbody.rigidbody.angles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.ang_rates.html">c4dynamics.states.lib.rigidbody.rigidbody.ang_rates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.BR.html">c4dynamics.states.lib.rigidbody.rigidbody.BR</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.RB.html">c4dynamics.states.lib.rigidbody.rigidbody.RB</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.inteqm.html">c4dynamics.states.lib.rigidbody.rigidbody.inteqm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.plot.html">c4dynamics.states.lib.rigidbody.rigidbody.plot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.animate.html">c4dynamics.states.lib.rigidbody.rigidbody.animate</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.pixelpoint.html">Pixelpoint</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.fsize.html">c4dynamics.states.lib.pixelpoint.pixelpoint.fsize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.class_id.html">c4dynamics.states.lib.pixelpoint.pixelpoint.class_id</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.box.html">c4dynamics.states.lib.pixelpoint.pixelpoint.box</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Sensors.html">Sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.seeker.html">Seeker</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.bias.html">c4dynamics.sensors.seeker.seeker.bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.scale_factor.html">c4dynamics.sensors.seeker.seeker.scale_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.measure.html">c4dynamics.sensors.seeker.seeker.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.radar.html">Radar</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Detectors.html">Detectors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/detectors.yolov3.html">YOLOv3</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.nms_th.html">c4dynamics.detectors.yolo3_opencv.yolov3.nms_th</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.confidence_th.html">c4dynamics.detectors.yolo3_opencv.yolov3.confidence_th</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.detect.html">c4dynamics.detectors.yolo3_opencv.yolov3.detect</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Filters.html">Filters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.kalman.html">Kalman filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.predict.html">c4dynamics.filters.kalman.kalman.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.update.html">c4dynamics.filters.kalman.kalman.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.store.html">c4dynamics.filters.kalman.kalman.store</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.ekf.html">Extended Kalman filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.predict.html">c4dynamics.filters.ekf.ekf.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.update.html">c4dynamics.filters.ekf.ekf.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.store.html">c4dynamics.filters.ekf.ekf.store</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.lpf.html">Lowpass filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/lpf/c4dynamics.filters.lowpass.lowpass.sample.html">c4dynamics.filters.lowpass.lowpass.sample</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/eqm.html">Kinematics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.derivs.eqm3.html">c4dynamics.eqm.derivs.eqm3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.derivs.eqm6.html">c4dynamics.eqm.derivs.eqm6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.integrate.int3.html">c4dynamics.eqm.integrate.int3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.integrate.int6.html">c4dynamics.eqm.integrate.int6</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/rotmat.html">Rotations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.rotx.html">c4dynamics.rotmat.rotmat.rotx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.roty.html">c4dynamics.rotmat.rotmat.roty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.rotz.html">c4dynamics.rotmat.rotmat.rotz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.dcm321.html">c4dynamics.rotmat.rotmat.dcm321</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.dcm321euler.html">c4dynamics.rotmat.rotmat.dcm321euler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.animate.animate.html">c4dynamics.rotmat.animate.animate</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Utils.html">Utils</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.tictoc.tic.html">c4dynamics.utils.tictoc.tic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.tictoc.toc.html">c4dynamics.utils.tictoc.toc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.cprint.cprint.html">c4dynamics.utils.cprint.cprint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.gen_gif.gif.html">c4dynamics.utils.gen_gif.gif</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.plottools.plotdefaults.html">c4dynamics.utils.plottools.plotdefaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.math.html">Math Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.const.html">Constants</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Datasets.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.image.html">c4dynamics.datasets.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.video.html">c4dynamics.datasets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.nn_model.html">c4dynamics.datasets.nn_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.d3_model.html">c4dynamics.datasets.d3_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.download_all.html">c4dynamics.datasets.download_all</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.clear_cache.html">c4dynamics.datasets.clear_cache</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/programs/pn_guidance/dof6sim.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Contents">Contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Introduction">1. Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Simulation-Overview">2. Simulation Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Setup-and-Initial-Conditions">3. Setup and Initial Conditions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Import-packages">Import packages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Times-setup">Times setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Target">Target</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Missile">Missile</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Modules">Modules</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Initial-conditions">Initial conditions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Frame-of-coordinates-and-DCM">Frame of coordinates and DCM</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Main-loop">4. Main loop</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Geometry">Geometry</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Guidance-Law">Guidance Law</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Kinematic-Differential-Equations">Kinematic Differential Equations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Miss-distance">5. Miss distance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Results">6. Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Configure-pyplot">Configure pyplot</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Trajectories">Trajectories</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Euler-angles">Euler angles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Line-of-sight-rates">Line-of-sight rates</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Provision-for-Monte-Carlo-Simulation">7. Provision for Monte Carlo Simulation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Summary">8. Summary</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <ul class="simple">
+<li><p><a class="reference external" href="https://colab.research.google.com/github/c4dynamics/c4dynamics/blob/main/docs/source/programs/dof6sim.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a> ← Click to open in Google Colab</p></li>
+<li><p>To download this notebook, click the download icon in the toolbar above and select the .ipynb format.</p></li>
+<li><p>For any questions or comments, please open an issue on the <a class="reference external" href="https://github.com/c4dynamics/c4dynamics/issues">c4dynamics issues page</a>.</p></li>
+</ul>
+<section id="Proportional-Navigation-Guidance---6-Degrees-of-Freedom-Simulation">
+<h1>Proportional Navigation Guidance - 6 Degrees of Freedom Simulation<a class="headerlink" href="#Proportional-Navigation-Guidance---6-Degrees-of-Freedom-Simulation" title="Link to this heading">#</a></h1>
+<p>Six Degrees Of Freedom (6DOF) simulation of a guided aircraft, modeling its dynamics, aerodynamics, and control system.</p>
+<section id="Contents">
+<h2>Contents<a class="headerlink" href="#Contents" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Introduction</p></li>
+<li><p>Simulation Overview</p></li>
+<li><p>Setup and Initial Conditions</p></li>
+<li><p>Main Loop</p></li>
+<li><p>Miss Distance</p></li>
+<li><p>Results</p></li>
+<li><p>Summary</p></li>
+</ol>
+</section>
+<section id="1.-Introduction">
+<h2>1. Introduction<a class="headerlink" href="#1.-Introduction" title="Link to this heading">#</a></h2>
+<p>This notebook presents a six degrees of freedom (6DOF) simulation of a guided aircraft, capturing the dynamics, aerodynamics, control system, and seeker behavior. The guided aircraft in this case is a missile pursuing a target using a proportional navigation guidance law. The simulation includes both translational and rotational dynamics, accounts for aerodynamic forces, and models control surface deflections in response to seeker feedback.</p>
+<p>By walking through the setup, implementation, and results, the notebook provides a complete view of how 6DOF guidance algorithms operate in practice. The missile, target, and seeker are modeled using the c4dynamics — an open-source framework for algorithm engineering that provides <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/States.html">state objects</a> to represent dynamic entities in space and time. The details of the missile model and the guidance system are based on the example in Chapter
+12 of the Military Handbook of Missile Flight Simulation [1].</p>
+</section>
+<section id="2.-Simulation-Overview">
+<h2>2. Simulation Overview<a class="headerlink" href="#2.-Simulation-Overview" title="Link to this heading">#</a></h2>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/dof6sim.drawio.png" /></p>
+</div><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Figure</span> <span class="pre">1:</span> <span class="pre">Simulation</span> <span class="pre">Overview</span></code></div>
+<div class="line">The process begins with initial conditions, where the missile, target, and seeker (a line-of-sight sensor) are defined. Key parameters are set to establish the starting state.</div>
+</div>
+<p>The simulation then enters a main loop, which iterates at a time step of 5 milliseconds until termination conditions are met. Each iteration involves the following steps:</p>
+<ol class="arabic simple">
+<li><p>Update Atmospheric Properties: Atmospheric conditions, including pressure, density, and speed of sound, are calculated based on the missile’s current altitude using an atmospheric model. These properties determine aerodynamic forces and the Mach number, influencing the missile’s behavior.</p></li>
+<li><p>Seeker Measurement: The line-of-sight seeker tracks angular rate variations between the missile and the target, providing critical data for trajectory adjustments. This step ensures the missile can track the target’s relative position and velocity.</p></li>
+<li><p>Guidance &amp; Control: After a 0.5-second delay to allow the missile to gain sufficient speed, the guidance system activates. It uses the seeker’s measurements to generate control commands, adjusting the missile’s pitch and yaw through control surface deflections to align its trajectory with the target.</p></li>
+<li><p>Forces &amp; Moments: Forces acting on the missile, including aerodynamic (lift, drag, axial, and normal), propulsion (thrust), and gravity, are computed. Aerodynamic moments (pitch and yaw) are also calculated based on the missile’s orientation and Mach number. These forces and moments are transformed into the inertial frame using the missile’s rotation matrix.</p></li>
+<li><p>Integrate Equations of Motion: The missile’s translational and rotational equations of motion are integrated using a numerical method to update its position, velocity, Euler angles, and angular rates. The target’s position is similarly updated if it is moving, assuming no external forces for a non-maneuvering target.</p></li>
+<li><p>Update Mass and Inertia Properties: As the missile consumes fuel, its mass and inertia properties are updated to reflect changes in dynamics.</p></li>
+</ol>
+<p>After each iteration, the simulation evaluates termination conditions. If the range rate changes sign (indicating the closest approach), the missile’s altitude drops below zero, or the simulation time exceeds 100 seconds, the loop exits. Otherwise, it returns to updating atmospheric properties for the next iteration.</p>
+<p>Upon termination, the simulation calculates the miss distance, determining the minimum distance between the missile and the target at the point of closest approach. This is approximated by analyzing the relative position vector perpendicular to the flight path and estimating the time of closest approach.</p>
+<p>Finally, the results are shown: Trajectory Plots, Euler Angles, and Line-of-Sight Rates. These plots provide insights into the missile’s dynamic behavior and the guidance system’s performance.</p>
+<p>The program utilizes the following components of c4dynamics:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Object</p></th>
+<th class="head"><p>Module</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>missile</p></td>
+<td><p><a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/states.lib.rigidbody.html">rigidbody</a></p></td>
+<td><p>The missile is modeled as a rigid body, representing a mass in space with defined length and orientation</p></td>
+</tr>
+<tr class="row-odd"><td><p>target</p></td>
+<td><p><a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/states.lib.datapoint.html">datapoint</a></p></td>
+<td><p>The target is represented as a datapoint object, modeling a point mass in space</p></td>
+</tr>
+<tr class="row-even"><td><p>seeker</p></td>
+<td><p><a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/Sensors.html">sensors</a></p></td>
+<td><p>line-of-sight seeker</p></td>
+</tr>
+<tr class="row-odd"><td><p>g_ms2</p></td>
+<td><p><a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/utils.const.html">const</a></p></td>
+<td><p>Gravity constant in meters per second</p></td>
+</tr>
+<tr class="row-even"><td><p>r2d</p></td>
+<td><p><a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/utils.const.html">const</a></p></td>
+<td><p>Radians to degrees conversion constant</p></td>
+</tr>
+<tr class="row-odd"><td><p>plotdefaults</p></td>
+<td><p><a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/generated/utils/c4dynamics.utils.plottools.plotdefaults.html">utils</a></p></td>
+<td><p>Setting default properties on a matplotlib axis</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In addition, some operations use c4dynamics modules explicitly. Among them:</p>
+<p><code class="docutils literal notranslate"><span class="pre">missile.RB</span></code> uses the rotmat module to rotate a vector from the body frame (B) to a reference frame (R).</p>
+<p><code class="docutils literal notranslate"><span class="pre">missile.inteqm()</span></code> intgrates the equations of motion for a given vector of forces.</p>
+<p>Let’s start.</p>
+</section>
+<section id="3.-Setup-and-Initial-Conditions">
+<h2>3. Setup and Initial Conditions<a class="headerlink" href="#3.-Setup-and-Initial-Conditions" title="Link to this heading">#</a></h2>
+<section id="Import-packages">
+<h3>Import packages<a class="headerlink" href="#Import-packages" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if Google Colab is running:</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">IN_COLAB</span> <span class="o">=</span> <span class="s2">&quot;google.colab&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span>
+<span class="k">if</span> <span class="n">IN_COLAB</span><span class="p">:</span>
+    <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>c4dynamics
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib</span><span class="w"> </span><span class="kn">import</span>  <span class="n">request</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="line-block">
+<div class="line">__</div>
+<div class="line">Load the controller, engine, and aerodynamics models, developed specifically for this example. These modules can be downloaded <a class="reference external" href="https://raw.githubusercontent.com/C4dynamics/C4dynamics/main/docs/source/programs/dof6_modules.py">here</a>.</div>
+<div class="line">Download the file and place it in the same directory as this notebook or in any folder included in your Python path. You can use the following snippet to download the file based on your operation system:</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/dof6_modules.py&#39;</span><span class="p">,</span> <span class="s1">&#39;dof6_modules.py&#39;</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dof6_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">control_system</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">aerodynamics</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&#39;dof6_modules.py&#39;, &lt;http.client.HTTPMessage at 0x1f0137a5fa0&gt;)
+</pre></div></div>
+</div>
+</section>
+<section id="Times-setup">
+<h3>Times setup<a class="headerlink" href="#Times-setup" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span>  <span class="o">=</span> <span class="mi">0</span>
+<span class="n">tf</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">5e-3</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Target">
+<h3>Target<a class="headerlink" href="#Target" title="Link to this heading">#</a></h3>
+<div class="line-block">
+<div class="line">The target is a <code class="docutils literal notranslate"><span class="pre">datapoint</span></code> object which means it has all the attributes of a mass in space:</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Position</span></code>: target.x, target.y, target.z.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Velocity</span></code>: target.vx, target.vy, target.vz.</div>
+</div>
+<p>It also has mass: target.mass (necessary for solving the equations of motion in the case of accelerating motion)</p>
+<p>In this example, the target is initialized with specific positions along the three axes and a velocity component only along the x-axis.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">datapoint</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">4000</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3000</span><span class="p">,</span> <span class="n">vx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">250</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Missile">
+<h3>Missile<a class="headerlink" href="#Missile" title="Link to this heading">#</a></h3>
+<div class="line-block">
+<div class="line">The missile is a <code class="docutils literal notranslate"><span class="pre">rigidbody</span></code> object, i.e. it has all the attributes of a datapoint, but also includes:</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Body</span> <span class="pre">(Euler)</span> <span class="pre">angles</span></code>: missile.phi, missile.theta, missile.psi.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Angular</span> <span class="pre">rates</span></code>: missile.p, missile.q, missile.r (rotation about <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span>, and <span class="math notranslate nohighlight">\(z\)</span>, respectively).</div>
+</div>
+<div class="line-block">
+<div class="line">As a rigidbody object, the missile possesses inertia attributes (necessary for solving the equations of accelerating motion):</div>
+<div class="line">Moment of inertia: missile.ixx, missile.iyy, missile.izz.</div>
+</div>
+<p>Since the rocket engine operates through fuel combustion, the missile’s mass properties vary over time.</p>
+<p>To enable mass recalculations during runtime, it is advisable to store the missile’s initial conditions.</p>
+<p>As <span class="math notranslate nohighlight">\(i_{yy}\)</span> and <span class="math notranslate nohighlight">\(i_{zz}\)</span> are equal here it’s enough to save just one of them. However, the initial position and initial attitude of any object (datapoint, rigidbody) are always saved on instantiation.</p>
+<p>The dimensions here are SI (i.e. seconds, meters, kilograms).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m0</span>      <span class="o">=</span> <span class="mi">85</span>        <span class="c1"># initial mass, kg</span>
+<span class="n">mbo</span>     <span class="o">=</span> <span class="mi">57</span>        <span class="c1"># burnout mass, kg</span>
+<span class="n">iyy0</span>    <span class="o">=</span> <span class="mi">61</span>        <span class="c1"># initial momoent of inertia about y and z</span>
+<span class="n">ibo</span>     <span class="o">=</span> <span class="mi">47</span>        <span class="c1"># iyy izz at burnout</span>
+<span class="n">xcm0</span>    <span class="o">=</span> <span class="mf">1.55</span>      <span class="c1"># initial distance from nose to center of mass, m</span>
+<span class="n">xcmbo</span>   <span class="o">=</span> <span class="mf">1.35</span>      <span class="c1"># distance from nose to center of mass after burnout, m</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">missile</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">rigidbody</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">missile</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="n">m0</span>
+<span class="n">missile</span><span class="o">.</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">iyy0</span><span class="p">,</span> <span class="n">iyy0</span><span class="p">]</span>
+<span class="n">missile</span><span class="o">.</span><span class="n">xcm</span> <span class="o">=</span> <span class="n">xcm0</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Modules">
+<h3>Modules<a class="headerlink" href="#Modules" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">seeker</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">lineofsight</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">tau1</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">tau2</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="n">ctrl</span>   <span class="o">=</span> <span class="n">control_system</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+<span class="n">eng</span>    <span class="o">=</span> <span class="n">engine</span><span class="p">()</span>
+<span class="n">aero</span>   <span class="o">=</span> <span class="n">aerodynamics</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Initial-conditions">
+<h3>Initial conditions<a class="headerlink" href="#Initial-conditions" title="Link to this heading">#</a></h3>
+<p>The initial missile direction is calculated by employing a simple algorithm in which the missile is pointed <span class="math notranslate nohighlight">\(30°\)</span> below the line-of-sight to the target at the instant of launch. The missile angular rates at launch are assumed to be negligible.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rTM</span>           <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Position</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">Position</span>
+<span class="n">rTMnorm</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rTM</span><span class="p">)</span>
+<span class="n">ucl</span>           <span class="o">=</span> <span class="n">rTM</span> <span class="o">/</span> <span class="n">rTMnorm</span> <span class="c1"># center line unit vector</span>
+
+<span class="n">pitch_tgt</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">ucl</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ucl</span><span class="p">[:</span><span class="mi">2</span><span class="p">]))</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span>
+<span class="n">heading</span>     <span class="o">=</span> <span class="mi">30</span> <span class="c1"># +30 tilts head down since z positive is downward.</span>
+<span class="n">pitch_lnch</span>  <span class="o">=</span> <span class="n">pitch_tgt</span> <span class="o">+</span> <span class="n">heading</span>
+<span class="n">ucl</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ucl</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">pitch_lnch</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">d2r</span><span class="p">)</span>
+<span class="n">ucl</span>         <span class="o">=</span> <span class="n">ucl</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ucl</span><span class="p">)</span>
+
+<span class="n">missile</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">vz</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">*</span> <span class="n">ucl</span> <span class="c1"># 30m/s is the missile initial velocity</span>
+<span class="n">missile</span><span class="o">.</span><span class="n">psi</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">ucl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">ucl</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">missile</span><span class="o">.</span><span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="o">-</span><span class="n">ucl</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ucl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">ucl</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">missile</span><span class="o">.</span><span class="n">phi</span>   <span class="o">=</span> <span class="mi">0</span>
+<span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span>       <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">BR</span> <span class="o">@</span> <span class="n">missile</span><span class="o">.</span><span class="n">Velocity</span>
+<span class="n">vc</span>            <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">ab_cmd</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">h</span>             <span class="o">=</span> <span class="o">-</span><span class="n">missile</span><span class="o">.</span><span class="n">z</span> <span class="c1"># missile altitude above sea level</span>
+
+<span class="n">alpha</span>       <span class="o">=</span> <span class="mi">0</span>
+<span class="n">beta</span>        <span class="o">=</span> <span class="mi">0</span>
+<span class="n">alpha_total</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">d_pitch</span>     <span class="o">=</span> <span class="mi">0</span>
+<span class="n">d_yaw</span>       <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">delta_data</span>   <span class="o">=</span> <span class="p">[]</span>
+<span class="n">omegaf_data</span>  <span class="o">=</span> <span class="p">[]</span>
+<span class="n">acc_data</span>     <span class="o">=</span> <span class="p">[]</span>
+<span class="n">aoa_data</span>     <span class="o">=</span> <span class="p">[]</span>
+<span class="n">moments_data</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Frame-of-coordinates-and-DCM">
+<h3>Frame of coordinates and DCM<a class="headerlink" href="#Frame-of-coordinates-and-DCM" title="Link to this heading">#</a></h3>
+<p>The property <code class="docutils literal notranslate"><span class="pre">missile.BR</span></code> returns a Body from Inertial DCM (Direction Cosine Matrix) in 3-2-1 order. Using this matrix, the missile velocity vector in the inertial frame of coordinates is rotated to represent the velocity in the body frame of coordinates.</p>
+<p>The inertial frame is determined by the frame that the initial Euler angles refer to. In this example, the reference of the Euler angles are as follows:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\varphi\)</span>: rotation about <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta\)</span>: rotation about <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\psi\)</span>: rotation about <span class="math notranslate nohighlight">\(z\)</span></p></li>
+</ul>
+<p>The frame axes convention is given by:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x\)</span>: parallel to flat earth in the direction of the missile centerline</p></li>
+<li><p><span class="math notranslate nohighlight">\(y\)</span>: completes a right-hand system</p></li>
+<li><p><span class="math notranslate nohighlight">\(z\)</span>: positive downward</p></li>
+</ul>
+</section>
+</section>
+<section id="4.-Main-loop">
+<h2>4. Main loop<a class="headerlink" href="#4.-Main-loop" title="Link to this heading">#</a></h2>
+<p>The main simulation loop performs the following steps:</p>
+<p>Geometry</p>
+<ul class="simple">
+<li><p>Update the target and the missile position and attitude according to the kinematics and initial conditions.</p></li>
+<li><p>Estimate the line-of-sight angular rate between the missile and target. Guidance law</p></li>
+<li><p>Compute the proportional navigation command</p></li>
+<li><p>Generate wing deflection commands for the missile. Kinematic equations</p></li>
+<li><p>Calculate forces and moments acting on the missile.</p></li>
+<li><p>Integrate the missile’s equations of motion.</p></li>
+<li><p>Integrate the target’s equations of motion.</p></li>
+</ul>
+<p>Here’s a thorough explanation of each block:</p>
+<section id="Geometry">
+<h3>Geometry<a class="headerlink" href="#Geometry" title="Link to this heading">#</a></h3>
+<p>The target and missile positions are set by initial conditions or updated via kinematic differential equations.</p>
+<p>Then, the missile’s seeker measures the line-of-sight (LOS) vector, approximated as <span class="math notranslate nohighlight">\(r_{TM}\)</span>, and provides angular rates to the guidance system. The seeker resolves the LOS unit vector <span class="math notranslate nohighlight">\(u_R = r_{TM}/|r_{TM}|\)</span> and computes the LOS angular rate as:</p>
+<div class="math notranslate nohighlight">
+\[\omega = (r_{TM} × v_{TM}) / |r_{TM}|^2\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(r_{TM} = r_T - r_M\)</span> is the relative position vector (target minus missile),</p></li>
+<li><p><span class="math notranslate nohighlight">\(v_{TM} = v_T - v_M\)</span> is the relative velocity.</p></li>
+</ul>
+<p>The geometry is further characterized by the range <span class="math notranslate nohighlight">\(R = |r_{TM}|\)</span> and the closing velocity <span class="math notranslate nohighlight">\(V_c = -u_R \cdot v_{TM}\)</span>, which determines the rate of approach.</p>
+</section>
+<section id="Guidance-Law">
+<h3>Guidance Law<a class="headerlink" href="#Guidance-Law" title="Link to this heading">#</a></h3>
+<p>The guidance law employs proportional navigation (PN), which aligns the missile’s velocity vector with the LOS to the target for interception.</p>
+<p>PN uses the LOS angular rate to generate corrective acceleration commands. The core equation is:</p>
+<div class="math notranslate nohighlight">
+\[a_c = N \cdot V_m \cdot \omega \times u_R\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(a_c\)</span> is the acceleration command (perpendicular to the missile’s velocity)</p></li>
+<li><p><span class="math notranslate nohighlight">\(N\)</span> is the navigation gain (typically <span class="math notranslate nohighlight">\(3–5\)</span>, here: <span class="math notranslate nohighlight">\(4\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(V_m\)</span> is the missile’s speed</p></li>
+<li><p><span class="math notranslate nohighlight">\(\omega\)</span> is the LOS angular rate vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(u_R\)</span> is the unit vector along the LOS.</p></li>
+</ul>
+<p>The LOS angular rate is measured by the seeker and calculated as described in the Geometry section.</p>
+<p>PN aims to nullify the LOS rate <span class="math notranslate nohighlight">\((\omega → 0)\)</span> to ensure a collision course. The commanded acceleration is transformed into the missile’s body frame using the rotation matrix (derived from Euler angles) and implemented via control surface deflections (e.g., pitch and yaw fins).</p>
+</section>
+<section id="Kinematic-Differential-Equations">
+<h3>Kinematic Differential Equations<a class="headerlink" href="#Kinematic-Differential-Equations" title="Link to this heading">#</a></h3>
+<p>The kinematic differential equations govern the missile’s motion in a six degrees of freedom (6DOF) simulation, capturing both translational and rotational dynamics. These equations describe how the missile’s position, velocity, and attitude evolve under forces (e.g., aerodynamic, propulsion, gravity) and moments.</p>
+<p>The target is treated as a point mass (with no attitude) and resolved in three degrees of freedom with no forces exerted.</p>
+<p>For translational motion, Newton’s second law is applied in the inertial frame:</p>
+<div class="math notranslate nohighlight">
+\[\dot{v} = F/m\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(v = [v_x, v_y, v_z]\)</span> is the velocity vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span> is the total force vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(m\)</span> is the missile’s mass.</p></li>
+</ul>
+<p>Position is updated via</p>
+<div class="math notranslate nohighlight">
+\[\dot{r} = v\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(r = [x, y, z]\)</span>.</p></li>
+</ul>
+<p>For rotational motion, the attitude is represented by Euler angles <span class="math notranslate nohighlight">\((\varphi, \theta, \psi)\)</span> — roll, pitch, and yaw, respectively.</p>
+<p>The Euler angle derivatives relate the body angular rates <span class="math notranslate nohighlight">\((p, q, r)\)</span> to the attitude rates:</p>
+<div class="math notranslate nohighlight">
+\[\dot{\varphi} = p + q \cdot sin\varphi \cdot  tan\theta + r \cdot cos\varphi \cdot tan\theta\]</div>
+<div class="math notranslate nohighlight">
+\[\dot{\theta} =  q \cdot cos\varphi - r \cdot sin\varphi\]</div>
+<div class="math notranslate nohighlight">
+\[\dot{\psi}   = (q \cdot sin\varphi + r \cdot cos\varphi) / cos\theta\]</div>
+<p>These equations account for the missile’s orientation, updated numerically to reflect changes due to aerodynamic moments and control surface deflections.</p>
+<p>The moments follow Euler’s equations for a rigid body:</p>
+<div class="math notranslate nohighlight">
+\[\dot{\omega} = I^{-1} \cdot M\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\omega = [p, q, r]\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(I\)</span> is the inertia tensor</p></li>
+<li><p><span class="math notranslate nohighlight">\(M\)</span> is the moment vector.</p></li>
+</ul>
+<p>This framework ensures accurate propagation of the missile’s dynamic state.</p>
+<div class="line-block">
+<div class="line"><em>Note</em>:</div>
+<div class="line">The implementation of the kinematic differential equations is part of the <code class="docutils literal notranslate"><span class="pre">eqm</span></code> module of <code class="docutils literal notranslate"><span class="pre">c4dynamics</span></code> and is encapsulated in the lines:</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">missile.inteqm()</span></code></div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">target.inteqm()</span></code></div>
+</div>
+<p>The target, as a datapoint, runs the <code class="docutils literal notranslate"><span class="pre">int3</span></code> method which integrates the translational equations as given. The missile, as a rigidbody object, runs <code class="docutils literal notranslate"><span class="pre">int6</span></code> and integrates the translation and rotational equations as given by eqm6. For a detailed explanation of the integration and differential equations, see the <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/routines.eqm.html#">introduction to the equations of motion solvers module</a>.</p>
+<p>The simulation runs until one of the following conditions is satisfied:</p>
+<ul class="simple">
+<li><p>The range rate changes sign</p></li>
+<li><p>The missile hits the ground</p></li>
+<li><p>The simulation time is over</p></li>
+</ul>
+<p>Comments are introduced inline.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="n">tf</span> <span class="ow">and</span> <span class="n">h</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">vc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+
+    <span class="c1"># relative position</span>
+    <span class="n">vTM</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Velocity</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">Velocity</span> <span class="c1"># missile-target relative velocity</span>
+    <span class="n">rTM</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Position</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">Position</span> <span class="c1"># relative position</span>
+
+    <span class="c1"># relative velcoity</span>
+    <span class="n">rTMnorm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rTM</span><span class="p">)</span> <span class="c1"># for next round</span>
+    <span class="n">uR</span>     <span class="o">=</span> <span class="n">rTM</span> <span class="o">/</span> <span class="n">rTMnorm</span> <span class="c1"># unit range vector</span>
+    <span class="n">vc</span>     <span class="o">=</span> <span class="o">-</span><span class="n">uR</span> <span class="o">*</span> <span class="n">vTM</span> <span class="c1"># closing velocity</span>
+
+    <span class="c1"># calculate the line-of-sight rates</span>
+    <span class="n">wf</span> <span class="o">=</span> <span class="n">seeker</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">rTM</span><span class="p">,</span> <span class="n">vTM</span><span class="p">)</span>
+    <span class="n">omegaf_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">wf</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wf</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+
+    <span class="c1"># atmospheric calculations</span>
+    <span class="n">pressure</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">vs</span> <span class="o">=</span> <span class="n">aerodynamics</span><span class="o">.</span><span class="n">alt2atmo</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="n">mach</span> <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">vel_mag</span><span class="p">()</span> <span class="o">/</span> <span class="n">vs</span> <span class="c1"># mach number</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">missile</span><span class="o">.</span><span class="n">vel_mag</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span> <span class="c1"># dynamic pressure</span>
+
+
+    <span class="c1"># guidance and control</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The guidance is initiated half a second after launch in</span>
+<span class="sd">        order to permit the missile to gain enough speed so that</span>
+<span class="sd">        it can be controlled.</span>
+<span class="sd">        Then the line-of-sight rate vector and the missile velocity</span>
+<span class="sd">        are used to base maneuver commands and the control system</span>
+<span class="sd">        responds by deflecting the control surfaces.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">Gs</span>       <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">missile</span><span class="o">.</span><span class="n">vel_mag</span><span class="p">()</span>
+        <span class="n">a_cmd</span>     <span class="o">=</span> <span class="n">Gs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">ucl</span><span class="p">)</span>
+        <span class="n">ab_cmd</span>   <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">BR</span> <span class="o">@</span> <span class="n">a_cmd</span>
+        <span class="n">afp</span><span class="p">,</span> <span class="n">afy</span> <span class="o">=</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ab_cmd</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+        <span class="n">d_pitch</span>  <span class="o">=</span> <span class="n">afp</span> <span class="o">-</span> <span class="n">alpha</span>
+        <span class="n">d_yaw</span>    <span class="o">=</span> <span class="n">afy</span> <span class="o">-</span> <span class="n">beta</span>
+
+    <span class="n">acc_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ab_cmd</span><span class="p">)</span>
+    <span class="n">delta_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">d_pitch</span><span class="p">,</span> <span class="n">d_yaw</span><span class="p">])</span>
+
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; forces and moments &#39;&#39;&#39;</span>
+
+    <span class="c1"># aerodynamic forces</span>
+    <span class="n">cL</span><span class="p">,</span> <span class="n">cD</span> <span class="o">=</span> <span class="n">aero</span><span class="o">.</span><span class="n">f_coef</span><span class="p">(</span><span class="n">mach</span><span class="p">,</span> <span class="n">alpha_total</span><span class="p">)</span> <span class="c1"># get lift and drag coefficients based on Mach number and angle of attack</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">Q</span> <span class="o">*</span> <span class="n">aero</span><span class="o">.</span><span class="n">s</span> <span class="o">*</span> <span class="n">cL</span>     <span class="c1"># compute lift force using dynamic pressure, reference area, and lift coefficient</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">Q</span> <span class="o">*</span> <span class="n">aero</span><span class="o">.</span><span class="n">s</span> <span class="o">*</span> <span class="n">cD</span>     <span class="c1"># compute drag force using dynamic pressure, reference area, and drag coefficient</span>
+
+
+    <span class="c1"># aero axial force</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">D</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha_total</span><span class="p">)</span> <span class="o">-</span> <span class="n">L</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha_total</span><span class="p">)</span>
+    <span class="c1"># aero normal force</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">D</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha_total</span><span class="p">)</span> <span class="o">+</span> <span class="n">L</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha_total</span><span class="p">)</span>
+
+    <span class="c1"># convert aerodynamic forces to body frame coordinates</span>
+    <span class="n">fAb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="o">-</span><span class="n">A</span>     <span class="c1"># axial force in body X-direction (negative because drag acts against velocity)</span>
+                    <span class="p">,</span> <span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">v</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">v</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>   <span class="c1"># normal force component in body Y-direction</span>
+                    <span class="p">,</span> <span class="n">N</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">w</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">v</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="p">))])</span> <span class="c1"># normal force component in body Z-direction</span>
+    <span class="n">fAe</span> <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">RB</span> <span class="o">@</span> <span class="n">fAb</span>  <span class="c1"># rotate aerodynamic forces to inertial frame</span>
+
+    <span class="c1"># aerodynamic moments</span>
+    <span class="n">cM</span><span class="p">,</span> <span class="n">cN</span> <span class="o">=</span> <span class="n">aero</span><span class="o">.</span><span class="n">m_coef</span><span class="p">(</span><span class="n">mach</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">d_pitch</span><span class="p">,</span> <span class="n">d_yaw</span>
+                        <span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">xcm</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">vel_mag</span><span class="p">(),</span> <span class="n">fAb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fAb</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">q</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">r</span><span class="p">)</span>     <span class="c1"># compute pitch and yaw moment coefficients</span>
+
+    <span class="n">mA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span>                     <span class="c1"># aerodynamic moment in roll</span>
+                <span class="p">,</span> <span class="n">Q</span> <span class="o">*</span> <span class="n">cM</span> <span class="o">*</span> <span class="n">aero</span><span class="o">.</span><span class="n">s</span> <span class="o">*</span> <span class="n">aero</span><span class="o">.</span><span class="n">d</span>         <span class="c1"># aerodynamic moment in pitch</span>
+                <span class="p">,</span> <span class="n">Q</span> <span class="o">*</span> <span class="n">cN</span> <span class="o">*</span> <span class="n">aero</span><span class="o">.</span><span class="n">s</span> <span class="o">*</span> <span class="n">aero</span><span class="o">.</span><span class="n">d</span><span class="p">])</span>       <span class="c1"># aerodynamic moment in yaw</span>
+
+    <span class="n">moments_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mA</span><span class="p">)</span>     <span class="c1"># store aerodynamic moment data for analysis</span>
+
+    <span class="c1"># propulsion force</span>
+    <span class="n">thrust</span><span class="p">,</span> <span class="n">thref</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">pressure</span><span class="p">)</span>     <span class="c1"># gt thrust force based on engine model and atmospheric pressure</span>
+    <span class="n">fPb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">thrust</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>              <span class="c1"># thrust acts purely in body X-direction</span>
+
+    <span class="n">fPe</span> <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">RB</span> <span class="o">@</span> <span class="n">fPb</span>  <span class="c1"># rotate propulsion forces to inertial frame</span>
+
+    <span class="c1"># gravity force</span>
+    <span class="n">fGe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">mass</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">g_ms2</span><span class="p">])</span>    <span class="c1"># gravity force acting in inertial Z-direction</span>
+
+    <span class="c1"># total forces</span>
+    <span class="n">forces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">fAe</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fPe</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">fGe</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>         <span class="c1"># sum of aerodynamic, propulsion, and gravity forces in X</span>
+                        <span class="p">,</span> <span class="n">fAe</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">fPe</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">fGe</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>       <span class="c1">#  in Y</span>
+                            <span class="p">,</span> <span class="n">fAe</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">fPe</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">fGe</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>  <span class="c1">#  in Z</span>
+
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    So far the three types of forces and moments, i.e. aerodynamic, propulsion,</span>
+<span class="sd">    and gravitation, have been calculated.</span>
+
+<span class="sd">    The missile.inteqm() function and the target.inteqm() function perform</span>
+<span class="sd">    integration on the derivatives of the equations of motion.</span>
+<span class="sd">    The integration is performed by running fourth-order Runge-Kutta.</span>
+<span class="sd">    For a datapoint, the equations are composed of translational equations,</span>
+<span class="sd">    while for a rigidbody they also include the rotational equations.</span>
+
+<span class="sd">    Therefore, for a datapoint object like the target,</span>
+<span class="sd">    a force vector is necessary for the evaluation of the derivatives.</span>
+<span class="sd">    The force must be given in the inertial frame of reference.</span>
+<span class="sd">    As the target in this example is not maneuvering, the force vector is [0, 0, 0].</span>
+
+<span class="sd">    For the missile, as a rigidbody,</span>
+<span class="sd">    both a force vector and a moment vector are required to evaluate the derivatives.</span>
+<span class="sd">    The force vector must be given in the inertial frame of reference.</span>
+<span class="sd">    Therefore, the propulsion, and the aerodynamic forces are rotated</span>
+<span class="sd">    to the inertial frame using the missile.RB rotation matrix.</span>
+<span class="sd">    The gravity forces are already given in the inertial frame and therefore remain intact.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># missile motion integration</span>
+    <span class="n">missile</span><span class="o">.</span><span class="n">inteqm</span><span class="p">(</span><span class="n">forces</span><span class="p">,</span> <span class="n">mA</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># rotate the velocities vector from the reference inertial frame</span>
+    <span class="c1"># to the missile body frame.</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">BR</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">missile</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="n">missile</span><span class="o">.</span><span class="n">vz</span><span class="p">])</span>
+
+    <span class="c1"># target dynmaics</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">inteqm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># update</span>
+    <span class="n">t</span> <span class="o">+=</span> <span class="n">dt</span>
+    <span class="n">missile</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; update mass and inertial properties &#39;&#39;&#39;</span>
+    <span class="n">missile</span><span class="o">.</span><span class="n">mass</span> <span class="o">-=</span> <span class="n">thref</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">/</span> <span class="n">eng</span><span class="o">.</span><span class="n">Isp</span>
+    <span class="n">missile</span><span class="o">.</span><span class="n">xcm</span>   <span class="o">=</span> <span class="n">xcm0</span> <span class="o">-</span> <span class="p">(</span><span class="n">xcm0</span> <span class="o">-</span> <span class="n">xcmbo</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">m0</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">m0</span> <span class="o">-</span> <span class="n">mbo</span><span class="p">)</span>
+    <span class="n">izz</span> <span class="o">=</span> <span class="n">iyy</span> <span class="o">=</span> <span class="n">iyy0</span> <span class="o">-</span> <span class="p">(</span><span class="n">iyy0</span> <span class="o">-</span> <span class="n">ibo</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">m0</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">m0</span> <span class="o">-</span> <span class="n">mbo</span><span class="p">)</span>
+
+    <span class="n">missile</span><span class="o">.</span><span class="n">I</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">iyy</span><span class="p">,</span> <span class="n">izz</span><span class="p">]</span>
+
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">beta</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="n">uvm</span> <span class="o">=</span> <span class="n">missile</span><span class="o">.</span><span class="n">Velocity</span> <span class="o">/</span> <span class="n">missile</span><span class="o">.</span><span class="n">vel_mag</span><span class="p">()</span>
+    <span class="n">ucl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">psi</span><span class="p">)</span>
+                    <span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">psi</span><span class="p">)</span>
+                    <span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="o">-</span><span class="n">missile</span><span class="o">.</span><span class="n">theta</span><span class="p">)])</span>
+    <span class="n">alpha_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">uvm</span> <span class="o">@</span> <span class="n">ucl</span><span class="p">)</span>
+    <span class="n">aoa_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">alpha_total</span><span class="p">])</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="o">-</span><span class="n">missile</span><span class="o">.</span><span class="n">z</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="5.-Miss-distance">
+<h2>5. Miss distance<a class="headerlink" href="#5.-Miss-distance" title="Link to this heading">#</a></h2>
+<div class="line-block">
+<div class="line">The simulation is stopped when the the line-of-sight vector <span class="math notranslate nohighlight">\(rTM\)</span> reaches a minimum (its rate changes sign). Therefore the last two samples of the simulation are the last negative range rate and first positive range rate (see figure below).</div>
+<div class="line">Now the closest approach (miss distance) and its time can be evaluated.</div>
+</div>
+<ol class="arabic simple">
+<li><p>Closest range: The miss distance vector is approximated as the component of <span class="math notranslate nohighlight">\(rTM\)</span> that is perpendicular to the relative flight path at the last computation time. (<span class="math notranslate nohighlight">\(dot(rTM, uvTM) \cdot uvTM\)</span> is the component of <span class="math notranslate nohighlight">\(rTM\)</span> along <span class="math notranslate nohighlight">\(uvTM\)</span>, i.e. the component of the position along the velocity)</p></li>
+<li><p>Time at closest range The time of the closest approach is approximated by calculating the time it takes the target to travel along the relative flight path from the point of closest approach to the final target position and then subtracting this calculated time from the time of the last computation.</p></li>
+</ol>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">vTM</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Velocity</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">Velocity</span> <span class="c1"># missile-target relative velocity</span>
+<span class="n">uvTM</span> <span class="o">=</span> <span class="n">vTM</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vTM</span><span class="p">)</span>
+
+<span class="n">rTM</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">Position</span> <span class="o">-</span> <span class="n">missile</span><span class="o">.</span><span class="n">Position</span> <span class="c1"># relative position</span>
+
+<span class="n">md</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rTM</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rTM</span><span class="p">,</span> <span class="n">uvTM</span><span class="p">)</span> <span class="o">*</span> <span class="n">uvTM</span><span class="p">)</span>
+<span class="n">tfinal</span> <span class="o">=</span> <span class="n">t</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rTM</span><span class="p">,</span> <span class="n">uvTM</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">vTM</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;miss: </span><span class="si">%.5f</span><span class="s1">, flight time: </span><span class="si">%.1f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">tfinal</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+miss: 0.00339, flight time: 7.8
+</pre></div></div>
+</div>
+<p><img alt="alt text" src="../../_images/missdistance.png" /></p>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Figure</span> <span class="pre">2:</span> <span class="pre">Miss-distance</span></code></div>
+<div class="line">Miss-distance vector diagram (taken from [1]). The descriptions in the handbook for the symbols in the illustration are:</div>
+</div>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(𝑀_𝑑\)</span>: miss distance vector at time of closet approach directed from missile to target</p></li>
+<li><p><span class="math notranslate nohighlight">\(𝑅\)</span>: range vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(𝑢_{𝑉_{𝑇/𝑀}}\)</span>: unit vector in direction of relative velocity vector <span class="math notranslate nohighlight">\(𝑉_{𝑇/𝑀}\)</span></p></li>
+</ul>
+</section>
+<section id="6.-Results">
+<h2>6. Results<a class="headerlink" href="#6.-Results" title="Link to this heading">#</a></h2>
+<section id="Configure-pyplot">
+<h3>Configure pyplot<a class="headerlink" href="#Configure-pyplot" title="Link to this heading">#</a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;dark_background&#39;</span><span class="p">)</span>
+
+<span class="n">fcsize</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">fontsize</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">linewidth</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">asp</span> <span class="o">=</span> <span class="mi">1080</span> <span class="o">/</span> <span class="mi">1920</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;font.family&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Times New Roman&#39;</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">fcsize</span><span class="p">,</span> <span class="n">fcsize</span> <span class="o">*</span> <span class="n">asp</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.subplot.top&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.subplot.left&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.15</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.subplot.right&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.subplot.bottom&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.subplot.hspace&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.8</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Trajectories">
+<h3>Trajectories<a class="headerlink" href="#Trajectories" title="Link to this heading">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">switch_backend</span><span class="p">(</span><span class="s1">&#39;inline&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;missile&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">target</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
+<span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="s1">&#39;Top View&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Crossrange (km)&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fontsize</span><span class="p">)</span>
+
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;missile&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="n">target</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
+<span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="s1">&#39;Side View&#39;</span><span class="p">,</span> <span class="s1">&#39;Downrange (km)&#39;</span><span class="p">,</span> <span class="s1">&#39;Altitude (km)&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fontsize</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">facecolor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loc</span> <span class="o">=</span> <span class="s1">&#39;lower right&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_pn_guidance_dof6sim_45_0.png" src="../../_images/programs_pn_guidance_dof6sim_45_0.png" />
+</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Figure</span> <span class="pre">3:</span> <span class="pre">Trajectories</span></code></div>
+<div class="line">The trajectory is shown from both a top view and a side view. The top view illustrates the missile’s crossrange motion relative to the target, while the side view displays the altitude change over the downrange distance. These plots visually confirm that the missile successfully intercepts the target with minimal miss distance, as the paths converge closely at the point of closest approach.</div>
+</div>
+</section>
+<section id="Euler-angles">
+<h3>Euler angles<a class="headerlink" href="#Euler-angles" title="Link to this heading">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;phi&#39;</span><span class="p">,</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">),</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">varphi$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">),</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">theta$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;psi&#39;</span><span class="p">,</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">),</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">psi$&#39;</span><span class="p">)</span>
+<span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="s1">&#39;Euler Angles&#39;</span><span class="p">,</span> <span class="s1">&#39;Time[s]&#39;</span><span class="p">,</span> <span class="s1">&#39;[deg]&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fontsize</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">facecolor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">loc</span> <span class="o">=</span> <span class="s1">&#39;lower right&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_pn_guidance_dof6sim_48_0.png" src="../../_images/programs_pn_guidance_dof6sim_48_0.png" />
+</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Figure</span> <span class="pre">4:</span> <span class="pre">Euler</span> <span class="pre">Angles</span></code></div>
+<div class="line">This plot shows the evolution of the missile’s orientation angles — roll (<span class="math notranslate nohighlight">\(\varphi\)</span>), pitch (<span class="math notranslate nohighlight">\(\theta\)</span>), yaw (<span class="math notranslate nohighlight">\(\psi\)</span>) — throughout the flight. The variations in these angles reflect the missile’s rotational dynamics as it maneuvers to a collistion path with the target.</div>
+</div>
+</section>
+<section id="Line-of-sight-rates">
+<h3>Line-of-sight rates<a class="headerlink" href="#Line-of-sight-rates" title="Link to this heading">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># omega los</span>
+<span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">omegaf_data</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">missile</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">omegaf_data</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">linewidth</span> <span class="o">=</span> <span class="n">linewidth</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+<span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">omega_</span><span class="si">{pitch}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fontsize</span><span class="p">)</span>
+<span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">omega_</span><span class="si">{yaw}</span><span class="s1">$&#39;</span><span class="p">,</span> <span class="s1">&#39;Time (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="n">fontsize</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_pn_guidance_dof6sim_51_0.png" src="../../_images/programs_pn_guidance_dof6sim_51_0.png" />
+</div>
+</div>
+<div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">Figure</span> <span class="pre">5:</span> <span class="pre">Line-Of-Sight</span> <span class="pre">Rates</span></code></div>
+<div class="line">The line-of-sight (LOS) angular rates in pitch and yaw, denoted as <span class="math notranslate nohighlight">\(\omega_{pitch}\)</span> and <span class="math notranslate nohighlight">\(\omega_{yaw}\)</span>, are shown as measured by the seeker. These rates are critical inputs to the proportional navigation guidance law. The decreasing trend in both angular rates toward zero suggests that the guidance system is effectively driving the LOS rotation to zero — indicating a successful intercept trajectory.</div>
+</div>
+</section>
+</section>
+<section id="7.-Provision-for-Monte-Carlo-Simulation">
+<h2>7. Provision for Monte Carlo Simulation<a class="headerlink" href="#7.-Provision-for-Monte-Carlo-Simulation" title="Link to this heading">#</a></h2>
+<p>While this simulation demonstrates the development and testing of a guidance system, future work can explore the system’s sensitivity to internal modeling errors.</p>
+<p>In this implementation, the main loop was executed using a fixed sample of the seeker’s random variables, the time constants (<span class="math notranslate nohighlight">\(\tau_1\)</span>, <span class="math notranslate nohighlight">\(\tau_2\)</span>), which influence the accuracy of the LOS rate measurements.</p>
+<p>A Monte Carlo simulation can be conducted to evaluate how variability in these time constants affects system performance.</p>
+<p>By introducing random variations within reasonable bounds for <span class="math notranslate nohighlight">\(\tau_1\)</span> and <span class="math notranslate nohighlight">\(\tau_2\)</span>, one can assess the robustness of the guidance algorithm and its tolerance to modeling inaccuracies and hardware imperfections.</p>
+</section>
+<section id="8.-Summary">
+<h2>8. Summary<a class="headerlink" href="#8.-Summary" title="Link to this heading">#</a></h2>
+<p>This 6DOF missile guidance simulation models the flight dynamics of a missile pursuing a non-maneuvering target, achieving a precise miss distance through the proportional navigation guidance algorithms. The simulation integrates translational and rotational equations of motion, accounts for aerodynamic forces, propulsion, and gravity, and employs a line-of-sight seeker to generate control commands.</p>
+<p>Trajectory plots and Euler angle visualizations reveal the missile’s dynamic behavior, offering insights into guidance system performance.</p>
+<p>Future enhancements could incorporate maneuvering targets or environmental effects to broaden the simulation’s applicability.</p>
+<section id="References">
+<h3>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h3>
+<p>1 Missile Flight Simulation Part One Surface-to-Air Missiles, MIL-HDBK-1211(MI) 17 July 1995. In: Military Handbook, 1995.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../../tutorials/introduction_guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Interactive Guide to State Space and State Objects Modeling</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../ballistic_ekf/ballistic_coefficient.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Ballistic Coefficient Estimation - Extended Kalman Filter</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Contents">Contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Introduction">1. Introduction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Simulation-Overview">2. Simulation Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Setup-and-Initial-Conditions">3. Setup and Initial Conditions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Import-packages">Import packages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Times-setup">Times setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Target">Target</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Missile">Missile</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Modules">Modules</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Initial-conditions">Initial conditions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Frame-of-coordinates-and-DCM">Frame of coordinates and DCM</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Main-loop">4. Main loop</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Geometry">Geometry</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Guidance-Law">Guidance Law</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Kinematic-Differential-Equations">Kinematic Differential Equations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Miss-distance">5. Miss distance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Results">6. Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Configure-pyplot">Configure pyplot</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Trajectories">Trajectories</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Euler-angles">Euler angles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Line-of-sight-rates">Line-of-sight rates</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Provision-for-Monte-Carlo-Simulation">7. Provision for Monte Carlo Simulation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Summary">8. Summary</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By c4dynamics
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, c4dynamics.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="last-updated">
+  Last updated on May 06, 2026.
+  <br/>
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

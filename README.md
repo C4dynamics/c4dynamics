@@ -87,7 +87,7 @@ Across:
 <tr>
 
 <td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/dof6sim.html">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html">
 <table height="140">
 <tr><td align="center" valign="middle">
 <img src="docs/source/_static/missdistance.png" width="100">
@@ -99,7 +99,7 @@ Across:
 </td>
 
 <td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/ballistic_coefficient.html">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html">
 <table height="140">
 <tr><td align="center" valign="middle">
 <img src="docs/source/_static/ballistic_trajectory.png" width="100">
@@ -111,7 +111,7 @@ Across:
 </td>
 
 <td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/car_tracker.html">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html">
 <table height="140">
 <tr><td align="center" valign="middle">
 <img src="docs/source/_static/drifting_car_snapshot.png" width="100">
@@ -123,10 +123,10 @@ Across:
 </td>
 
 <td width="260" align="center">
-<a href="https://c4dynamics.github.io/c4dynamics/programs/mpc_steering.html">
+<a href="https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html">
 <table height="140">
 <tr><td align="center" valign="middle">
-<img src="docs/source/_static/mpc_diagram.png" width="100">
+<img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100">
 </td></tr>
 </table>
 <b>Model Predictive Control</b><br>
