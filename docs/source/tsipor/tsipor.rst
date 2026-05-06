@@ -276,7 +276,7 @@ Real implementations of **guidance, estimation, and control algorithms**
 
     <div class="sim-grid">
 
-    <a href="../programs/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
+    <a href="../programs/pn_guidance/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/missdistance.png" class="sim-img">
         <div class="sim-text">
             <h3>6-DOF</h3>
@@ -284,7 +284,7 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/ballistic_coefficient.html" target="_blank" rel="noopener" class="sim-card">
+    <a href="../programs/ballistic_ekf/ballistic_coefficient.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/ballistic_trajectory.png" class="sim-img">
         <div class="sim-text">
             <h3>Extended Kalman Filter</h3>
@@ -292,10 +292,10 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
+    <a href="../programs/car_tracker/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/drifting_car_snapshot.png" class="sim-img">
         <div class="sim-text">
-            <h3>Object Detection & Kalman filter</h3>
+            <h3>YOLO Detector & Kalman Filter</h3>
             <p>Car tracker</p>
         </div>
     </a>
