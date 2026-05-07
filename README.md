@@ -71,6 +71,14 @@ Across:
 
 ---
 
+<div align="center">
+  <img src="https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/_static/the_switch.png">
+</div>
+
+
+
+---
+
 ## 🧪 Examples
 
 **Real implementations of modeling, estimation, and control**
