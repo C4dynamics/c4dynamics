@@ -40,29 +40,41 @@ class helicopter(state):
         super().__init__(theta=theta, psi=psi, dtheta=dtheta, dpsi=dpsi)
 
 
-    def F(self, X = None):
+    def F(self, X = None, mass = None, lcm = None, jy = None, jp = None):
         """Compute the nonlinear drift dynamics.
 
         Args:
             X: Optional state vector ordered as
                 ``[theta, psi, dtheta, dpsi]``. If omitted, the current
                 object state is used.
+            mass: Optional mass parameter. If omitted, the default class parameter is used.
+            lcm: Optional centre-of-mass arm length parameter. If omitted, the default class
+                parameter is used.
+            jy: Optional yaw moment of inertia parameter. If omitted, the default class parameter
+                is used.
+            jp: Optional pitch moment of inertia parameter. If omitted, the default class parameter
+                is used.
 
         Returns:
             A two-element array containing the uncontrolled pitch and yaw
             angular accelerations.
         """
 
+        M = self.M if mass is None else mass
+        Lcm = self.Lcm if lcm is None else lcm
+        Jy = self.Jy if jy is None else jy
+        Jp = self.Jp if jp is None else jp
+
         theta, psi, dtheta, dpsi = self.X if X is None else X
 
-        beta1  = self.Jp + self.M * self.Lcm**2
-        beta2  = (- self.M * self.g * self.Lcm * np.cos(theta)
+        beta1  = Jp + M * Lcm**2
+        beta2  = (- M * self.g * Lcm * np.cos(theta)
                 - self.Dp * dtheta
-                - self.M * self.Lcm**2 * dpsi**2 * np.sin(theta) * np.cos(theta))
+                - M * Lcm**2 * dpsi**2 * np.sin(theta) * np.cos(theta))
 
-        gamma1 = self.Jy + self.M * self.Lcm**2 * np.cos(theta)**2
+        gamma1 = Jy + M * Lcm**2 * np.cos(theta)**2
         gamma2 = (- self.Dy * dpsi
-                + 2.0 * self.M * self.Lcm**2 * dpsi * dtheta * np.sin(theta) * np.cos(theta))
+                + 2.0 * M * Lcm**2 * dpsi * dtheta * np.sin(theta) * np.cos(theta))
 
         F = np.array([beta2 / beta1,
                     gamma2 / gamma1])
@@ -71,26 +83,43 @@ class helicopter(state):
 
 
 
-    def G(self, X = None):
+    def G(self, X = None, mass = None, lcm = None, jy = None, jp = None, kpy = None, kyy = None):
         """Compute the control-effectiveness matrix.
 
         Args:
             X: Optional state vector ordered as
                 ``[theta, psi, dtheta, dpsi]``. If omitted, the current
                 object state is used.
+            mass: Optional mass parameter. If omitted, the default class parameter is used.
+            lcm: Optional centre-of-mass arm length parameter. If omitted, the default class
+                parameter is used.
+            jy: Optional yaw moment of inertia parameter. If omitted, the default class parameter
+                is used.
+            jp: Optional pitch moment of inertia parameter. If omitted, the default class parameter
+                is used.
+            kpy: Optional thrust gain parameter for pitch←yaw prop. If omitted, the default class
+                parameter is used.
+            kyy: Optional thrust gain parameter for yaw←yaw prop. If omitted, the default class
+                parameter is used.
 
         Returns:
             A 2-by-2 matrix that maps the control input vector to pitch and
             yaw angular accelerations.
         """
+        M = self.M if mass is None else mass
+        Lcm = self.Lcm if lcm is None else lcm
+        Jy = self.Jy if jy is None else jy
+        Jp = self.Jp if jp is None else jp
+        Kpy = self.Kpy if kpy is None else kpy
+        Kyy = self.Kyy if kyy is None else kyy
 
         theta, psi, dtheta, dpsi = self.X if X is None else X
 
-        beta1  = self.Jp + self.M * self.Lcm**2
-        gamma1 = self.Jy + self.M * self.Lcm**2 * np.cos(theta)**2
+        beta1  = Jp + M * Lcm**2
+        gamma1 = Jy + M * Lcm**2 * np.cos(theta)**2
 
-        G = np.array([[self.Kpp / beta1,  self.Kpy / beta1],
-                    [self.Kyp / gamma1, self.Kyy / gamma1]])
+        G = np.array([[self.Kpp / beta1, Kpy / beta1],
+                    [self.Kyp / gamma1, Kyy / gamma1]])
 
         return G
 
@@ -136,8 +165,8 @@ class helicopter(state):
                             -15 * np.cos(t)]) * d2r
 
         return xd, xd_d, xd_dd
-    
-    
+
+
     def split(self, X=None):
         """Split a full state vector into position and velocity components.
 
