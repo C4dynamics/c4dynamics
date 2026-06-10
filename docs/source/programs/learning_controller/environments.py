@@ -40,7 +40,10 @@ class helicopter(state):
         super().__init__(theta=theta, psi=psi, dtheta=dtheta, dpsi=dpsi)
 
 
-    def F(self, X = None, mass = None, lcm = None, jy = None, jp = None):
+    def F(self, X = None,
+          mass = None, lcm = None,
+          jy = None, jp = None
+        ):
         """Compute the nonlinear drift dynamics.
 
         Args:
@@ -83,7 +86,11 @@ class helicopter(state):
 
 
 
-    def G(self, X = None, mass = None, lcm = None, jy = None, jp = None, kpy = None, kyy = None):
+    def G(self, X = None,
+          mass = None, lcm = None,
+          jy = None, jp = None,
+          kpy = None, kyy = None
+        ):
         """Compute the control-effectiveness matrix.
 
         Args:
