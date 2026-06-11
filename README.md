@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/C4dynamics/C4dynamics/blob/main/docs/source/_icon/c4dlogotext.svg">
+  <img src="https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/_icon/c4dlogotext.svg">
 </div>
 
 
@@ -43,62 +43,163 @@ Tsipor (bird) Dynamics (c4dynamics) is the Python framework for state-space mode
 ![Pepy Total Downloads](https://img.shields.io/pepy/dt/c4dynamics?style=for-the-badge&color=blue%20&link=https%3A%2F%2Fpepy.tech%2Fprojects%2Fc4dynamics%3FtimeRange%3DthreeMonths%26category%3Dversion%26includeCIDownloads%3Dtrue%26granularity%3Ddaily%26viewType%3Dline%26versions%3D2.0.3%252C2.0.1%252C2.0.0)
 
 
-## About c4dynamics
 
-**c4dynamics** is designed to 
-simplify the development of algorithms for dynamic systems, 
-using state space representations. 
-It offers engineers and researchers a systematic approach to model, 
-simulate, and control systems in fields like 
-``robotics, aerospace,`` and ``navigation``.
+### **Stop starting from scratch every time you change systems**
 
-The framework introduces ``state objects,`` which are foundational 
-data structures that encapsulate state vectors and provide 
-the tools for managing data, simulating system behavior, 
-and analyzing results. 
+**Same workflow. Different systems.**
 
-With integrated modules for sensors, 
-detectors, and filters, 
-c4dynamics accelerates algorithm development 
-while maintaining flexibility and scalability.
+> Most engineers rebuild everything.
+> **c4dynamics keeps the structure fixed.**
 
+---
 
-## Why c4dynamics?
+## What is c4dynamics?
 
-✅ State objects for easy modeling
+**c4dynamics** is a Python framework for building, simulating, estimating, and controlling physical systems
+— without resetting your workflow every time the system changes.
 
-✅ Built-in functions for Kalman filters
+It gives you one consistent way to:
 
-✅ Integrated sensors and object detection models
+* define a system
+* simulate its evolution
+* estimate its state
+* design control
 
-✅ Out-of-the-box environments for reinforcement learning 
+Across:
 
-✅ Seamless integration with OpenCV & Open3D 
+> robotics · aerospace · autonomous systems · navigation
 
-✅ Optimization for Monte Carlo simulations
+---
+
+<div align="center">
+  <img src="https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/_static/the_switch.png">
+</div>
 
 
 
-## Documentation
+---
 
-📘 **Full documentation:**  
-https://c4dynamics.github.io/c4dynamics/
+## 🧪 Examples
 
-- Installation and setup guides  
-- Core concepts and state-space modeling philosophy  
-- API reference and examples  
-- Tutorials for filtering, sensing, and simulation workflows
+**Real implementations of modeling, estimation, and control**
+
+> These are not isolated demos.
+> They all follow the same structure.
 
 
-## Requirements 
+
+
+| [6-DOF Simulation](https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html) | [Extended Kalman Filter](https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html) | [YOLO + Kalman Filter](https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html) | [Model Predictive Control](https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html) | [Quadcopter Cascade PID](https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html) |
+|:-:|:-:|:-:|:-:|:-:|
+| <img src="docs/source/_static/missdistance.png" width="100"> | <img src="docs/source/_static/ballistic_trajectory.png" width="100"> | <img src="docs/source/_static/drifting_car_snapshot.png" width="100"> | <img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"> | <img src="docs/source/_static/fig8_quad.png" width="100"> |
+| Proportional navigation guidance | Ballistic coefficient estimation | Vehicle tracking | Vehicle steering | Figure-8 trajectory tracking |
+
+
+
+---
+
+## The switching problem
+
+Switching systems shouldn’t feel like starting over.
+
+But it does:
+
+* new models
+* new simulation structure
+* new estimation logic
+* new control pipeline
+
+You don’t just learn new physics.
+
+> **You rebuild everything.**
+
+---
+
+## The workflow
+
+> **Keep the workflow. Change the physics.**
+
+c4dynamics enforces a consistent structure:
+
+```
+define → simulate → estimate → control
+```
+
+So when the system changes:
+
+> your thinking doesn’t.
+
+---
+
+## Core principle
+
+> **Physics first. Programming second.**
+
+* Code implements
+* Models define reality
+* Algorithms follow structure
+
+---
+
+## What you get
+
+* state-based modeling primitives
+* simulation infrastructure
+* Kalman / Extended Kalman filters
+* sensor and detection modules
+* reinforcement learning environments
+* OpenCV / Open3D integration
+* Monte Carlo simulation support
+
+---
+
+
+## Who this is for
+
+* control engineers
+* robotics engineers
+* aerospace engineers
+* autonomy developers
+
+Especially if you’ve felt:
+
+> “I know this stuff… but I don’t use it.”
+
+---
+
+## Quickstart
+
+```python
+>>> import c4dynamics as c4d
+```
+
+# define system
+```python
+s = c4d.state(y=1, vy=0.5)
+```
+
+# simulate
+```python
+F = [[1, 1],
+     [0, 1]]
+
+s.X += F @ s.X
+s.store(t=1)
+```
+
+
+
+## Requirements
 - 3.8 <= Python < 3.13
 - Required packages are listed in [requirements.txt](requirements.txt)
 
 
+---
 
-## Installation 
+## Installation
 
-For detailed instructions on installing c4dynamics, including setup for virtual environments, Python version requirements, and troubleshooting, refer to the [c4dynamics setup guide](c4dynamics_setup.ipynb).
+For detailed instructions on installing c4dynamics, including setup for virtual environments, Python version requirements, and troubleshooting, refer to the [c4dynamics setup guide](https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/tutorials/setup_guide.ipynb).
+
 
 * [PIP](https://pypi.org/project/c4dynamics/)
 
@@ -107,8 +208,7 @@ For detailed instructions on installing c4dynamics, including setup for virtual 
 ```
 
 
-
-* [GitHub](https://github.com/C4dynamics/C4dynamics)  
+* [GitHub](https://github.com/c4dynamics/c4dynamics)
 
 To run the latest GitHub version, download the repo and install required packages:
 
@@ -117,53 +217,38 @@ To run the latest GitHub version, download the repo and install required package
 ```
 
 
-## Quickstart
+---
 
-Import c4dynamics:
-```python
->>> import c4dynamics as c4d
-```
+## Documentation
 
-Define state space object of two variables in the state space (y, vy) with initial conditions (change the state with your variables): 
-```python
->>> s = c4d.state(y = 1, vy = 0.5)
-``` 
-Store with time stamp `t = 0`:
-```python 
->>> s.store(t = 0)
-``` 
+📘 https://c4dynamics.github.io/c4dynamics/
 
-Multiply the state vector by a matrix and store:  
-```python
->>> F = [[1, 1],                      
-         [0, 1]]              
->>> s.X += F @ s.X                     
->>> s.store(t = 1)                    
-```
+* concepts
+* API
+* examples
+* tutorials
 
-Print the state variables, the state vector, and the stored data:  
-```python
->>> print(s)  
-[ y  vy ]
->>> s.X 
-[2.5  1]
->>> s.data('y') 
-([0,  1], [1,  2.5])
-```
+---
 
-## Support 
-If you encounter problems, have questions, or would like to suggest improvements, 
+## Contributing
+
+This is not just a library.
+
+It’s a shared way of building systems.
+
+* build examples
+* improve structure
+* explore new systems
+
+---
+
+## Support
+If you encounter problems, have questions, or would like to suggest improvements,
 please open an Issue in this repository.
 
 
-## New in Block 2
+---
 
-Enhancements and modules in latest release:
+> **New system. Same workflow.**
 
-- Complete state space objects mechanism
-- Seeker and radar measurements
-- Kalman filter and Extended Kalman filter
-- YOLOv3 object detection API 
-- Datasets fetching to run examples
-- Documentation
-
+---

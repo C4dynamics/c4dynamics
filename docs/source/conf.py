@@ -82,6 +82,17 @@ Each introduction should be tailored to the specific audience, with clear and re
 
 
 
+missdistance.png
+ballistic_trajectory.png
+drifting_car_snapshot.png
+mpc_diagram_thumbnail.png
+fig8_quad.png
+
+are images that not generated during the build because they
+are defined only in a css block (not genuine sphinx) then they
+need to be postioned in the _static folder 
+
+
 
 """
 # Configuration file for the Sphinx documentation builder.

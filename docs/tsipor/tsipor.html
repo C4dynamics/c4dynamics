@@ -63,7 +63,7 @@
     <link rel="search" title="Search" href="../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Mar 20, 2026"/>
+    <meta name="docbuild:last-update" content="May 07, 2026"/>
   </head>
   
   
@@ -207,13 +207,14 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../programs/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../programs/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../programs/car_tracker.html">Car Tracker – Objects Detection and Kalman Filter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../programs/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
+<li class="toctree-l1"><a class="reference internal" href="../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
@@ -735,15 +736,15 @@ Start the 10-Minute Tutorial
 <p>Real implementations of <strong>guidance, estimation, and control algorithms</strong></p>
 <div class="sim-grid">
 
-<a href="../programs/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
-    <img src="../_images/missdistance.png" class="sim-img">
+<a href="../programs/pn_guidance/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
+    <img src="../_static/missdistance.png" class="sim-img">
     <div class="sim-text">
         <h3>6-DOF</h3>
         <p>Proportional navigation guidance</p>
     </div>
 </a>
 
-<a href="../programs/ballistic_coefficient.html" target="_blank" rel="noopener" class="sim-card">
+<a href="../programs/ballistic_ekf/ballistic_coefficient.html" target="_blank" rel="noopener" class="sim-card">
     <img src="../_static/ballistic_trajectory.png" class="sim-img">
     <div class="sim-text">
         <h3>Extended Kalman Filter</h3>
@@ -751,19 +752,27 @@ Start the 10-Minute Tutorial
     </div>
 </a>
 
-<a href="../programs/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
+<a href="../programs/car_tracker/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
     <img src="../_static/drifting_car_snapshot.png" class="sim-img">
     <div class="sim-text">
-        <h3>Object Detection & Kalman filter</h3>
+        <h3>YOLO Detector & Kalman Filter</h3>
         <p>Car tracker</p>
     </div>
 </a>
 
-<a href="../programs/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
-    <img src="../_static/mpc_diagram.png" class="sim-img">
+<a href="../programs/mpc_steering/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
+    <img src="../_static/mpc_diagram_thumbnail.png" class="sim-img">
     <div class="sim-text">
         <h3>Model Predictive Control</h3>
         <p>Vehicle steering</p>
+    </div>
+</a>
+
+<a href="../programs/pid_cascade/quadcopter_pid.html" target="_blank" rel="noopener" class="sim-card">
+    <img src="../_static/fig8_quad.png" class="sim-img">
+    <div class="sim-text">
+        <h3>Quadcopter Cascade PID</h3>
+        <p>Figure-8 trajectory tracking</p>
     </div>
 </a>
 
@@ -779,13 +788,48 @@ Start the 10-Minute Tutorial
 </section>
 <section id="about">
 <h2>✨ About<a class="headerlink" href="#about" title="Link to this heading">#</a></h2>
-<p>In 2017 I moved from <strong>system engineering to algorithm development</strong>.</p>
-<p>While building simulations and testing guidance and estimation algorithms, I realized that a <strong>good simulation framework can dramatically improve algorithm development and evaluation</strong>.</p>
-<p>So I built <strong>c4dynamics</strong>.</p>
-<p>This project exists to help engineers <strong>design, test, and evaluate algorithms independently</strong>, with maximum flexibility to focus on the core problem.</p>
-<p>Focusing on the core problem is the true meaning of</p>
-<p><strong>PHYSICS FIRST — PROGRAMMING SECOND</strong></p>
-<p>Download <strong>c4dynamics</strong>, run the examples, and use it in your own projects.</p>
+<p>For years, I worked on guidance and control of aerodynamic missiles.</p>
+<p>At some point, I wanted to move to a different domain — robotics, drones, self-driving cars.</p>
+<p>It was unexpectedly hard.</p>
+<p>Every system came with its own:</p>
+<ul class="simple">
+<li><p>models</p></li>
+<li><p>sensors</p></li>
+<li><p>tools</p></li>
+<li><p>workflows</p></li>
+</ul>
+<p>It felt like starting over each time.</p>
+<p>But it didn’t make sense to me.</p>
+<p>These systems are different, yet they all follow the same fundamentals of dynamics and control.</p>
+<p>So I started asking:</p>
+<p>What actually forces me to relearn everything when I switch systems?</p>
+<p>I began to see a pattern:</p>
+<p>state → dynamics → algorithm → action</p>
+<ul class="simple">
+<li><p>define the system</p></li>
+<li><p>model how it evolves</p></li>
+<li><p>estimate its state</p></li>
+<li><p>control its behavior</p></li>
+</ul>
+<p>The structure repeats.
+Only the physics changes.</p>
+<p>So I built c4dynamics.</p>
+<p>A framework that forces me to put the physics at the center.
+Not the domain.</p>
+<p>It didn’t make switching easy.</p>
+<p>It made it possible.
+Structured. Repeatable.</p>
+<p>Today, engineers use c4dynamics to build and simulate:</p>
+<ul class="simple">
+<li><p>estimators (Kalman filters)</p></li>
+<li><p>controllers (PID, LQR, MPC)</p></li>
+<li><p>dynamic systems (rigid bodies, vehicles, robots)</p></li>
+</ul>
+<p>All with the same underlying structure.</p>
+<p>If you’ve ever felt like every new system resets your thinking —
+you’re not alone.</p>
+<p>That’s what I’m trying to solve.</p>
+<p>Explore c4dynamics, try the examples, and see what stays the same.</p>
 <p>If you have questions or want to contribute, feel free to reach out.</p>
 <p>— <strong>Ziv Meri</strong></p>
 </section>
@@ -877,7 +921,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Mar 20, 2026.
+  Last updated on May 07, 2026.
   <br/>
 </p>
   </div>

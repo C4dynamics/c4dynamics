@@ -276,15 +276,15 @@ Real implementations of **guidance, estimation, and control algorithms**
 
     <div class="sim-grid">
 
-    <a href="../programs/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_images/missdistance.png" class="sim-img">
+    <a href="../programs/pn_guidance/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/missdistance.png" class="sim-img">
         <div class="sim-text">
             <h3>6-DOF</h3>
             <p>Proportional navigation guidance</p>
         </div>
     </a>
 
-    <a href="../programs/ballistic_coefficient.html" target="_blank" rel="noopener" class="sim-card">
+    <a href="../programs/ballistic_ekf/ballistic_coefficient.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/ballistic_trajectory.png" class="sim-img">
         <div class="sim-text">
             <h3>Extended Kalman Filter</h3>
@@ -292,19 +292,27 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
+    <a href="../programs/car_tracker/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/drifting_car_snapshot.png" class="sim-img">
         <div class="sim-text">
-            <h3>Object Detection & Kalman filter</h3>
+            <h3>YOLO Detector & Kalman Filter</h3>
             <p>Car tracker</p>
         </div>
     </a>
 
-    <a href="../programs/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_static/mpc_diagram.png" class="sim-img">
+    <a href="../programs/mpc_steering/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/mpc_diagram_thumbnail.png" class="sim-img">
         <div class="sim-text">
             <h3>Model Predictive Control</h3>
             <p>Vehicle steering</p>
+        </div>
+    </a>
+
+    <a href="../programs/pid_cascade/quadcopter_pid.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/fig8_quad.png" class="sim-img">
+        <div class="sim-text">
+            <h3>Quadcopter Cascade PID</h3>
+            <p>Figure-8 trajectory tracking</p>
         </div>
     </a>
 
@@ -346,19 +354,65 @@ Real implementations of **guidance, estimation, and control algorithms**
 ✨ About
 --------
 
-In 2017 I moved from **system engineering to algorithm development**.
+For years, I worked on guidance and control of aerodynamic missiles.
 
-While building simulations and testing guidance and estimation algorithms, I realized that a **good simulation framework can dramatically improve algorithm development and evaluation**.
+At some point, I wanted to move to a different domain — robotics, drones, self-driving cars.
 
-So I built **c4dynamics**.
+It was unexpectedly hard.
 
-This project exists to help engineers **design, test, and evaluate algorithms independently**, with maximum flexibility to focus on the core problem.
+Every system came with its own:
 
-Focusing on the core problem is the true meaning of
+- models
+- sensors
+- tools
+- workflows
 
-**PHYSICS FIRST — PROGRAMMING SECOND**
+It felt like starting over each time.
 
-Download **c4dynamics**, run the examples, and use it in your own projects.
+But it didn't make sense to me.
+
+These systems are different, yet they all follow the same fundamentals of dynamics and control.
+
+So I started asking:
+
+What actually forces me to relearn everything when I switch systems?
+
+I began to see a pattern:
+
+state → dynamics → algorithm → action
+
+- define the system
+- model how it evolves
+- estimate its state
+- control its behavior
+
+The structure repeats.
+Only the physics changes.
+
+So I built c4dynamics.
+
+A framework that forces me to put the physics at the center.
+Not the domain.
+
+It didn't make switching easy.
+
+It made it possible.
+Structured. Repeatable.
+
+Today, engineers use c4dynamics to build and simulate:
+
+- estimators (Kalman filters)
+- controllers (PID, LQR, MPC)
+- dynamic systems (rigid bodies, vehicles, robots)
+
+All with the same underlying structure.
+
+If you've ever felt like every new system resets your thinking —
+you're not alone.
+
+That's what I'm trying to solve.
+
+Explore c4dynamics, try the examples, and see what stays the same.
 
 If you have questions or want to contribute, feel free to reach out.
 

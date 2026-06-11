@@ -57,6 +57,8 @@ tests/_out
 examples/temp
 programs/temp
 programs/zarchan_guidance
+docs/source/programs/pid_cascade_controller/matlab_files/
+docs/source/programs/pid_cascade_controller/python_files/
 
 
 # files in subfolders
@@ -134,3 +136,13 @@ docs/source/programs/mpc-steering_appendix.ipynb
 docs/source/programs/learning_controller/auto_landing_system.py
 docs/source/programs/learning_controller/learning_controller_ziv.ipynb
 docs/source/programs/learning_controller/environments (1).py
+
+quad_simulation_results.npz
+out/mountaincar/checkpoint/
+
+docs/source/programs/pid_cascade_controller/quadcopter_pid_v0.ipynb
+docs/source/programs/pid_cascade_controller/quadcopter_pid_ziv.ipynb
+docs/source/programs/pid_cascade_controller/quad_pid_utils_ziv.py
+optimize_gains.py
+theoretical_gains.py
+docs/source/programs/pid_cascade/quad_frame - Copy.png
