@@ -15,10 +15,12 @@
   <a href="https://doi.org/10.21105/joss.08776">
     <img src="https://joss.theoj.org/papers/10.21105/joss.08776/status.svg">
   </a>
+  <br>
+  <a href="https://github.com/pyOpenSci/software-review/issues/234">
+    <img src="https://pyopensci.org/badges/peer-reviewed.svg" alt="pyOpenSci Peer Reviewed">
+  </a>
 </div>
-
 <br>
-
 
 
 
