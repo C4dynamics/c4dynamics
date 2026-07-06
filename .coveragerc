@@ -1,6 +1,6 @@
 [run]
 omit =
-    */config-*.py
+    */config*.py
     */python-*.py
     */site-packages/*
     */distutils/*
