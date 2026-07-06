@@ -74,6 +74,8 @@ class TestYoloV3(unittest.TestCase):
     @patch("os.path.exists")
     @patch("cv2.dnn.readNet")
     def test_initialization_invalid_weights_path(self, mock_readNet, mock_exists, mock_nn_model):
+        # Mock os.path.exists to return False for the invalid path
+        mock_exists.return_value = False
         with self.assertRaises(FileNotFoundError):
             yolov3(weights_path="invalid/path/to/weights")
 
