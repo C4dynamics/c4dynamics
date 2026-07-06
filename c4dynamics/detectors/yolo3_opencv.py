@@ -298,7 +298,7 @@ class yolov3:
 
         # with resources.path("c4dynamics.detectors", "yolov3.cfg") as cfgpath:
         cfgpath = files("c4dynamics.detectors") / "yolov3.cfg"
-        self.net = cv2.dnn.readNetFromDarknet(str(cfgpath), weights_path)
+        self.net = cv2.dnn.readNet(str(cfgpath), weights_path)
 
         self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
         ln = self.net.getLayerNames()
