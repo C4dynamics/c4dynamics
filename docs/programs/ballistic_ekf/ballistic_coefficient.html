@@ -68,7 +68,7 @@
     <link rel="prev" title="Proportional Navigation Guidance - 6 Degrees of Freedom Simulation" href="../pn_guidance/dof6sim.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="May 07, 2026"/>
+    <meta name="docbuild:last-update" content="Jul 08, 2026"/>
   </head>
   
   
@@ -568,7 +568,7 @@ document.write(`
 <section id="Setup">
 <h2>Setup<a class="headerlink" href="#Setup" title="Link to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check if Google Colab is running:</span>
@@ -580,7 +580,7 @@ document.write(`
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
@@ -590,7 +590,7 @@ document.write(`
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dt</span><span class="p">,</span> <span class="n">tf</span> <span class="o">=</span> <span class="mf">.01</span><span class="p">,</span> <span class="mi">30</span>
@@ -647,7 +647,7 @@ v_z \\
 </ul>
 <p>In the form of <code class="docutils literal notranslate"><span class="pre">ODE</span></code> function, these equations are given in the ballistic function:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">ballistics</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
@@ -670,7 +670,7 @@ v_z \\
 <section id="Setup-&amp;-Initial-Conditions">
 <h3>Setup &amp; Initial Conditions<a class="headerlink" href="#Setup-&-Initial-Conditions" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tgt</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="n">z</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span> <span class="n">vz</span> <span class="o">=</span> <span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">500</span><span class="p">)</span>
@@ -692,7 +692,7 @@ v_z \\
 <li><p>Samples the radar</p></li>
 </ol>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tspan</span><span class="p">:</span>
@@ -715,7 +715,7 @@ v_z \\
 </ul>
 <p>Each subplot calls <code class="docutils literal notranslate"><span class="pre">plotdefaults()</span></code> from c4dynamics <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/generated/utils/c4dynamics.utils.plottools.plotdefaults.html">utils</a> to set default properties for an axis.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
@@ -800,7 +800,7 @@ v_z \\
 </div>
 <p>Now we can call <code class="docutils literal notranslate"><span class="pre">drawekf()</span></code> to plot the results of the ideal case:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">drawekf</span><span class="p">(</span><span class="n">trueobj</span> <span class="o">=</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">measures</span> <span class="o">=</span> <span class="n">altmtr</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Ideal&#39;</span><span class="p">,</span> <span class="n">txtcaption</span> <span class="o">=</span> <span class="s2">&quot;Figure 3: Time histories of the target altitude, velocity, and ballistic coefficient.</span><span class="se">\n</span><span class="s2">Magenta = true target, cyan = radar samples.&quot;</span><span class="p">);</span>
@@ -825,7 +825,7 @@ v_z \\
 <section id="id1">
 <h3>Setup &amp; Initial Conditions<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>
@@ -838,7 +838,7 @@ v_z \\
 <section id="id2">
 <h3>Main Loop<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tspan</span><span class="p">:</span>
@@ -852,7 +852,7 @@ v_z \\
 <section id="Results">
 <h3>Results<a class="headerlink" href="#Results" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">drawekf</span><span class="p">(</span><span class="n">trueobj</span> <span class="o">=</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">measures</span> <span class="o">=</span> <span class="n">altmtr</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Noisy&#39;</span><span class="p">,</span> <span class="n">txtcaption</span> <span class="o">=</span> <span class="s2">&quot;Figure 4: Time histories of the target altitude, velocity, and ballistic coefficient.</span><span class="se">\n</span><span class="s2">Magenta = true target, cyan = samples by nonideal radar.&quot;</span><span class="p">)</span>
@@ -868,7 +868,7 @@ v_z \\
 </div>
 <p>To observe the effect of the radar’s realistic parameters, we need to focus on a small range of the altitude axis:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">gridspec_kw</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:</span> <span class="mf">.15</span><span class="p">,</span> <span class="s1">&#39;right&#39;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s1">&#39;top&#39;</span><span class="p">:</span> <span class="mf">.80</span><span class="p">,</span> <span class="s1">&#39;bottom&#39;</span><span class="p">:</span> <span class="mf">.15</span><span class="p">})</span>
@@ -919,7 +919,7 @@ v_z \\
 <h3>Initial Conditions<a class="headerlink" href="#Initial-Conditions" title="Link to this heading">#</a></h3>
 <p>Since the initial conditions are not precisely known, let us define the following errors:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">zerr</span> <span class="o">=</span> <span class="mi">25</span>       <span class="c1"># initial error in position</span>
@@ -940,7 +940,7 @@ v_z \\
       1 &amp; 0 &amp; 0
     \end{bmatrix}\]</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">H</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
@@ -952,7 +952,7 @@ v_z \\
 <div class="line">We can use the errors that defined earlier to initialize the covariane matrix:</div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">P0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="n">nu</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">vzerr</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">betaerr</span><span class="o">**</span><span class="mi">2</span><span class="p">])</span>
@@ -968,7 +968,7 @@ v_z \\
 </div>
 <p>The measurement noise is characterized by <span class="math notranslate nohighlight">\(\nu = \sqrt{500}\)</span>:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">R</span> <span class="o">=</span> <span class="n">nu</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">dt</span>
@@ -986,7 +986,7 @@ v_z \\
 <div class="line">Finally, it requires the constant system matrices, which in this case include all matrices except the process matrix.</div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tgt</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="n">z</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span> <span class="n">vz</span> <span class="o">=</span> <span class="o">-</span><span class="mi">6000</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">500</span><span class="p">)</span>
@@ -1021,7 +1021,7 @@ v_z \\
 <p>Note that although the process is linearized, the nonlinear equations are still passed to the <code class="docutils literal notranslate"><span class="pre">predict()</span></code> function to integrate the derivatives using their exact expressions.</p>
 <p>All the steps described earlier appear in the following main loop with a comment line entitling every section:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tspan</span><span class="p">:</span>
@@ -1050,7 +1050,7 @@ v_z \\
 <section id="id5">
 <h3>Results<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">drawekf</span><span class="p">(</span><span class="n">trueobj</span> <span class="o">=</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">measures</span> <span class="o">=</span> <span class="n">altmtr</span><span class="p">,</span> <span class="n">ekf</span> <span class="o">=</span>  <span class="n">ekf</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Filtered&#39;</span><span class="p">,</span> <span class="n">txtcaption</span> <span class="o">=</span> <span class="s2">&quot;Figure 6: Extended Kalman filter estimation of target position, velocity, and ballistic coefficient.</span><span class="se">\n</span><span class="s2">Magenta = true target, cyan = samples by nonideal radar, yellow = estimated target.&quot;</span><span class="p">);</span>
@@ -1076,7 +1076,7 @@ v_z \\
 <div class="line">The effect of this process noise can be observed in the following figure, where the estimated error (white lines) remains high and does not converge as a function of time.</div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">drawekf</span><span class="p">(</span><span class="n">trueobj</span> <span class="o">=</span> <span class="n">tgt</span><span class="p">,</span> <span class="n">measures</span> <span class="o">=</span> <span class="n">altmtr</span><span class="p">,</span> <span class="n">ekf</span> <span class="o">=</span>  <span class="n">ekf</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Filtered&#39;</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">txtcaption</span> <span class="o">=</span> <span class="s2">&quot;Figure 7: Focus on an arbitrary part of the target altitude.</span><span class="se">\n</span><span class="s2">Magenta = true target, cyan = samples by nonideal radar, yellow = estimated target.&quot;</span><span class="p">);</span>
@@ -1230,7 +1230,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on May 07, 2026.
+  Last updated on Jul 08, 2026.
   <br/>
 </p>
   </div>

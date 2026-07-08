@@ -62,7 +62,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="May 07, 2026"/>
+    <meta name="docbuild:last-update" content="Jul 08, 2026"/>
   </head>
   
   
@@ -748,7 +748,7 @@ document.write(`
 
         <span class="c1"># with resources.path(&quot;c4dynamics.detectors&quot;, &quot;yolov3.cfg&quot;) as cfgpath:</span>
         <span class="n">cfgpath</span> <span class="o">=</span> <span class="n">files</span><span class="p">(</span><span class="s2">&quot;c4dynamics.detectors&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;yolov3.cfg&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">net</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">dnn</span><span class="o">.</span><span class="n">readNetFromDarknet</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cfgpath</span><span class="p">),</span> <span class="n">weights_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">net</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">dnn</span><span class="o">.</span><span class="n">readNet</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cfgpath</span><span class="p">),</span> <span class="n">weights_path</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="o">.</span><span class="n">setPreferableBackend</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">dnn</span><span class="o">.</span><span class="n">DNN_BACKEND_OPENCV</span><span class="p">)</span>
         <span class="n">ln</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="o">.</span><span class="n">getLayerNames</span><span class="p">()</span>
@@ -1256,7 +1256,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on May 07, 2026.
+  Last updated on Jul 08, 2026.
   <br/>
 </p>
   </div>
