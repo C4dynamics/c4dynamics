@@ -68,7 +68,7 @@
     <link rel="prev" title="Vehicle Steering - Model Predictive Control" href="../mpc_steering/mpc_steering.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="May 07, 2026"/>
+    <meta name="docbuild:last-update" content="Jul 08, 2026"/>
   </head>
   
   
@@ -578,13 +578,15 @@ document.write(`
 <li><p>At the end of every section, a code snippet is configuring the simulating objects.</p></li>
 <li><p>After running the example, change the quadcopter and the <em>figure-8</em> configurations to support your own system.</p></li>
 </ul>
-<p><strong>To keep the notebook focused on tuning and results, the implementation details are collected in a supporting utility file, ``quad_pid_utils.py``.</strong></p>
-<hr class="docutils" />
+<div class="line-block">
+<div class="line"><strong>To keep the notebook focused on tuning and results, the implementation details are collected in a supporting utility file,</strong> <a class="reference external" href="https://raw.githubusercontent.com/C4dynamics/C4dynamics/main/docs/source/programs/pid_cascade/quad_pid_utils.py">quad_pid_utils.py</a><strong>.</strong></div>
+<div class="line">Please refer to this file for the implementations of the quadcopter dynamics, the cascade PID’s, the mixer (control allocator), and the reference trajectories.</div>
+</div>
 </section>
 <section id="1.-Setup">
 <h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Link to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
@@ -690,7 +692,7 @@ document.write(`
 <section id="Config">
 <h3>Config<a class="headerlink" href="#Config" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quadcopter</span> <span class="o">=</span> <span class="p">{</span>
@@ -792,7 +794,7 @@ document.write(`
 <section id="id1">
 <h3>Config<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory</span> <span class="o">=</span> <span class="p">{</span>
@@ -889,7 +891,7 @@ document.write(`
 <section id="id2">
 <h3>Config<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">controller</span> <span class="o">=</span> <span class="p">{</span>
@@ -943,7 +945,7 @@ document.write(`
 <section id="id3">
 <h3>Config<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span> <span class="o">=</span> <span class="p">{</span>
@@ -957,7 +959,7 @@ document.write(`
 <section id="Main-Loop">
 <h3>Main Loop<a class="headerlink" href="#Main-Loop" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plug all the config files for the simulation entry:</span>
@@ -974,7 +976,7 @@ document.write(`
 <section id="Run-Simulation">
 <h3>Run Simulation<a class="headerlink" href="#Run-Simulation" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quad</span> <span class="o">=</span> <span class="n">run_fig8_pid</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -1009,7 +1011,7 @@ Simulation complete.
 <section id="Trajectories-and-Angles">
 <h3>Trajectories and Angles<a class="headerlink" href="#Trajectories-and-Angles" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_results</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;trajectory&#39;</span><span class="p">])</span>
@@ -1050,7 +1052,7 @@ Simulation complete.
 </table>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">)</span>
@@ -1203,7 +1205,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on May 07, 2026.
+  Last updated on Jul 08, 2026.
   <br/>
 </p>
   </div>
