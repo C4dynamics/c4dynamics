@@ -90,7 +90,7 @@ fig8_quad.png
 
 are images that not generated during the build because they
 are defined only in a css block (not genuine sphinx) then they
-need to be postioned in the _static folder 
+need to be postioned in the _static folder
 
 
 
@@ -293,9 +293,9 @@ html_short_title = project
   A list of paths that contain custom static files.
   Relative paths are taken as relative to the configuration directory (conf.py base).
 
-  The content of these folders are copied to the output’s _static directory
-  after the theme’s static files,
-  so a file named default.css will overwrite the theme’s default.css.
+  The content of these folders are copied to the output's _static directory
+  after the theme's static files,
+  so a file named default.css will overwrite the theme's default.css.
 
   Then no matter what static folder the image is located, for example
   source/_architecture/image.png
@@ -340,7 +340,9 @@ html_theme_options = {
         "google_analytics_id": "G-LKRZFXZKQP",
     }
 }
-
+html_js_files = [
+    "custom.js",
+]
 
 """
 procedure for version.
