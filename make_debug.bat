@@ -11,7 +11,9 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=docs/source
 set BUILDDIR=docs
-
+if "%SPHINXOPTS%"=="" (
+    set SPHINXOPTS=-vvv
+)
 
 @REM redirecting the output (both standard output and standard error) of the sphinx-build command to the null device, effectively suppressing any output or error messages.
 %SPHINXBUILD% >NUL 2>NUL
@@ -47,16 +49,15 @@ if "%1" == "" goto help
 @REM echo %SPHINXOPTS%
 @REM echo %O%
 
-%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
+%SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O% > build.log 2>&1
 
 
 REM if exist %BUILDDIR%\html (
 REM Move contents of doc/html/ to doc/ (including subfolders)
 REM Delete the html folder
 @REM move /Y %BUILDDIR%\html\* %BUILDDIR%\
-xcopy /E /Y %BUILDDIR%\html\* %BUILDDIR%\ >NUL
+xcopy /E /Y %BUILDDIR%\html\* %BUILDDIR%\ >NUL 2>&1
 rmdir /S /Q %BUILDDIR%\html
-
 @REM ) else (
 @REM 	echo html file not exists
 @REM )
