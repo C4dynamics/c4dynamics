@@ -1,4 +1,4 @@
-.. C4dynamics documentation master file, created by
+.. c4dynamics documentation master file, created by
    sphinx-quickstart on Thu Nov 23 16:12:22 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -220,12 +220,12 @@ The documentation is organized as follows:
   Rigid Body Transformations <concepts/transformations>
   Sensors <concepts/sensors>
   Filters <concepts/filters>
-  Reinforcement Learning Enviroenment <concepts/rl_env>
+  Reinforcement Learning Environment <concepts/rl_env>
 
 
 .. toctree::
   :maxdepth: 0
-  :caption: Toturials
+  :caption: Tutorials
   :hidden:
 
   tutorials/setup_guide.ipynb
@@ -242,6 +242,7 @@ The documentation is organized as follows:
   programs/car_tracker/car_tracker.ipynb
   programs/mpc_steering/mpc_steering.ipynb
   programs/pid_cascade/quadcopter_pid.ipynb
+  programs/learning_controller/learning_controller.ipynb
 
 
 .. toctree::

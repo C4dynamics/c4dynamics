@@ -91,10 +91,14 @@ Across:
 
 
 
-| [6-DOF Simulation](https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html) | [Extended Kalman Filter](https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html) | [YOLO + Kalman Filter](https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html) | [Model Predictive Control](https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html) | [Quadcopter Cascade PID](https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html) |
-|:-:|:-:|:-:|:-:|:-:|
-| <img src="docs/source/_static/missdistance.png" width="100"> | <img src="docs/source/_static/ballistic_trajectory.png" width="100"> | <img src="docs/source/_static/drifting_car_snapshot.png" width="100"> | <img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"> | <img src="docs/source/_static/fig8_quad.png" width="100"> |
-| Proportional navigation guidance | Ballistic coefficient estimation | Vehicle tracking | Vehicle steering | Figure-8 trajectory tracking |
+| | | |
+|:-:|:-:|:-:|
+| [**6-DOF Simulation**](https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html) | [**Extended Kalman Filter**](https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html) | [**YOLO + Kalman Filter**](https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html) |
+| <img src="docs/source/_static/missdistance.png" width="100"> | <img src="docs/source/_static/ballistic_trajectory.png" width="100"> | <img src="docs/source/_static/drifting_car_snapshot.png" width="100"> |
+| Proportional navigation guidance | Ballistic coefficient estimation | Vehicle tracking |
+| [**Model Predictive Control**](https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html) | [**Cascade PID**](https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html) | [**Neural Network based Controller**](https://c4dynamics.github.io/c4dynamics/programs/learning_controller/learning_controller.html) |
+| <img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"> | <img src="docs/source/_static/fig8_quad.png" width="100"> | <img src="docs/source/_static/helicopter.png" width="100"> |
+| Vehicle steering | Quadcopter figure-8 tracking | Helicopter Learning Controller |
 
 
 

@@ -133,6 +133,9 @@ state objects vs numpy arrays.pdf
 state objects vs numpy arrays.pptx
 docs/source/programs/mpc-steering_appendix.ipynb
 
+docs/source/programs/learning_controller/auto_landing_system.py
+docs/source/programs/learning_controller/learning_controller_ziv.ipynb
+docs/source/programs/learning_controller/environments (1).py
 
 quad_simulation_results.npz
 out/mountaincar/checkpoint/

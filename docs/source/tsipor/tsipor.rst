@@ -311,8 +311,16 @@ Real implementations of **guidance, estimation, and control algorithms**
     <a href="../programs/pid_cascade/quadcopter_pid.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/fig8_quad.png" class="sim-img">
         <div class="sim-text">
-            <h3>Quadcopter Cascade PID</h3>
-            <p>Figure-8 trajectory tracking</p>
+            <h3>Cascade PID</h3>
+            <p>Quadcopter figure-8 trajectory tracking</p>
+        </div>
+    </a>
+
+    <a href="../programs/learning_controller/learning_controller.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/helicopter.png" class="sim-img">
+        <div class="sim-text">
+            <h3>Neural Network Based Controller</h3>
+            <p>Helicopter learning control</p>
         </div>
     </a>
 
