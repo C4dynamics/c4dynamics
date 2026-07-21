@@ -1,0 +1,2022 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Neural Learning Control for Online Uncertain Dynamics Estimation &#8212; C4DYNAMICS v2.3</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../../_static/style.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=3ecf1c2d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-LKRZFXZKQP"></script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-LKRZFXZKQP');
+            </script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-LKRZFXZKQP');
+            </script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'programs/learning_controller/learning_controller';</script>
+    <script src="../../_static/custom.js?v=53f4f99c"></script>
+    <link rel="icon" href="../../_static/c4dlogo.svg"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API Reference" href="../../api/introduction.html" />
+    <link rel="prev" title="Quadcopter Cascade PID — Figure-8 Trajectory Tracking" href="../pid_cascade/quadcopter_pid.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">C4DYNAMICS v2.3</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    Home
+                </a>
+            </li>
+        </ul>
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gettingstarted.html">Getting Started</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/states.html">State Objects</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/kinematics.html">Kinematics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/transformations.html">Rigid Body Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/sensors.html">Sensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/filters.html">Filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts/rl_env.html">Reinforcement Learning Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/setup_guide.html">Setup Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/introduction_guide.html">Interactive Guide to State Space and State Objects Modeling</a></li>
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="../car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../api/introduction.html">Introduction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/States.html">State Objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/states.state.html">The State Class</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.X.html">c4dynamics.states.state.state.X</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.X0.html">c4dynamics.states.state.state.X0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.norm.html">c4dynamics.states.state.state.norm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.normalize.html">c4dynamics.states.state.state.normalize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.Position.html">c4dynamics.states.state.state.Position</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.Velocity.html">c4dynamics.states.state.state.Velocity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.addvars.html">c4dynamics.states.state.state.addvars</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.dist.html">c4dynamics.states.state.state.dist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.vel_mag.html">c4dynamics.states.state.state.vel_mag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.store.html">c4dynamics.states.state.state.store</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.storeparams.html">c4dynamics.states.state.state.storeparams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.data.html">c4dynamics.states.state.state.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.timestate.html">c4dynamics.states.state.state.timestate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/state/c4dynamics.states.state.state.plot.html">c4dynamics.states.state.state.plot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/states.lib.html">States Library</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.datapoint.html">Datapoint</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.mass.html">c4dynamics.states.lib.datapoint.datapoint.mass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.inteqm.html">c4dynamics.states.lib.datapoint.datapoint.inteqm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/dp/c4dynamics.states.lib.datapoint.datapoint.plot.html">c4dynamics.states.lib.datapoint.datapoint.plot</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.rigidbody.html">Rigidbody</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.mass.html">c4dynamics.states.lib.rigidbody.rigidbody.mass</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.I.html">c4dynamics.states.lib.rigidbody.rigidbody.I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.angles.html">c4dynamics.states.lib.rigidbody.rigidbody.angles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.ang_rates.html">c4dynamics.states.lib.rigidbody.rigidbody.ang_rates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.BR.html">c4dynamics.states.lib.rigidbody.rigidbody.BR</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.RB.html">c4dynamics.states.lib.rigidbody.rigidbody.RB</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.inteqm.html">c4dynamics.states.lib.rigidbody.rigidbody.inteqm</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.plot.html">c4dynamics.states.lib.rigidbody.rigidbody.plot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/rb/c4dynamics.states.lib.rigidbody.rigidbody.animate.html">c4dynamics.states.lib.rigidbody.rigidbody.animate</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/states.lib.pixelpoint.html">Pixelpoint</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.fsize.html">c4dynamics.states.lib.pixelpoint.pixelpoint.fsize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.class_id.html">c4dynamics.states.lib.pixelpoint.pixelpoint.class_id</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/generated/fdp/c4dynamics.states.lib.pixelpoint.pixelpoint.box.html">c4dynamics.states.lib.pixelpoint.pixelpoint.box</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Sensors.html">Sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.seeker.html">Seeker</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.bias.html">c4dynamics.sensors.seeker.seeker.bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.scale_factor.html">c4dynamics.sensors.seeker.seeker.scale_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/seeker/c4dynamics.sensors.seeker.seeker.measure.html">c4dynamics.sensors.seeker.seeker.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.radar.html">Radar</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Detectors.html">Detectors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/detectors.yolov3.html">YOLOv3</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.nms_th.html">c4dynamics.detectors.yolo3_opencv.yolov3.nms_th</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.confidence_th.html">c4dynamics.detectors.yolo3_opencv.yolov3.confidence_th</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/yolov3/c4dynamics.detectors.yolo3_opencv.yolov3.detect.html">c4dynamics.detectors.yolo3_opencv.yolov3.detect</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Filters.html">Filters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.kalman.html">Kalman filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.predict.html">c4dynamics.filters.kalman.kalman.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.update.html">c4dynamics.filters.kalman.kalman.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/kalman/c4dynamics.filters.kalman.kalman.store.html">c4dynamics.filters.kalman.kalman.store</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.ekf.html">Extended Kalman filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.predict.html">c4dynamics.filters.ekf.ekf.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.update.html">c4dynamics.filters.ekf.ekf.update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/ekf/c4dynamics.filters.ekf.ekf.store.html">c4dynamics.filters.ekf.ekf.store</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/filters.lpf.html">Lowpass filter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/lpf/c4dynamics.filters.lowpass.lowpass.sample.html">c4dynamics.filters.lowpass.lowpass.sample</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/eqm.html">Kinematics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.derivs.eqm3.html">c4dynamics.eqm.derivs.eqm3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.derivs.eqm6.html">c4dynamics.eqm.derivs.eqm6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.integrate.int3.html">c4dynamics.eqm.integrate.int3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/eqm/c4dynamics.eqm.integrate.int6.html">c4dynamics.eqm.integrate.int6</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/rotmat.html">Rotations</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.rotx.html">c4dynamics.rotmat.rotmat.rotx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.roty.html">c4dynamics.rotmat.rotmat.roty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.rotz.html">c4dynamics.rotmat.rotmat.rotz</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.dcm321.html">c4dynamics.rotmat.rotmat.dcm321</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.rotmat.dcm321euler.html">c4dynamics.rotmat.rotmat.dcm321euler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/rotmat/c4dynamics.rotmat.animate.animate.html">c4dynamics.rotmat.animate.animate</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Utils.html">Utils</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.tictoc.tic.html">c4dynamics.utils.tictoc.tic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.tictoc.toc.html">c4dynamics.utils.tictoc.toc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.cprint.cprint.html">c4dynamics.utils.cprint.cprint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.gen_gif.gif.html">c4dynamics.utils.gen_gif.gif</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/utils/c4dynamics.utils.plottools.plotdefaults.html">c4dynamics.utils.plottools.plotdefaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.math.html">Math Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/utils.const.html">Constants</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/Datasets.html">Datasets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.image.html">c4dynamics.datasets.image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.video.html">c4dynamics.datasets.video</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.nn_model.html">c4dynamics.datasets.nn_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.d3_model.html">c4dynamics.datasets.d3_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.download_all.html">c4dynamics.datasets.download_all</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/generated/datasets/c4dynamics.datasets.clear_cache.html">c4dynamics.datasets.clear_cache</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/programs/learning_controller/learning_controller.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Neural Learning Control for Online Uncertain Dynamics Estimation</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Neural Learning Control for Online Uncertain Dynamics Estimation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Author">Author</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Backstepping---Nominal-Controller">1. Backstepping - Nominal Controller</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Barrier-Lyapunov-Controller-(BLF)">2. Barrier Lyapunov Controller (BLF)</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Controller-Parameters">Controller Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Neural-Network-Uncertainty-Estimation">3. Neural Network Uncertainty Estimation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Radial-Basis-Function-Neural-Networks-(RBFNNs)">Radial Basis Function Neural Networks (<span class="math notranslate nohighlight">\(RBFNNs\)</span>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Critic">Critic</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Actor">Actor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Neural-Network-Parameters">Neural Network Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Plant-Environment">4. Plant Environment</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Custom-Environment">Custom Environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Helicopter-Example">Helicopter Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#System-Dynamics">System Dynamics</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamics-Mismatch">Dynamics Mismatch</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Desired-Setpoint">Desired Setpoint</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Simulation">5. Simulation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Results">6. Results</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Plotting-Functions">Plotting Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Comparison:-Learning-Enabled-vs-Disabled">Comparison: Learning Enabled vs Disabled</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Outputs">State Outputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Inputs">Control Inputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Critic-and-Cost">Critic and Cost</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RBF-Trajectories">RBF Trajectories</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Summary">7. Summary</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <ul class="simple">
+<li><p><a class="reference external" href="https://colab.research.google.com/github/c4dynamics/c4dynamics/blob/main/docs/source/programs/learning_controller/learning_controller.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a> ← Click to open in Google Colab</p></li>
+<li><p>To download this notebook, click the download icon in the toolbar above and select the .ipynb format.</p></li>
+<li><p>For any questions or comments, please open an issue on the <a class="reference external" href="https://github.com/c4dynamics/c4dynamics/issues">c4dynamics issues page</a>.</p></li>
+</ul>
+<section id="Neural-Learning-Control-for-Online-Uncertain-Dynamics-Estimation">
+<h1>Neural Learning Control for Online Uncertain Dynamics Estimation<a class="headerlink" href="#Neural-Learning-Control-for-Online-Uncertain-Dynamics-Estimation" title="Link to this heading">#</a></h1>
+<p>First-principles models capture the main behavior of most engineered systems, but they are never exact. The gap between the model and reality comes from uncertain parameters, unmodeled nonlinear effects, coupling effects, and external disturbances. These factors limit the performance of purely model-based controllers.</p>
+<p>This notebook presents a reusable framework for prototyping neural learning controllers that estimate these uncertainties online. Its emphasis is not the 2-DOF helicopter itself, but the environment abstraction, provided by <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/">c4dynamics</a>, that separates the controller from the plant, allowing the same learning architecture to be evaluated on arbitrary nonlinear systems by replacing only the environment implementation.</p>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/architecture.png" /></p>
+<figcaption><p>Figure 1: nonlinear controller with neural network uncertainty estimation.</p>
+</figcaption></div><section id="Author">
+<h2>Author<a class="headerlink" href="#Author" title="Link to this heading">#</a></h2>
+<p>This notebook was developed by Gilmar Tuta (<a class="reference external" href="https://github.com/grep265">&#64;grep265</a>) as part of the c4dynamics project, under the guidance of the <em>c4dynamics maintainers</em>.</p>
+</section>
+<section id="Overview">
+<h2>Overview<a class="headerlink" href="#Overview" title="Link to this heading">#</a></h2>
+<p>This notebook implements an adaptive control framework that combines a model-based backstepping controller with an actor–critic architecture for online uncertainty estimation. This differs from standard RL actor-critic where the actor outputs the control action. Here, the actor learns disturbance compensation while the critic provides adaptive gain modulation.</p>
+<p>As shown in Figure 1, the desired trajectory <span class="math notranslate nohighlight">\(X_d\)</span> is compared with the system state <span class="math notranslate nohighlight">\(X\)</span>. The resulting tracking error drives the backstepping controller, which computes the nominal control action from the available system model.</p>
+<p>An Actor Network estimates the uncertain dynamics, <span class="math notranslate nohighlight">\(\hat{f} = W_a^T H_a\)</span>, providing an adaptive compensation for modeling errors and external disturbances. The actor is trained online by gradient descent.</p>
+<p>A Critic Network evaluates the quality of the actor’s compensation through a temporal-difference (<span class="math notranslate nohighlight">\(TD\)</span>) error, which is used to adapt the actor’s learning process.</p>
+<p>Finally, a Barrier Lyapunov Function (<span class="math notranslate nohighlight">\(BLF\)</span>) incorporates state constraints into the control design, preventing the system from approaching predefined safety boundaries while preserving tracking performance.</p>
+<ul class="simple">
+<li><p>Import required libraries</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="c1"># Check if Google Colab is running:</span>
+<span class="k">if</span> <span class="s2">&quot;google.colab&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
+    <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>c4dynamics
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.gridspec</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSpec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_ivp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="1.-Backstepping---Nominal-Controller">
+<h1>1. Backstepping - Nominal Controller<a class="headerlink" href="#1.-Backstepping---Nominal-Controller" title="Link to this heading">#</a></h1>
+<div class="line-block">
+<div class="line">Backstepping is a recursive control design technique commonly used for nonlinear systems, where the control problem is broken down into a sequence of smaller steps.</div>
+<div class="line">Instead of directly designing the final control input, the method first introduces intermediate or “virtual” control laws that stabilize lower-order subsystems, and then progressively builds toward the actual control input.</div>
+<div class="line">The main advantage of backstepping is that it provides a systematic way to handle nonlinearities while maintaining rigorous stability guarantees.</div>
+</div>
+<p>This algorithm is designed for systems whose state can be split into two parts:</p>
+<div class="math notranslate nohighlight">
+\[X = [X_1, X_2]^T\]</div>
+<p>where:</p>
+<div class="math notranslate nohighlight">
+\[\dot{X}_1 = X_2\]</div>
+<p>that is, <span class="math notranslate nohighlight">\(X_1\)</span> represents position-like variables, and <span class="math notranslate nohighlight">\(X_2\)</span> represents their corresponding velocities.</p>
+<p>Such a structure naturally arises in second-order systems (e.g. mechanical systems), where the dynamics can be written in control-affine form:</p>
+<div class="math notranslate nohighlight">
+\[\dot{X}_2 = F(X) + G(X) \cdot u\]</div>
+<p>This structure enables to handle position and velocity errors separately</p>
+<p>Compute backstepping error signals and the virtual control <span class="math notranslate nohighlight">\(\alpha\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}Z_1 = X_1 - X_d \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\alpha = -K_1 \cdot Z_1 + \dot{X}_d \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}Z_2 = X_2 - \alpha \\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\dot{\alpha} = -K_1 \cdot (X_2 - \dot{X}_d) + \ddot{X}_d\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(X_1\)</span>: position-like state vector, containing the pitch and yaw angles</p></li>
+<li><p><span class="math notranslate nohighlight">\(X_2\)</span>: velocity-like state vector, containing the pitch and yaw angular rates</p></li>
+<li><p><span class="math notranslate nohighlight">\(X_d\)</span>: desired reference trajectory for <span class="math notranslate nohighlight">\(X_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span>: virtual control that defines the desired value of <span class="math notranslate nohighlight">\(X_2\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_1\)</span>: position tracking-error vector between <span class="math notranslate nohighlight">\(X_1\)</span> and <span class="math notranslate nohighlight">\(X_d\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_2\)</span>: velocity tracking-error vector between <span class="math notranslate nohighlight">\(X_2\)</span> and <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(K_1\)</span>: positive backstepping gain matrix for the <span class="math notranslate nohighlight">\(Z_1\)</span> error</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_2\)</span>: positive backstepping gain matrix for the <span class="math notranslate nohighlight">\(Z_2\)</span> error</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">backstepping</span><span class="p">(</span><span class="n">x1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">x2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                 <span class="n">xd</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">xd_d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                 <span class="n">xd_dd</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">K1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute backstepping tracking errors and virtual-control derivative.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x1: Position-like state vector.</span>
+<span class="sd">        x2: Velocity-like state vector.</span>
+<span class="sd">        xd: Desired position-like reference vector.</span>
+<span class="sd">        xd_d: First derivative of the desired reference vector.</span>
+<span class="sd">        xd_dd: Second derivative of the desired reference vector.</span>
+<span class="sd">        K1: Backstepping gain matrix for the x1 error.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tuple (z1, z2, alpha_d) containing the position error, velocity</span>
+<span class="sd">        error, and virtual-control derivative.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">z1</span>      <span class="o">=</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">xd</span>
+    <span class="n">alpha</span>   <span class="o">=</span> <span class="o">-</span><span class="n">K1</span> <span class="o">@</span> <span class="n">z1</span> <span class="o">+</span> <span class="n">xd_d</span>   <span class="c1">#  compute desired velocity</span>
+    <span class="n">z2</span>      <span class="o">=</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">alpha</span>
+    <span class="n">alpha_d</span> <span class="o">=</span> <span class="o">-</span><span class="n">K1</span> <span class="o">@</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">xd_d</span><span class="p">)</span> <span class="o">+</span> <span class="n">xd_dd</span>
+
+    <span class="k">return</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">alpha_d</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="2.-Barrier-Lyapunov-Controller-(BLF)">
+<h1>2. Barrier Lyapunov Controller (BLF)<a class="headerlink" href="#2.-Barrier-Lyapunov-Controller-(BLF)" title="Link to this heading">#</a></h1>
+<div class="line-block">
+<div class="line">To ensure that the system states remain within predefined safety limits, a barrier Lyapunov function (<span class="math notranslate nohighlight">\(BLF\)</span>) is introduced into the control design.</div>
+<div class="line">Unlike standard Lyapunov functions, which typically penalize large errors, the <span class="math notranslate nohighlight">\(BLF\)</span> becomes unbounded as the system approaches constraint boundaries, effectively preventing the states from violating these limits.</div>
+<div class="line">This creates a virtual “barrier” that restricts the evolution of the system within a safe region.</div>
+<div class="line">In practice, this means that the control input increases sharply as the tracking error approaches the constraint boundary, forcing the system back toward the allowable region.</div>
+<div class="line">This mechanism is particularly important in reinforcement learning settings, where exploration may otherwise lead to unsafe behavior.</div>
+<div class="line">For this, the control signal is computed as:</div>
+</div>
+<div class="math notranslate nohighlight">
+\[BLF = \begin{bmatrix}
+Z_{1_1} \over (k_{b_1}^2 − Z_{1_1}^2) &amp;&amp;
+Z_{1_2} \over (k_{b_2}^2 − Z_{1_2}^2) &amp;&amp;
+...                                   &amp;&amp;
+Z_{1_m} \over (k_{b_m}^2 − Z_{1_m}^2)
+\end{bmatrix}\]</div>
+<div class="math notranslate nohighlight">
+\[P = GG^T + \omega I\]</div>
+<div class="math notranslate nohighlight">
+\[u = G^T P^{-1} (−BLF − K_2 \cdot Z_2 − F + \alpha_d)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(BLF\)</span>: barrier Lyapunov function term that grows as tracking errors approach their bounds</p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_{1}\)</span>: position tracking-error vector constrained by the barrier function</p></li>
+<li><p><span class="math notranslate nohighlight">\(m\)</span>: number of constrained tracking-error components</p></li>
+<li><p><span class="math notranslate nohighlight">\(k_b\)</span>: vector of barrier bounds for the components of <span class="math notranslate nohighlight">\(Z_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(P\)</span>: regularized control allocation matrix <span class="math notranslate nohighlight">\(GG^T + \omega I\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(G\)</span>: control-effectiveness matrix of the helicopter dynamics</p></li>
+<li><p><span class="math notranslate nohighlight">\(\omega\)</span>: positive regularization coefficient used to keep <span class="math notranslate nohighlight">\(P\)</span> well conditioned</p></li>
+<li><p><span class="math notranslate nohighlight">\(u\)</span>: control input vector applied to the helicopter</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_2\)</span>: positive backstepping gain matrix for the <span class="math notranslate nohighlight">\(Z_2\)</span> error</p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_2\)</span>: velocity tracking-error vector between <span class="math notranslate nohighlight">\(X_2\)</span> and the virtual control</p></li>
+<li><p><span class="math notranslate nohighlight">\(F\)</span>: nonlinear dynamics vector of the helicopter model</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha_d\)</span>: time derivative of the virtual control <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">blf_control</span><span class="p">(</span><span class="n">z1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                    <span class="n">F</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">G</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                    <span class="n">alpha_d</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                    <span class="n">K2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="n">kb</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the learning BLF control</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        z1: Position tracking-error vector.</span>
+<span class="sd">        z2: Velocity tracking-error vector.</span>
+<span class="sd">        F: Drift dynamics vector evaluated at the current state.</span>
+<span class="sd">        G: Control-effectiveness matrix evaluated at the current state.</span>
+<span class="sd">        alpha_d: Derivative of the virtual control from backstepping.</span>
+<span class="sd">        K2: Backstepping gain matrix for the z2 error.</span>
+<span class="sd">        omega: Regularization coefficient for the control solve matrix.</span>
+<span class="sd">        kb: Barrier bounds for each z1 component.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The two-element control input vector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">z1_safe</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.999</span> <span class="o">*</span> <span class="n">kb</span><span class="p">,</span> <span class="mf">0.999</span> <span class="o">*</span> <span class="n">kb</span><span class="p">)</span>
+    <span class="n">blf</span> <span class="o">=</span> <span class="n">z1_safe</span> <span class="o">/</span> <span class="p">(</span><span class="n">kb</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">z1_safe</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">P</span>   <span class="o">=</span> <span class="n">G</span> <span class="o">@</span> <span class="n">G</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="o">-</span><span class="n">blf</span> <span class="o">-</span> <span class="n">K2</span> <span class="o">@</span> <span class="n">z2</span> <span class="o">-</span> <span class="n">F</span> <span class="o">+</span> <span class="n">alpha_d</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">rhs</span><span class="p">),</span> <span class="o">-</span><span class="mf">50.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="Controller-Parameters">
+<h2>Controller Parameters<a class="headerlink" href="#Controller-Parameters" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(K_1\)</span></p></td>
+<td><p>Position error gain</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(K_2\)</span></p></td>
+<td><p>Velocity error gain</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(k_b\)</span></p></td>
+<td><p>BLF barrier bounds for <span class="math notranslate nohighlight">\(\theta\)</span>, <span class="math notranslate nohighlight">\(\psi\)</span> errors</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\omega\)</span></p></td>
+<td><p>P-matrix regulariser</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Controller gains</span>
+<span class="n">K1</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">15.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">])</span> <span class="c1"># Position error gain</span>
+<span class="n">K2</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span>  <span class="c1"># Velocity error gain</span>
+<span class="n">kb</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">])</span> <span class="c1"># BLF barrier bounds for θ, ψ errors</span>
+<span class="n">omega</span> <span class="o">=</span> <span class="mf">0.01</span>                  <span class="c1"># P-matrix regulariser</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="3.-Neural-Network-Uncertainty-Estimation">
+<h1>3. Neural Network Uncertainty Estimation<a class="headerlink" href="#3.-Neural-Network-Uncertainty-Estimation" title="Link to this heading">#</a></h1>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/nn_architecture.png" /></p>
+<figcaption><p>Figure 2: neural network architecture for uncertainty estimation.</p>
+</figcaption></div><section id="Radial-Basis-Function-Neural-Networks-(RBFNNs)">
+<h2>Radial Basis Function Neural Networks (<span class="math notranslate nohighlight">\(RBFNNs\)</span>)<a class="headerlink" href="#Radial-Basis-Function-Neural-Networks-(RBFNNs)" title="Link to this heading">#</a></h2>
+<div class="line-block">
+<div class="line">Radial Basis Function Neural Networks are a class of function approximators that are widely used in adaptive control due to their simplicity and strong approximation capabilities.</div>
+<div class="line">An <span class="math notranslate nohighlight">\(RBFNN\)</span> represents a nonlinear function as a weighted sum of radial basis functions, typically Gaussian functions centered at different points in the input space.</div>
+<div class="line">Because of their localized response, these networks can approximate complex nonlinear mappings with relatively simple structures and fast training.</div>
+</div>
+<p>In this work, both the critic and actor use Radial Basis Function Neural Networks (<span class="math notranslate nohighlight">\(RBFNNs\)</span>) as linear-in-weights function approximators:</p>
+<div class="math notranslate nohighlight">
+\[f(Z) = W^T H(Z)\]</div>
+<div class="math notranslate nohighlight">
+\[H(Z) = \exp
+\begin{bmatrix}
+-\frac{\lVert Z - c_1 \rVert ^2}{b^2} &amp;&amp;
+-\frac{\lVert Z - c_2 \rVert ^2}{b^2} &amp;&amp;
+...                      &amp;&amp;
+-\frac{\lVert Z - c_m \rVert ^2}{b^2}
+\end{bmatrix}^T\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(f\)</span>: nonlinear function approximated by the <em>RBF</em> neural network</p></li>
+<li><p><span class="math notranslate nohighlight">\(Z\)</span>: input vector to the <em>RBF</em> neural network</p></li>
+<li><p><span class="math notranslate nohighlight">\(W\)</span>: neural-network weight vector used in the linear-in-weights approximation</p></li>
+<li><p><span class="math notranslate nohighlight">\(H\)</span>: vector of <em>RBF</em> activations evaluated at <span class="math notranslate nohighlight">\(Z\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(h\)</span>: individual Gaussian radial basis function activation</p></li>
+<li><p><span class="math notranslate nohighlight">\(c\)</span>: <em>RBF</em> center location in the input space</p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span>: Gaussian width parameter that controls each basis function spread</p></li>
+<li><p><span class="math notranslate nohighlight">\(m\)</span>: number of <em>RBF</em> nodes or basis functions</p></li>
+</ul>
+<ul class="simple">
+<li><p><em>rbf_basis()</em> computes the radial basis function activations <span class="math notranslate nohighlight">\(𝐻(𝑍)\)</span> for a given input vector <span class="math notranslate nohighlight">\(𝑍\)</span>, set of centers <span class="math notranslate nohighlight">\(𝑐_𝑖\)</span>, and Gaussian width <span class="math notranslate nohighlight">\(𝑏\)</span>, enabling nonlinear function approximation through localized basis functions</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">rbf_basis</span><span class="p">(</span><span class="n">Z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">centers</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate Gaussian radial basis functions at the input point.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Z: Input vector where the basis functions are evaluated.</span>
+<span class="sd">        centers: RBF center locations, one center per row.</span>
+<span class="sd">        width: Gaussian width parameter shared by all basis functions.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A vector containing one RBF activation value per center.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">Z</span> <span class="o">-</span> <span class="n">centers</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diff</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">width</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p><em>make_centers()</em> constructs a set of <span class="math notranslate nohighlight">\(RBF\)</span> centers <span class="math notranslate nohighlight">\(c_i\)</span> over the state/input domain, enabling localized Gaussian basis functions for accurate nonlinear function approximation</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">make_centers</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                 <span class="n">bounds</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample RBF centers uniformly within the provided bounds.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_nodes: Number of RBF centers to generate.</span>
+<span class="sd">        input_dim: Dimension of each center vector.</span>
+<span class="sd">        bounds: Sequence of (min, max) bounds for each input dimension.</span>
+<span class="sd">        rng: NumPy random number generator used for reproducible sampling.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An array of shape (n_nodes, input_dim) containing sampled centers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span>
+    <span class="n">hi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span> <span class="o">+</span> <span class="n">lo</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Critic">
+<h2>Critic<a class="headerlink" href="#Critic" title="Link to this heading">#</a></h2>
+<p>The critic serves as the evaluator of the actor’s performance. Because the instantaneous cost <span class="math notranslate nohighlight">\(I(t)\)</span> is computed from the modeling residual <span class="math notranslate nohighlight">\(e\)</span> (which directly incorporates the actor’s compensation, the critic’s estimated value function <span class="math notranslate nohighlight">\(\hat{J}(X)\)</span> represents the expected long-term cumulative error under the current actor policy. As the actor’s compensation improves, the cost-to-go estimated by the critic decreases.</p>
+<p>The instantaneous cost is the squared modeling residual evaluated after the actor’s learned compensation:</p>
+<div class="math notranslate nohighlight">
+\[e = \dot{X}_{2,\text{meas}} - (F + G \cdot u) - W_a^T H_a\]</div>
+<div class="math notranslate nohighlight">
+\[I(t) = e^T \cdot Q_e \cdot e\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(e \in \mathbb{R}^n\)</span>: residual between the measured acceleration and the model’s prediction, with the actor’s current learned compensation subtracted</p></li>
+<li><p><span class="math notranslate nohighlight">\(Q_e \succ 0\)</span>: positive-definite weighting on the residual (default: <span class="math notranslate nohighlight">\(I_n\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_a^T H_a\)</span>: the actor’s current learned compensation</p></li>
+</ul>
+<p>This cost has two key properties:</p>
+<ol class="arabic simple">
+<li><p>Bounded: as the actor learns to compensate the modeling error, <span class="math notranslate nohighlight">\(e \to 0\)</span> and the cost vanishes.</p></li>
+<li><p>State-dependent: the mismatch is driven by physics (gravity, coupling), so the critic’s input <span class="math notranslate nohighlight">\(X\)</span> is the full state.</p></li>
+</ol>
+<p>The value function is approximated by an RBF network:</p>
+<div class="math notranslate nohighlight">
+\[\hat{J}(X) = W_c^T H_c(X)\]</div>
+<p>The critic is updated using discrete-time <span class="math notranslate nohighlight">\(TD\)</span> (temporal difference):</p>
+<div class="math notranslate nohighlight">
+\[\phi_t = I_t \cdot dt + \gamma \cdot [\hat{J}(X_{t+1}) - \hat{J}(X_t)]\]</div>
+<div class="math notranslate nohighlight">
+\[W_c \leftarrow W_c + l_c \cdot {\phi_t \cdot H_c(X) \over 1 + \|H_c\|^2} \cdot dt\]</div>
+<p>The discount factor <span class="math notranslate nohighlight">\(\gamma \in (0, 1)\)</span>.</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(Q_e\)</span>: residual cost matrix (default <span class="math notranslate nohighlight">\(I_n\)</span>)</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_c\)</span>: critic neural-network weight vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(l_c\)</span>: critic learning rate</p></li>
+<li><p><span class="math notranslate nohighlight">\(H_c\)</span>: critic basis-function activation vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(\hat{J}\)</span>: estimated long-term mismatch-to-go function</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma\)</span>: <span class="math notranslate nohighlight">\(TD\)</span> discount factor</p></li>
+<li><p><span class="math notranslate nohighlight">\(dt\)</span>: integration time step</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">critic_update</span><span class="p">(</span><span class="n">Wc</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">Hc</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">Hc_next</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">residual</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">Qe</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">lc</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">weight_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update critic weights with discrete-time TD (termporal difference) on the modeling mismatch.</span>
+
+<span class="sd">    The critic estimates the long-term integrated mismatch I = e^T Q_e e</span>
+<span class="sd">    under the current actor. With J_hat = Wc @ Hc and</span>
+<span class="sd">    J_next = Wc @ Hc_next, the TD residual is</span>
+<span class="sd">    phi = I*dt + gamma * (J_next - J_hat). The normalized update keeps the</span>
+<span class="sd">    step size stable even when Hc activations vary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Wc: Current critic weight vector, shape (Nc,).</span>
+<span class="sd">        Hc: Critic RBF activation vector at state X_t.</span>
+<span class="sd">        Hc_next: Critic RBF activation vector at state X_{t+1}.</span>
+<span class="sd">        residual: Instantaneous modeling residual x2_dot_meas - (F + Gu) - W_a^T H_a.</span>
+<span class="sd">        Qe: Residual cost matrix.</span>
+<span class="sd">        gamma: TD discount factor.</span>
+<span class="sd">        lc: Critic learning rate.</span>
+<span class="sd">        dt: Integration time step.</span>
+<span class="sd">        weight_limit: Optional critic-weight clipping bound.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (Wc, J_hat, phi, I) after the critic update.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">e</span>  <span class="o">=</span> <span class="n">residual</span>
+    <span class="n">I</span>  <span class="o">=</span> <span class="n">e</span> <span class="o">@</span> <span class="n">Qe</span> <span class="o">@</span> <span class="n">e</span>
+    <span class="n">J</span>  <span class="o">=</span> <span class="n">Wc</span> <span class="o">@</span> <span class="n">Hc</span>
+    <span class="n">Jn</span> <span class="o">=</span> <span class="n">Wc</span> <span class="o">@</span> <span class="n">Hc_next</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">I</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="n">Jn</span> <span class="o">-</span> <span class="n">J</span><span class="p">)</span>
+
+    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">Hc</span> <span class="o">@</span> <span class="n">Hc</span>
+    <span class="n">Wc</span> <span class="o">=</span> <span class="n">Wc</span> <span class="o">+</span> <span class="n">lc</span> <span class="o">*</span> <span class="n">phi</span> <span class="o">*</span> <span class="n">Hc</span> <span class="o">/</span> <span class="n">norm</span> <span class="o">*</span> <span class="n">dt</span>
+
+    <span class="k">if</span> <span class="n">weight_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Wc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">Wc</span><span class="p">,</span> <span class="o">-</span><span class="n">weight_limit</span><span class="p">,</span> <span class="n">weight_limit</span><span class="p">)</span>
+
+    <span class="n">J_hat</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Wc</span><span class="p">,</span> <span class="n">J_hat</span><span class="p">,</span> <span class="n">phi</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Actor">
+<h2>Actor<a class="headerlink" href="#Actor" title="Link to this heading">#</a></h2>
+<p>The actor network is responsible for evaluating the known dynamics. The actor here is updated directly using the gradient of the instantaneous modeling residual cost (<span class="math notranslate nohighlight">\(2 \cdot Q_e \cdot e\)</span>). The critic’s role is to modulate the step size of this update using its <span class="math notranslate nohighlight">\(TD\)</span> (temporal difference) error (<span class="math notranslate nohighlight">\(\phi\)</span>), scaling up the update rate when performance is unexpectedly good, and scaling it down when performance is unexpectedly poor.</p>
+<ul class="simple">
+<li><p>The actor weights are updated via a gradient descent step on the instantaneous modeling cost, with the step size adaptively modulated by the critic’s <span class="math notranslate nohighlight">\(TD\)</span> error:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[g(\phi) = 1 + \kappa \cdot \tanh(-\phi)\]</div>
+<div class="math notranslate nohighlight">
+\[W_a \leftarrow W_a + [l_a \cdot g(\phi) \cdot H_a \cdot (2 \cdot Q_e \cdot e)^T - \sigma \cdot W_a] \cdot dt\]</div>
+<p>The cost gradient is <span class="math notranslate nohighlight">\({\partial I \over \partial (W_a^T H_a)} = -2 \cdot Q_e \cdot e\)</span> as <span class="math notranslate nohighlight">\(I = e^T \cdot Q_e \cdot e\)</span>. The critic-modulation gate <span class="math notranslate nohighlight">\(g(\phi)\)</span> reacts to the <span class="math notranslate nohighlight">\(TD\)</span> error:</p>
+<ul class="simple">
+<li><p>When <span class="math notranslate nohighlight">\(\phi &gt; 0\)</span> (the realized mismatch was larger than the critic predicted), <span class="math notranslate nohighlight">\(\tanh(-\phi) &lt; 0\)</span> and the gate shrinks.</p></li>
+<li><p>When <span class="math notranslate nohighlight">\(\phi &lt; 0\)</span> (the actor did better than expected), the gate grows, pushing the actor harder in the same direction.</p></li>
+</ul>
+<p>The gain <span class="math notranslate nohighlight">\(\kappa \ge 0\)</span> controls the critic’s influence on the actor. The residual <span class="math notranslate nohighlight">\(e\)</span> appears as the cost gradient of the value function, with the critic’s <span class="math notranslate nohighlight">\(TD\)</span> error providing the adaptive gain. A weight-decay term <span class="math notranslate nohighlight">\(-\sigma \cdot W_a\)</span> is added to the update to prevent unbounded growth.</p>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(W_a\)</span>: actor neural-network weight matrix</p></li>
+<li><p><span class="math notranslate nohighlight">\(l_a\)</span>: actor learning rate</p></li>
+<li><p><span class="math notranslate nohighlight">\(H_a\)</span>: actor basis-function activation vector</p></li>
+<li><p><span class="math notranslate nohighlight">\(e\)</span>: modeling residual</p></li>
+<li><p><span class="math notranslate nohighlight">\(Q_e\)</span>: residual cost matrix</p></li>
+<li><p><span class="math notranslate nohighlight">\(\phi\)</span>: critic <span class="math notranslate nohighlight">\(TD\)</span> residual</p></li>
+<li><p><span class="math notranslate nohighlight">\(\hat{J}\)</span>: critic’s long-term mismatch-to-go estimate</p></li>
+<li><p><span class="math notranslate nohighlight">\(\kappa\)</span>: critic-modulation gain</p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma\)</span>: weight decay term</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">actor_update</span><span class="p">(</span><span class="n">Wa</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">Ha</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">residual</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">Qe</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                     <span class="n">phi</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">la</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">kappa</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">dt</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                     <span class="n">weight_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update actor weights via a gradient descent step on the instantaneous modeling cost, critic-modulated.</span>
+
+<span class="sd">    The cost gradient -2 Q_e e provides the descent direction;</span>
+<span class="sd">    gradient descent subtracts it, so the update adds 2 Q_e e. The critic&#39;s TD</span>
+<span class="sd">    error phi modulates the learning-rate gain so the actor pushes harder</span>
+<span class="sd">    when the realized cost exceeded the critic&#39;s expectation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        Wa: Current actor weight matrix.</span>
+<span class="sd">        Ha: Actor RBF activation vector.</span>
+<span class="sd">        residual: Instantaneous modeling residual x2_dot_meas - (F + Gu) - W_a^T H_a.</span>
+<span class="sd">        Qe: Residual cost matrix.</span>
+<span class="sd">        phi: Critic TD residual (advantage-like signal).</span>
+<span class="sd">        la: Actor learning rate.</span>
+<span class="sd">        kappa: Critic modulation gain.</span>
+<span class="sd">        dt: Integration time step.</span>
+<span class="sd">        weight_limit: Optional actor-weight clipping bound.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Updated actor weight matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="c1"># Small regularization term to prevent unbounded growth</span>
+    <span class="n">grad_imm</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">Qe</span> <span class="o">@</span> <span class="n">residual</span><span class="p">)</span>
+    <span class="n">gate</span>     <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">kappa</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="o">-</span><span class="n">phi</span><span class="p">)</span>
+    <span class="n">dWa</span>      <span class="o">=</span> <span class="p">(</span>
+        <span class="n">la</span> <span class="o">*</span> <span class="n">gate</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">Ha</span><span class="p">,</span> <span class="n">grad_imm</span><span class="p">)</span>
+        <span class="o">-</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">Wa</span>
+    <span class="p">)</span>
+    <span class="n">Wa</span>       <span class="o">=</span> <span class="n">Wa</span> <span class="o">+</span> <span class="n">dWa</span> <span class="o">*</span> <span class="n">dt</span>
+
+    <span class="k">if</span> <span class="n">weight_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Wa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">Wa</span><span class="p">,</span> <span class="o">-</span><span class="n">weight_limit</span><span class="p">,</span> <span class="n">weight_limit</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Wa</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Neural-Network-Parameters">
+<h2>Neural Network Parameters<a class="headerlink" href="#Neural-Network-Parameters" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(l_c\)</span></p></td>
+<td><p>critic learning rate</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(l_a\)</span></p></td>
+<td><p>actor learning rate</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(b_c\)</span></p></td>
+<td><p>critic Gaussian width</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(b_a\)</span></p></td>
+<td><p>actor Gaussian width</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(N_c\)</span></p></td>
+<td><p>critic hidden nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(N_a\)</span></p></td>
+<td><p>actor hidden nodes</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\gamma\)</span></p></td>
+<td><p>discount factor</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(Q_e\)</span></p></td>
+<td><p>residual cost matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\kappa\)</span></p></td>
+<td><p>critic modulation gain on actor</p></td>
+</tr>
+<tr class="row-odd"><td><p>critic_bounds</p></td>
+<td><p>RBFNN critic centre bounds</p></td>
+</tr>
+<tr class="row-even"><td><p>actor_bounds</p></td>
+<td><p>RBFNN actor centre bounds</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lc</span>    <span class="o">=</span> <span class="mf">5.0</span>                    <span class="c1"># critic learning rate</span>
+<span class="n">la</span>    <span class="o">=</span> <span class="mf">5.0</span>                    <span class="c1"># actor learning rate</span>
+<span class="n">bc</span>    <span class="o">=</span> <span class="mf">0.8</span>                    <span class="c1"># critic Gaussian width</span>
+<span class="n">ba</span>    <span class="o">=</span> <span class="mf">20.0</span>                   <span class="c1"># actor Gaussian width</span>
+<span class="n">Nc</span>    <span class="o">=</span> <span class="mi">32</span>                     <span class="c1"># critic hidden nodes</span>
+<span class="n">Na</span>    <span class="o">=</span> <span class="mi">64</span>                     <span class="c1"># actor hidden nodes</span>
+<span class="n">gamma</span> <span class="o">=</span> <span class="mf">0.999</span>                  <span class="c1"># discount factor: gamma = exp(-dt/tau) with tau ≈ 1 s; dt = 0.001 s, tau = 1 s =&gt; gamma = exp(-0.001/1) ≈ 0.999</span>
+<span class="n">Qe</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>              <span class="c1"># residual cost weighting</span>
+<span class="n">kappa</span> <span class="o">=</span> <span class="mf">1.0</span>                    <span class="c1"># critic modulation gain on actor</span>
+
+<span class="c1"># Safety bounds</span>
+<span class="n">Wc_max</span> <span class="o">=</span> <span class="mf">100.0</span>                 <span class="c1"># critic weight clipping bound</span>
+<span class="n">Wa_max</span> <span class="o">=</span> <span class="mf">100.0</span>                 <span class="c1"># actor weight clipping bound</span>
+
+<span class="c1"># RBFNN center bounds</span>
+<span class="n">critic_bounds</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">1.6</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="n">actor_bounds</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span>    <span class="c1"># theta</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span>    <span class="c1"># psi</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>    <span class="c1"># dot{theta}</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>    <span class="c1"># dot{psi}</span>
+<span class="p">]</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="4.-Plant-Environment">
+<h1>4. Plant Environment<a class="headerlink" href="#4.-Plant-Environment" title="Link to this heading">#</a></h1>
+<p>The objective of this project is not to provide a controller for a single helicopter model, but to provide a reusable environment for developing and evaluating learning-based controllers.</p>
+<p>The controller interacts only with the environment through the system state and control inputs, allowing the plant implementation to be replaced without modifying the learning algorithm. This separation makes it possible to prototype different dynamic systems, inject modeling errors and disturbances, and compare control strategies under identical conditions.</p>
+<p>The environment is responsible for</p>
+<ul class="simple">
+<li><p>simulating the plant dynamics,</p></li>
+<li><p>integrating the equations of motion,</p></li>
+<li><p>defining reference trajectories,</p></li>
+<li><p>introducing model uncertainties and disturbances,</p></li>
+<li><p>providing observations to the controller, and</p></li>
+<li><p>recording data for analysis and visualization.</p></li>
+</ul>
+<p>Although this notebook demonstrates the framework using a 2-DOF helicopter, the same interface can be adapted to other nonlinear systems with minimal changes.</p>
+<section id="Custom-Environment">
+<h2>Custom Environment<a class="headerlink" href="#Custom-Environment" title="Link to this heading">#</a></h2>
+<p>The controller assumes systems of the (control-affine) form:</p>
+<div class="math notranslate nohighlight">
+\[\dot{X}_1 = X_2\]</div>
+<div class="math notranslate nohighlight">
+\[\dot{X}_2 = F(X) + G(X)\, u\]</div>
+<p>where the full state vector is <span class="math notranslate nohighlight">\(X = [X_1,\, X_2] \in \mathbb{R}^{2n}\)</span>, split into:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(X_1 \in \mathbb{R}^n\)</span>: position-like state vector, such as positions or angles</p></li>
+<li><p><span class="math notranslate nohighlight">\(X_2 \in \mathbb{R}^n\)</span>: velocity-like state vector, such as velocities or rates</p></li>
+</ul>
+<p>and:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(F(X) \in \mathbb{R}^n\)</span>: system internal dynamics</p></li>
+<li><p><span class="math notranslate nohighlight">\(G(X) \in \mathbb{R}^{n \times m}\)</span>: control-input matrix</p></li>
+<li><p><span class="math notranslate nohighlight">\(u \in \mathbb{R}^m\)</span>: control input vector</p></li>
+</ul>
+<p>Here <span class="math notranslate nohighlight">\(n\)</span> is the number of generalized coordinates and <span class="math notranslate nohighlight">\(m\)</span> is the number of inputs. To plug in a new system into this controller, implement a class with these methods and information:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Output</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>states</em></p></td>
+<td><p>None</p></td>
+<td><p>System states</p></td>
+<td><p>Defines the complete system state representation used by the controller.</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>system parameters</em></p></td>
+<td><p>None</p></td>
+<td><p>Physical/model parameters</p></td>
+<td><p>Defines all model parameters required by the environment dynamics.</p></td>
+</tr>
+<tr class="row-even"><td><p><em>F(X)</em></p></td>
+<td><p><em>X</em>: full state vector</p></td>
+<td><p>Internal dynamics vector <span class="math notranslate nohighlight">\(F(X)\)</span></p></td>
+<td><p>Computes the internal system dynamics excluding the control-input contribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>G(X)</em></p></td>
+<td><p><em>X</em>: full state vector</p></td>
+<td><p>Control-input matrix <span class="math notranslate nohighlight">\(G(X)\)</span></p></td>
+<td><p>Computes the input matrix mapping control inputs into the system dynamics.</p></td>
+</tr>
+<tr class="row-even"><td><p><em>dynamics(t, X, u)</em></p></td>
+<td><p><em>t</em>: simulation time, <em>X</em>: full state vector, <em>u</em>: control input vector</p></td>
+<td><p>Full state derivative <span class="math notranslate nohighlight">\(\dot{X}\)</span></p></td>
+<td><p>Returns the complete nonlinear state equation used for numerical integration and simulation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>reference(t)</em></p></td>
+<td><p><em>t</em>: simulation time</p></td>
+<td><p>Desired trajectory <span class="math notranslate nohighlight">\((x_d,\ \dot{x}_d,\ \ddot{x}_d)\)</span></p></td>
+<td><p>Provides the desired reference trajectory and its derivatives required by the controller.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="line-block">
+<div class="line">The following pseudocode illustrates the required structure of a custom environment.</div>
+<div class="line">For a complete implementation, see the <a class="reference external" href="https://github.com/grep265/c4dynamics/tree/helicopter_rl/c4dynamics/envs/environments.py">helicopter environment</a>.</div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MySystem</span><span class="p">(</span><span class="n">c4dynamics</span><span class="o">.</span><span class="n">state</span><span class="p">):</span>
+
+    <span class="c1"># State variables</span>
+    <span class="n">var_1</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="o">...</span>
+    <span class="n">var_n</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="n">dvar_1</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="o">...</span>
+    <span class="n">dvar_n</span><span class="p">:</span> <span class="nb">float</span>
+
+
+    <span class="c1"># Define physical/model parameters</span>
+    <span class="n">parameter_1</span> <span class="o">=</span> <span class="o">...</span>
+    <span class="n">parameter_2</span> <span class="o">=</span> <span class="o">...</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_1</span><span class="o">=</span><span class="n">var_1_0</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">dvar_1</span><span class="o">=</span><span class="n">dvar_1_0</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Initialize state variables &#39;&#39;&#39;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">F</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Internal dynamics &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">F</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">G</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Input matrix &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Full state equation &#39;&#39;&#39;</span>
+
+        <span class="n">X1_dot</span> <span class="o">=</span> <span class="n">X2</span>
+        <span class="n">X2_dot</span> <span class="o">=</span> <span class="n">F</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">+</span> <span class="n">G</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">@</span> <span class="n">u</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">X1_dot</span><span class="p">,</span> <span class="n">X2_dot</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Desired trajectory &#39;&#39;&#39;</span>
+
+        <span class="n">xd</span>     <span class="o">=</span> <span class="o">...</span>
+        <span class="n">xd_dot</span> <span class="o">=</span> <span class="o">...</span>
+        <span class="n">xd_ddot</span> <span class="o">=</span> <span class="o">...</span>
+
+        <span class="k">return</span> <span class="n">xd</span><span class="p">,</span> <span class="n">xd_dot</span><span class="p">,</span> <span class="n">xd_ddot</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; Split state vector into position and velocity components &#39;&#39;&#39;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="k">if</span> <span class="n">X</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="p">:]</span>
+</pre></div>
+</div>
+<p>To create a custom environment, define a class that inherits from <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/states.state.html">c4dynamics.state</a> and follows the structure of <em>MySystem</em>.</p>
+</section>
+<section id="Helicopter-Example">
+<h2>Helicopter Example<a class="headerlink" href="#Helicopter-Example" title="Link to this heading">#</a></h2>
+<section id="System-Dynamics">
+<h3>System Dynamics<a class="headerlink" href="#System-Dynamics" title="Link to this heading">#</a></h3>
+<p>The system under consideration is a laboratory-scale 2-DOF helicopter, which can rotate in pitch and yaw directions and is actuated by two independent DC motors generating thrust forces. The system exhibits strong nonlinear coupling between these two axes. These characteristics make the control problem particularly challenging, as the controller must handle nonlinearities, coupling effects, and incomplete knowledge of the system while maintaining stable and accurate trajectory tracking.</p>
+<div style="text-align: center;"><p><img alt="alt text" src="../../_images/helicopter_diagram.png" /></p>
+<figcaption><p>Figure 3: Helicopter diagram of a laboratory model mounted on a fixed base with two propellers driven by DC motors.</p>
+</figcaption></div><p><strong>Clarifications for figure 3:</strong></p>
+<ul class="simple">
+<li><p>No translational motion exists</p></li>
+<li><p>The front rotor generates thrust <span class="math notranslate nohighlight">\(F_p​\)</span> and controls the pitch (<span class="math notranslate nohighlight">\(\theta\)</span>) motion</p></li>
+<li><p>The rear rotor generates thrust <span class="math notranslate nohighlight">\(F_y\)</span> and controls the yaw (<span class="math notranslate nohighlight">\(\psi\)</span>) motion</p></li>
+<li><p>The connecting beam is fixed at point <span class="math notranslate nohighlight">\(P\)</span> which is used as the origin of the coordiante systems</p></li>
+<li><p>The helicopter center of mass is located at a distance <span class="math notranslate nohighlight">\(L\)</span> from point <span class="math notranslate nohighlight">\(P\)</span></p></li>
+<li><p>The inertial reference system (black) is fixed with origin at <span class="math notranslate nohighlight">\(P\)</span></p></li>
+<li><p>The body reference system (red) has an origin at <span class="math notranslate nohighlight">\(P\)</span> and rotates with the helicopter laboratory model</p></li>
+<li><p>The azimuth angle <span class="math notranslate nohighlight">\(\psi\)</span> is the first rotation in the series and is given by a rotation about the <span class="math notranslate nohighlight">\(Z\)</span> inertial axis</p></li>
+<li><p>The elevation angle <span class="math notranslate nohighlight">\(\theta\)</span> is the second rotation and is given by a rotation about the <span class="math notranslate nohighlight">\(Y_b\)</span> body axis</p></li>
+</ul>
+<div class="line-block">
+<div class="line">The dynamics are derived using Lagrangian mechanics and result in a nonlinear multi-input multi-output (MIMO) system.</div>
+<div class="line">The 2-DOF helicopter system equations of motion can be written as <span class="math notranslate nohighlight">\([1], [2]\)</span>:</div>
+</div>
+<div class="math notranslate nohighlight">
+\[(J_p + M \cdot L_{cm}^2) \cdot \ddot{\theta} = K_{pp} \cdot V_p + K_{py} \cdot V_y - M \cdot g \cdot L_{cm} \cdot \cos(\theta) - D_p \cdot \dot{\theta} - M \cdot L_{cm}^2 \cdot \dot{\psi}^2 \cdot \sin(\theta) \cdot \cos(\theta)\]</div>
+<div class="math notranslate nohighlight">
+\[(J_y + M \cdot L_{cm}^2 \cdot \cos^2(\theta)) \cdot \ddot{\psi} = K_{yp} \cdot V_p + K_{yy} \cdot V_y - D_y \cdot \dot{\psi} + 2 \cdot M \cdot L_{cm}^2 \cdot \dot{\psi} \cdot \dot{\theta} \cdot \sin(\theta) \cdot \cos(\theta)\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\theta\)</span>: pitch angle</p></li>
+<li><p><span class="math notranslate nohighlight">\(\psi\)</span>: yaw angle</p></li>
+<li><p><span class="math notranslate nohighlight">\(\dot{\theta}\)</span>: pitch angular velocity</p></li>
+<li><p><span class="math notranslate nohighlight">\(\dot{\psi}\)</span>: yaw angular velocity</p></li>
+<li><p><span class="math notranslate nohighlight">\(V_p\)</span>: pitch motor input voltage</p></li>
+<li><p><span class="math notranslate nohighlight">\(V_y\)</span>: yaw motor input voltage</p></li>
+<li><p><span class="math notranslate nohighlight">\(D_p\)</span>: pitch viscous friction constant</p></li>
+<li><p><span class="math notranslate nohighlight">\(D_y\)</span>: yaw viscous friction constant</p></li>
+<li><p><span class="math notranslate nohighlight">\(J_p\)</span>: pitch-axis moment of inertia</p></li>
+<li><p><span class="math notranslate nohighlight">\(J_y\)</span>: yaw-axis moment of inertia</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_{pp}\)</span>: torque thrust gain on the pitch axis from the pitch propeller</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_{py}\)</span>: torque thrust gain on the pitch axis from the yaw propeller</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_{yp}\)</span>: torque thrust gain on the yaw axis from the pitch propeller</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_{yy}\)</span>: torque thrust gain on the yaw axis from the yaw propeller</p></li>
+<li><p><span class="math notranslate nohighlight">\(g\)</span>: gravitational acceleration</p></li>
+<li><p><span class="math notranslate nohighlight">\(L_{cm}\)</span>: the center-of-mass distance from the body-fixed frame origin</p></li>
+<li><p><span class="math notranslate nohighlight">\(M\)</span>: the helicopter’s mass</p></li>
+</ul>
+<p><strong>Dynamics clarifications:</strong></p>
+<ul class="simple">
+<li><p>Ideally, the front rotor would generate pure pitch motion and the rear rotor pure yaw motion.</p></li>
+<li><p>In reality, the system is nonlinear because the pitch and yaw motions are dynamically coupled, as expressed in items (3) and (6).</p></li>
+</ul>
+<ol class="arabic simple">
+<li><p>The term in the left <span class="math notranslate nohighlight">\((J_p + M \cdot L_{cm}^2) \cdot \ddot{\theta}\)</span> is the rotational analogue of Newton’s second law <span class="math notranslate nohighlight">\(m \cdot a\)</span>, where <span class="math notranslate nohighlight">\((J_p + M \cdot L_{cm}^2)\)</span> is the effective pitch-axis inertia and <span class="math notranslate nohighlight">\(\ddot{\theta}\)</span> is the pitch angular acceleration.</p></li>
+<li><p>The term <span class="math notranslate nohighlight">\(K_{pp} \cdot V_p\)</span> represents the primary control action of the front rotor on the pitch axis, i.e. the pitch torque generated by the front motor voltage.</p></li>
+<li><p><span class="math notranslate nohighlight">\(K_{py} \cdot V_y\)</span> represents actuator coupling: an unintended contribution of the yaw rotor to the pitch dynamics due to non-ideal mechanics.</p></li>
+<li><p><span class="math notranslate nohighlight">\(M \cdot g \cdot L_{cm} \cdot \cos\theta\)</span> is the gravitational restoring torque acting on a rigid body.</p></li>
+<li><p><span class="math notranslate nohighlight">\(D_p \cdot \dot{\theta}\)</span> models viscous rotational damping opposing the pitch angular velocity.</p></li>
+<li><p>The term <span class="math notranslate nohighlight">\(M \cdot L_{cm}^2 \cdot \dot{\psi}^2 \cdot \sin\theta \cdot \cos\theta\)</span> is a major coupling term. It originates from centrifugal inertial effects caused by the simultaneous yaw rotation and pitch orientation of the rigid body. As the helicopter rotates in yaw, the center of mass follows a curved trajectory around the yaw axis, generating additional apparent torques that couple the yaw motion into the pitch dynamics.</p></li>
+<li><p>The terms in the yaw equation follow the same structure, besides <span class="math notranslate nohighlight">\(2 \cdot M \cdot L_{cm}^2 \cdot \dot{\psi} \cdot \dot{\theta} \cdot \sin(\theta) \cdot \cos(\theta)\)</span> which is the second major coupling term. It originates from the Coriolis-like inertial effects caused by the simultaneous pitch and yaw rotational motion of the rigid body. The interaction between the angular velocities generates additional apparent torques that couple the pitch motion into the yaw dynamics.</p></li>
+</ol>
+<p>The state variables are defined as</p>
+<div class="math notranslate nohighlight">
+\[X = [\theta, \psi, \dot{\theta}, \dot{\psi}]^T\]</div>
+<p>For this example, <span class="math notranslate nohighlight">\(n = 2\)</span> (pitch and yaw) and <span class="math notranslate nohighlight">\(m = 2\)</span> (pitch motor voltage, yaw motor voltage), therefore:</p>
+<div class="math notranslate nohighlight">
+\[X_1 = [\theta, \psi]^T\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[X_2 = [\dot{\theta}, \dot{\psi}]^T\]</div>
+<ul class="simple">
+<li><p>Define initial states</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">theta0</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># [rad]</span>
+<span class="n">psi0</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># [rad]</span>
+<span class="n">thetadot0</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># [rad/s]</span>
+<span class="n">psidot0</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># [rad/s]</span>
+</pre></div>
+</div>
+</div>
+<p>Following the formulation</p>
+<div class="math notranslate nohighlight">
+\[\ddot{x} = F(X) + G(X) \cdot u\]</div>
+<p>the helicopter dynamics are implemented through the functions <em>F(X)</em> and <em>G(X)</em> in <a class="reference external" href="https://github.com/grep265/c4dynamics/tree/helicopter_rl/c4dynamics/envs/environments.py">environments.py</a>.</p>
+<ul class="simple">
+<li><p>Import environment</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics.envs.environments</span><span class="w"> </span><span class="kn">import</span> <span class="n">helicopter</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">helicopter</span><span class="p">(</span><span class="n">theta</span><span class="o">=</span><span class="n">theta0</span><span class="p">,</span> <span class="n">psi</span><span class="o">=</span><span class="n">psi0</span><span class="p">,</span> <span class="n">dtheta</span><span class="o">=</span><span class="n">thetadot0</span><span class="p">,</span> <span class="n">dpsi</span><span class="o">=</span><span class="n">psidot0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[ θ  ψ  dtheta  dpsi ]
+[0. 0. 0. 0.]
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Dynamics-Mismatch">
+<h2>Dynamics Mismatch<a class="headerlink" href="#Dynamics-Mismatch" title="Link to this heading">#</a></h2>
+<p>The gap between the controller’s model and the true plant is simulated by intentionally adding a mismatch to the physical parameters that appear in <em>F(X)</em> and <em>G(X)</em>. Two categories of uncertainty are introduced:</p>
+<ul class="simple">
+<li><p><strong>Inertia uncertainty</strong>: the mass M, pitch inertia Jp, and yaw inertia Jy. This represents changes in the center of mass, inaccuracies in CAD modelling, and errors in inertia identification.</p></li>
+<li><p><strong>Aerodynamic gain uncertainty</strong>: the thrust gains Kpy (pitch from yaw rotor) and Kyy (yaw from yaw rotor). This represents imprecise motor/propeller models and errors in thrust coefficient identification.</p></li>
+</ul>
+<p>The plant dynamics uses <em>F(X)</em> and <em>G(X)</em> with the nominal parameters, while the controller uses the perturbed parameter values. The resulting residual is the signal the actor-critic learns to cancel, and its magnitude depends directly on the size of these parameter mismatches:</p>
+<div class="math notranslate nohighlight">
+\[e = \dot{X}_{2,\text{meas}} - (F_{\text{ctrl}} + G_{\text{ctrl}}\, u) - f_{\text{hat}}\]</div>
+<p>The parameter mismatches were chosen to be large enough to challenge the nominal backstepping controller, thereby creating a meaningful residual for the actor–critic component to learn and compensate.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mass_factor</span> <span class="o">=</span> <span class="mf">1.2</span>
+<span class="n">jy_factor</span>   <span class="o">=</span> <span class="mf">0.2</span>
+<span class="n">jp_factor</span>   <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">kpy_factor</span>  <span class="o">=</span> <span class="mf">1.35</span>
+<span class="n">kyy_factor</span>  <span class="o">=</span> <span class="mf">0.4</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Desired-Setpoint">
+<h2>Desired Setpoint<a class="headerlink" href="#Desired-Setpoint" title="Link to this heading">#</a></h2>
+<p>The desired trajectory used in this study consists of smooth sinusoidal functions for both pitch and yaw angles, which are commonly used in control system validation. This type of trajectory is particularly suitable because it continuously excites the system dynamics, allowing the controller’s performance to be evaluated under varying conditions rather than at a single operating point.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}X_d(t) =
+\begin{bmatrix}
+\frac{10\pi}{180} \sin(t) \\
+\frac{15\pi}{180} \cos(t)
+\end{bmatrix}
+\quad [\text{rad}]\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\dot{X}_d(t) =
+\begin{bmatrix}
+\frac{10\pi}{180} \cos(t) \\
+-\frac{15\pi}{180} \sin(t)
+\end{bmatrix}
+\quad [\text{rad/s}]\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}\ddot{X}_d(t) =
+\begin{bmatrix}
+-\frac{10\pi}{180} \sin(t) \\
+-\frac{15\pi}{180} \cos(t)
+\end{bmatrix}
+\quad [\text{rad/s}^2]\end{split}\]</div>
+<p>You can find the reference trajectory implementation for the helicopter example in the <em>reference()</em> method of <a class="reference external" href="https://github.com/grep265/c4dynamics/tree/helicopter_rl/c4dynamics/envs/environments.py">environments.py</a>.</p>
+</section>
+</section>
+<section id="5.-Simulation">
+<h1>5. Simulation<a class="headerlink" href="#5.-Simulation" title="Link to this heading">#</a></h1>
+<p>For each step:</p>
+<ol class="arabic simple">
+<li><p>Log data for analysis</p></li>
+<li><p>Evaluate updated system model</p></li>
+<li><p>Get reference trajectory</p></li>
+<li><p>Compute backstepping errors</p></li>
+<li><p>Compute Lyapunov control</p></li>
+<li><p>Integrate the TRUE dynamics</p></li>
+<li><p>Evaluate critic features</p></li>
+<li><p>Evaluate actor features</p></li>
+<li><p>Evaluate the uncertainty</p></li>
+</ol>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">u_hist</span>      <span class="o">=</span> <span class="p">[]</span>
+<span class="n">J_hat_hist</span>  <span class="o">=</span> <span class="p">[]</span>
+<span class="n">u_k2_hist</span>   <span class="o">=</span> <span class="p">[]</span>
+<span class="n">u_F_hist</span>    <span class="o">=</span> <span class="p">[]</span>
+<span class="n">phi_hist</span>    <span class="o">=</span> <span class="p">[]</span>
+<span class="n">residual_hist</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span>
+
+<span class="c1"># RBFNN centre placement</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+<span class="c1"># Critic input: Zc = X (full states)</span>
+<span class="n">critic_centers</span> <span class="o">=</span> <span class="n">make_centers</span><span class="p">(</span><span class="n">Nc</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">critic_bounds</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+<span class="c1"># Actor input: Za = X (full states)</span>
+<span class="n">actor_centers</span>  <span class="o">=</span> <span class="n">make_centers</span><span class="p">(</span><span class="n">Na</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">actor_bounds</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_controller</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">25.0</span><span class="p">,</span> <span class="n">learning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Run the helicopter simulation over the requested horizon.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dt: Simulation integration time step, in seconds.</span>
+<span class="sd">        T: Total simulation duration, in seconds.</span>
+<span class="sd">        seed: Random seed used to generate RBF centers.</span>
+<span class="sd">        learning: Whether to use learned control input.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None. The function updates the global env state history and</span>
+<span class="sd">        appends control inputs to u_hist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Clear history from previous runs</span>
+    <span class="n">u_hist</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">J_hat_hist</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">phi_hist</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">residual_hist</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">X0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Weight initialisation</span>
+    <span class="n">Wc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">Nc</span><span class="p">)</span>
+    <span class="n">Wa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">Na</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">Hc_prev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Nc</span><span class="p">)</span>
+    <span class="n">u</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">f_hat</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">J_hat</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">phi_td</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+
+        <span class="n">env</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">u_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+        <span class="n">J_hat_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">J_hat</span><span class="p">)</span>
+        <span class="n">phi_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phi_td</span><span class="p">)</span>
+        <span class="n">residual_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">))</span>
+
+        <span class="c1"># Model with intentionally perturbed parameters (uncertainty)</span>
+        <span class="n">F_control</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">F</span><span class="p">(</span><span class="n">mass</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">M</span> <span class="o">*</span> <span class="n">mass_factor</span><span class="p">,</span> <span class="n">jy</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">Jy</span> <span class="o">*</span> <span class="n">jy_factor</span><span class="p">,</span> <span class="n">jp</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">Jp</span> <span class="o">*</span> <span class="n">jp_factor</span><span class="p">)</span>
+        <span class="n">G_control</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">G</span><span class="p">(</span><span class="n">mass</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">M</span> <span class="o">*</span> <span class="n">mass_factor</span><span class="p">,</span> <span class="n">jy</span> <span class="o">=</span>  <span class="n">env</span><span class="o">.</span><span class="n">Jy</span> <span class="o">*</span> <span class="n">jy_factor</span><span class="p">,</span> <span class="n">jp</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">Jp</span> <span class="o">*</span> <span class="n">jp_factor</span><span class="p">,</span>
+                          <span class="n">kpy</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">Kpy</span> <span class="o">*</span> <span class="n">kpy_factor</span><span class="p">,</span> <span class="n">kyy</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">Kyy</span> <span class="o">*</span> <span class="n">kyy_factor</span><span class="p">)</span>
+
+        <span class="c1"># Reference trajectory</span>
+        <span class="n">xd</span><span class="p">,</span> <span class="n">xd_d</span><span class="p">,</span> <span class="n">xd_dd</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+
+        <span class="c1"># Backstepping error variables</span>
+        <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">alpha_d</span> <span class="o">=</span> <span class="n">backstepping</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">xd</span><span class="p">,</span> <span class="n">xd_d</span><span class="p">,</span> <span class="n">xd_dd</span><span class="p">,</span> <span class="n">K1</span><span class="p">)</span>
+
+
+        <span class="c1"># Compute control signal using RLC_BLF control law</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">F_control</span> <span class="o">+</span> <span class="n">f_hat</span>
+
+        <span class="n">u</span> <span class="o">=</span> <span class="n">blf_control</span><span class="p">(</span>
+            <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">G_control</span><span class="p">,</span> <span class="n">alpha_d</span><span class="p">,</span> <span class="n">K2</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">kb</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Integrate ODE</span>
+        <span class="n">sol_env</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">dynamics</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="n">dt</span><span class="p">],</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">X</span><span class="p">,</span>
+            <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">u</span><span class="p">,),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK45&#39;</span><span class="p">,</span>
+            <span class="n">max_step</span><span class="o">=</span><span class="n">dt</span><span class="p">,</span>
+            <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+            <span class="n">atol</span><span class="o">=</span><span class="mf">1e-9</span>
+        <span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">sol_env</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Measured acceleration residual</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">x2_update</span>  <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">x2_dot_meas</span> <span class="o">=</span> <span class="p">(</span><span class="n">x2_update</span> <span class="o">-</span> <span class="n">x2</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">x2_dot_meas</span>
+            <span class="o">-</span> <span class="n">F_control</span>
+            <span class="o">-</span> <span class="n">G_control</span> <span class="o">@</span> <span class="n">u</span>
+            <span class="o">-</span> <span class="n">f_hat</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Actor - critic</span>
+
+        <span class="c1"># Critic NN</span>
+        <span class="n">Hc</span> <span class="o">=</span> <span class="n">rbf_basis</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">critic_centers</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span>
+        <span class="c1"># Critic update - produces phi for the actor&#39;s gain modulation</span>
+        <span class="n">Wc</span><span class="p">,</span> <span class="n">J_hat</span><span class="p">,</span> <span class="n">phi_td</span> <span class="o">=</span> <span class="n">critic_update</span><span class="p">(</span>
+            <span class="n">Wc</span><span class="p">,</span> <span class="n">Hc_prev</span><span class="p">,</span> <span class="n">Hc</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">Qe</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">lc</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span>
+            <span class="n">weight_limit</span><span class="o">=</span><span class="n">Wc_max</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># features at next state</span>
+        <span class="n">Hc_prev</span> <span class="o">=</span> <span class="n">Hc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Neural Network Compensation</span>
+        <span class="n">Ha</span> <span class="o">=</span> <span class="n">rbf_basis</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">actor_centers</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span>
+        <span class="n">Wa</span> <span class="o">=</span> <span class="n">actor_update</span><span class="p">(</span>
+            <span class="n">Wa</span><span class="p">,</span> <span class="n">Ha</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">Qe</span><span class="p">,</span> <span class="n">phi_td</span><span class="p">,</span> <span class="n">la</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span>
+            <span class="n">weight_limit</span><span class="o">=</span><span class="n">Wa_max</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">f_hat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">Wa</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Ha</span><span class="p">,</span> <span class="o">-</span><span class="mf">20.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">learning</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="6.-Results">
+<h1>6. Results<a class="headerlink" href="#6.-Results" title="Link to this heading">#</a></h1>
+<section id="Plotting-Functions">
+<h2>Plotting Functions<a class="headerlink" href="#Plotting-Functions" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">plot_state_comparison</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">theta_disabled</span><span class="p">,</span> <span class="n">psi_disabled</span><span class="p">,</span>
+                          <span class="n">theta_enabled</span><span class="p">,</span> <span class="n">psi_enabled</span><span class="p">,</span> <span class="n">env</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot learning-enabled vs learning-disabled state outputs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        t_hist: Time array from simulation.</span>
+<span class="sd">        theta_disabled: Pitch angle history (learning disabled).</span>
+<span class="sd">        psi_disabled: Yaw angle history (learning disabled).</span>
+<span class="sd">        theta_enabled: Pitch angle history (learning enabled).</span>
+<span class="sd">        psi_enabled: Yaw angle history (learning enabled).</span>
+<span class="sd">        env: Environment object for computing desired trajectory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Compute desired trajectory</span>
+    <span class="n">theta_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">env</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">ti</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">ti</span> <span class="ow">in</span> <span class="n">t_hist</span><span class="p">])</span>
+    <span class="n">psi_d</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">env</span><span class="o">.</span><span class="n">reference</span><span class="p">(</span><span class="n">ti</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">ti</span> <span class="ow">in</span> <span class="n">t_hist</span><span class="p">])</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;State Outputs&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.45</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">theta_d</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span>        <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;desired&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">theta_disabled</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>  <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;learning disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">theta_enabled</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;learning enabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
+    <span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\theta$&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Pitch (deg)&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">psi_d</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span>        <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;desired&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">psi_disabled</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>  <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;learning disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">psi_enabled</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;learning enabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
+    <span class="n">c4d</span><span class="o">.</span><span class="n">plotdefaults</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\psi$&#39;</span><span class="p">,</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Time (s)&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Yaw (deg)&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_input_comparison</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">u_disabled</span><span class="p">,</span> <span class="n">u_enabled</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot learning-enabled vs learning-disabled control inputs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        t_hist: Time array from simulation.</span>
+<span class="sd">        u_disabled: Control input array (learning disabled), shape (N, 2).</span>
+<span class="sd">        u_enabled: Control input array (learning enabled), shape (N, 2).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">,</span>     <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span>       <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Control Inputs&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
+
+    <span class="n">Vpitch_dis</span><span class="p">,</span> <span class="n">Vyas_dis</span> <span class="o">=</span> <span class="n">u_disabled</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">Vpitch_en</span><span class="p">,</span>  <span class="n">Vyas_en</span>  <span class="o">=</span> <span class="n">u_enabled</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">Vpitch_dis</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>   <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">Vpitch_en</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+    <span class="n">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Voltage [V]&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$u_1$ (Pitch)&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">Vyas_dis</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>   <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">Vyas_en</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+    <span class="n">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Voltage [V]&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$u_2$ (Yaw)&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_critic_comparison</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">J_hat_disabled</span><span class="p">,</span> <span class="n">phi_disabled</span><span class="p">,</span> <span class="n">residual_disabled</span><span class="p">,</span>
+                           <span class="n">J_hat_enabled</span><span class="p">,</span> <span class="n">phi_enabled</span><span class="p">,</span> <span class="n">residual_enabled</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot learning-enabled vs learning-disabled critic and cost signals.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        t_hist: Time array from simulation.</span>
+<span class="sd">        J_hat_disabled: Critic estimated mismatch-to-go (learning disabled).</span>
+<span class="sd">        phi_disabled: TD (temporal difference) residual (learning disabled).</span>
+<span class="sd">        residual_disabled: Modeling residual norm (learning disabled).</span>
+<span class="sd">        J_hat_enabled: Critic estimated mismatch-to-go (learning enabled).</span>
+<span class="sd">        phi_enabled: TD residual (learning enabled).</span>
+<span class="sd">        residual_enabled: Modeling residual norm (learning enabled).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time (s)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">,</span>     <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span>       <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Critic and Cost&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.45</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">J_hat_disabled</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>   <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">J_hat_enabled</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+    <span class="n">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Critic estimated mismatch-to-go $\hat</span><span class="si">{J}</span><span class="s1">$&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">phi_disabled</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>   <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">phi_enabled</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+    <span class="n">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;TD Residual $\phi$&#39;</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">residual_disabled</span><span class="p">,</span> <span class="s1">&#39;r-&#39;</span><span class="p">,</span>   <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;disabled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">residual_enabled</span><span class="p">,</span>  <span class="s1">&#39;lime&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+    <span class="n">_style</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Modeling residual norm $\|e\|$&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Comparison:-Learning-Enabled-vs-Disabled">
+<h2>Comparison: Learning Enabled vs Disabled<a class="headerlink" href="#Comparison:-Learning-Enabled-vs-Disabled" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">DT</span> <span class="o">=</span> <span class="mf">0.001</span>    <span class="c1"># integration step [s]</span>
+<span class="n">T</span>  <span class="o">=</span> <span class="mf">25.0</span>     <span class="c1"># simulation duration [s]</span>
+
+<span class="c1"># Learning disabled</span>
+<span class="n">run_controller</span><span class="p">(</span><span class="n">dt</span> <span class="o">=</span> <span class="n">DT</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="p">,</span> <span class="n">learning</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="n">t_hist</span><span class="p">,</span> <span class="n">theta_dis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span>       <span class="n">psi_dis</span>  <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;psi&#39;</span><span class="p">)</span>
+<span class="n">u_dis</span>          <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">u_hist</span><span class="p">)</span>
+<span class="n">J_hat_dis</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">J_hat_hist</span><span class="p">)</span>
+<span class="n">phi_dis</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phi_hist</span><span class="p">)</span>
+<span class="n">residual_dis</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">residual_hist</span><span class="p">)</span>
+
+<span class="c1"># Learning enabled</span>
+<span class="n">run_controller</span><span class="p">(</span><span class="n">dt</span> <span class="o">=</span> <span class="n">DT</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="p">,</span> <span class="n">learning</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">theta_en</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">psi_en</span>   <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;psi&#39;</span><span class="p">)</span>
+<span class="n">u_en</span>          <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">u_hist</span><span class="p">)</span>
+<span class="n">J_hat_en</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">J_hat_hist</span><span class="p">)</span>
+<span class="n">phi_en</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phi_hist</span><span class="p">)</span>
+<span class="n">residual_en</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">residual_hist</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="State-Outputs">
+<h3>State Outputs<a class="headerlink" href="#State-Outputs" title="Link to this heading">#</a></h3>
+<p>The following plots compare the closed-loop response of the controller under two conditions: learning disabled and learning enabled, both against the desired reference trajectory. With learning disabled, the nominal controller relies entirely on the mismatched model, resulting in persistent tracking errors. Enabling the actor-critic compensation reduces these errors, confirming that the learned component effectively addresses the modeling gap.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_state_comparison</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">theta_dis</span><span class="p">,</span> <span class="n">psi_dis</span><span class="p">,</span> <span class="n">theta_en</span><span class="p">,</span> <span class="n">psi_en</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_learning_controller_learning_controller_72_0.png" src="../../_images/programs_learning_controller_learning_controller_72_0.png" />
+</div>
+</div>
+</section>
+<section id="Control-Inputs">
+<h3>Control Inputs<a class="headerlink" href="#Control-Inputs" title="Link to this heading">#</a></h3>
+<p>The control input comparison shows how the total control effort changes between the two configurations. With learning enabled, the actor’s learned compensation <span class="math notranslate nohighlight">\(u_{\text{learned}}\)</span> partially offsets the modeling mismatch, allowing the model-based component <span class="math notranslate nohighlight">\(u_{\text{model}}\)</span> to bridge the gap between the nominal model and the true plant dynamics. The resulting total control signals differ in both magnitude and waveform, reflecting the redistribution of effort between the model-based
+and learning-based components.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_input_comparison</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">u_dis</span><span class="p">,</span> <span class="n">u_en</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_learning_controller_learning_controller_75_0.png" src="../../_images/programs_learning_controller_learning_controller_75_0.png" />
+</div>
+</div>
+</section>
+<section id="Critic-and-Cost">
+<h3>Critic and Cost<a class="headerlink" href="#Critic-and-Cost" title="Link to this heading">#</a></h3>
+<p>Three internal signals are compared to illustrate the learning dynamics: the critic’s estimated mismatch-to-go <span class="math notranslate nohighlight">\(\hat{J}\)</span>, the <span class="math notranslate nohighlight">\(TD\)</span> (temporal difference) residual <span class="math notranslate nohighlight">\(\phi\)</span>, and the instantaneous modeling residual norm <span class="math notranslate nohighlight">\(\|e\|\)</span>. The residual norm directly measures how well the actor compensates for the modeling gap. The critic’s value estimate <span class="math notranslate nohighlight">\(\hat{J}\)</span> reflects the expected long-term cumulative cost under the current actor policy, while <span class="math notranslate nohighlight">\(\phi\)</span> indicates whether
+the realized cost exceeded or fell below the critic’s prediction at each step.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_critic_comparison</span><span class="p">(</span><span class="n">t_hist</span><span class="p">,</span> <span class="n">J_hat_dis</span><span class="p">,</span> <span class="n">phi_dis</span><span class="p">,</span> <span class="n">residual_dis</span><span class="p">,</span>
+                       <span class="n">J_hat_en</span><span class="p">,</span> <span class="n">phi_en</span><span class="p">,</span> <span class="n">residual_en</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_learning_controller_learning_controller_78_0.png" src="../../_images/programs_learning_controller_learning_controller_78_0.png" />
+</div>
+</div>
+</section>
+<section id="RBF-Trajectories">
+<h3>RBF Trajectories<a class="headerlink" href="#RBF-Trajectories" title="Link to this heading">#</a></h3>
+<p>The trajectory comparison shows the state trajectory projected into the actor’s RBF input space, overlaid on the learned center locations. The left subplot displays the position trajectory in <span class="math notranslate nohighlight">\((\theta, \psi)\)</span>, while the right subplot shows the velocity trajectory in <span class="math notranslate nohighlight">\((\dot{\theta}, \dot{\psi})\)</span>. The coverage of the trajectory relative to the RBF centers indicates how well the actor’s basis functions span the regions visited during operation, ensuring that the learned compensation is
+effectively represented across the operating envelope.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Trajectory in actor RBF input space vs. center locations</span>
+<span class="c1"># Actor input: [z1_theta, z1_psi, z2_theta, z2_psi]</span>
+
+<span class="k">if</span> <span class="n">actor_centers</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Trajectory vs. Actor RBF Centers&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+
+<span class="c1"># Extract trajectory</span>
+<span class="n">traj_z1_theta</span>   <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">traj_z1_psi</span>     <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;psi&#39;</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">traj_z2_theta</span>   <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;dtheta&#39;</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">traj_z2_psi</span>     <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">data</span><span class="p">(</span><span class="s1">&#39;dpsi&#39;</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="c1"># Plot 1: z1 (position error) space</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">actor_centers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="n">actor_centers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ba</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;RBF centers&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">traj_z1_theta</span><span class="p">,</span> <span class="n">traj_z1_psi</span><span class="p">,</span> <span class="s1">&#39;b-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;trajectory&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">traj_z1_theta</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">traj_z1_psi</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;start&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">traj_z1_theta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">traj_z1_psi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;end&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\theta (deg)$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\psi (deg)$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Position Trajectory Space&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="c1"># ax.set_xlim(rbf_bounds[0])</span>
+<span class="c1"># ax.set_ylim(rbf_bounds[1])</span>
+
+<span class="c1"># Plot 2: z2 (velocity error) space</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">actor_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="n">actor_centers</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">c4d</span><span class="o">.</span><span class="n">r2d</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ba</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;RBF centers&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">traj_z2_theta</span><span class="p">,</span> <span class="n">traj_z2_psi</span><span class="p">,</span> <span class="s1">&#39;b-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;trajectory&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">traj_z2_theta</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">traj_z2_psi</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;start&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">traj_z2_theta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">traj_z2_psi</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;end&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\dot{\theta} (deg/s)$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\dot{\psi} (deg/s)$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Velocity Trajectory Space&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_learning_controller_learning_controller_81_0.png" src="../../_images/programs_learning_controller_learning_controller_81_0.png" />
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="7.-Summary">
+<h1>7. Summary<a class="headerlink" href="#7.-Summary" title="Link to this heading">#</a></h1>
+<p>This notebook presented a modular framework for developing adaptive learning controllers for nonlinear dynamical systems.</p>
+<p>The controller combines</p>
+<ul class="simple">
+<li><p>a backstepping baseline controller for guaranteed stabilization,</p></li>
+<li><p><span class="math notranslate nohighlight">\(RBF\)</span> neural networks to approximate unknown dynamics,</p></li>
+<li><p>an actor network that learns the uncertainty compensation online, and</p></li>
+<li><p>a critic that estimates the long-term cost.</p></li>
+</ul>
+<p>The learning algorithm operates independently of the underlying plant through a dedicated environment, making it straightforward to replace the helicopter model with other nonlinear systems or to evaluate different uncertainty scenarios.</p>
+<p>The simulation results demonstrate that enabling online learning substantially improves tracking performance compared with the baseline controller alone, highlighting the effectiveness of adaptive uncertainty estimation for compensating modeling errors and external disturbances.</p>
+<p>The implementation is intended primarily as a research and prototyping platform, providing a clear reference architecture for experimenting with adaptive control, reinforcement learning, and online function approximation before deployment to real hardware.</p>
+</section>
+<section id="References">
+<h1>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h1>
+<ul class="simple">
+<li><p>[1] Zhao et al., “Reinforcement Learning Control for a 2-DOF Helicopter With State Constraints: Theory and Experiments” IEEE Trans. Autom. Sci. Eng., Vol. 21, No. 1, Jan 2024. <a class="reference external" href="https://cogno.pusan.ac.kr/sites/cogno/2024/2024_260.pdf">DOI: 10.1109/TASE.2022.3215738</a></p></li>
+<li><p>[2] Quanser Inc., “Quanser 2-DOF Helicopter Laboratory Manual,” Quanser Aerospace, Instructor Manual, 2011.</p></li>
+<li><p>[3] Lavretsky, E., &amp; Wise, K. A. (2013). Robust and adaptive control: With aerospace applications. Springer London. <a class="reference external" href="https://link.springer.com/book/10.1007/978-3-031-38314-4">DOI: 10.1007/978-3-031-38314-4</a></p></li>
+</ul>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../pid_cascade/quadcopter_pid.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../api/introduction.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Neural Learning Control for Online Uncertain Dynamics Estimation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Author">Author</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Backstepping---Nominal-Controller">1. Backstepping - Nominal Controller</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Barrier-Lyapunov-Controller-(BLF)">2. Barrier Lyapunov Controller (BLF)</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Controller-Parameters">Controller Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Neural-Network-Uncertainty-Estimation">3. Neural Network Uncertainty Estimation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Radial-Basis-Function-Neural-Networks-(RBFNNs)">Radial Basis Function Neural Networks (<span class="math notranslate nohighlight">\(RBFNNs\)</span>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Critic">Critic</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Actor">Actor</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Neural-Network-Parameters">Neural Network Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Plant-Environment">4. Plant Environment</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Custom-Environment">Custom Environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Helicopter-Example">Helicopter Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#System-Dynamics">System Dynamics</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamics-Mismatch">Dynamics Mismatch</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Desired-Setpoint">Desired Setpoint</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Simulation">5. Simulation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Results">6. Results</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Plotting-Functions">Plotting Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Comparison:-Learning-Enabled-vs-Disabled">Comparison: Learning Enabled vs Disabled</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Outputs">State Outputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Control-Inputs">Control Inputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Critic-and-Cost">Critic and Cost</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#RBF-Trajectories">RBF Trajectories</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Summary">7. Summary</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By c4dynamics
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, c4dynamics.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="last-updated">
+  Last updated on Jul 22, 2026.
+  <br/>
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
