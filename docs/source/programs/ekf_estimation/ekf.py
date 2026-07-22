@@ -37,11 +37,15 @@ State vector (shared with the truth rigidbody and the cascade-PID model)::
      0  1  2   3   4   5   6     7     8   9  10 11
 
 Frames: body = forward-right-down (FRD), inertial = ENU, 3-2-1 Euler angles —
-identical to ``quad_pid_utils.py``.
+identical to ``quad_pid_utils.py`` (X motor configuration, dcm321-based
+rotations). jacobian_F's translational blocks are computed numerically
+against quad_pid_utils.dynamics() directly, so this
+consistency is enforced by construction rather than by hand-derivation.
 
 Contents
 --------
-    jacobian_F            analytical process Jacobian  df/dx  (12x12)
+    jacobian_F            process Jacobian df/dx (12x12): analytic kinematic/
+                           rotational blocks + numeric translational block
     H_GPS, H_GYRO, H_MAG  constant measurement matrices
     accel_h, accel_H      nonlinear accelerometer measurement model + Jacobian
     gps, imu, magnetometer simulated sensors (truth -> measurement)
@@ -59,7 +63,7 @@ from scipy.integrate import solve_ivp
 import c4dynamics as c4d
 
 from quad_pid_utils import (dynamics, position_reference, velocity_reference,
-                            InitializeControllers)
+                            InitializeControllers, dcm321)
 
 # State-variable names, in the canonical c4dynamics rigidbody order.
 STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
@@ -70,24 +74,60 @@ STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
 #  PROCESS MODEL JACOBIAN   F = df/dx   (12 x 12)
 # ============================================================================
 
-def jacobian_F(x, T, Omega, params):
+def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
     """
-    Analytical Jacobian of the rigid-body dynamics ``f(x, u)`` evaluated at the
-    current state estimate.
+    Numerically differentiate the translational rows of
+    :func:`quad_pid_utils.dynamics` (indices 3,4,5 = dvx,dvy,dvz) with respect
+    to [vx,vy,vz,phi,theta,psi] (state indices 3..8), via central differences.
 
-    The process model ``f`` is :func:`quad_pid_utils.dynamics`; this is its
-    closed-form partial-derivative matrix, organised in six physical blocks
-    (kinematics, translational drag, thrust projection, Euler-angle kinematics,
-    and Euler's rotational equations including the rotor gyroscopic coupling).
+    quad_pid_utils2's translational model rotates velocity into the body
+    frame, applies drag there, then rotates the resulting force back to
+    inertial (``BI``/``dcm321``-based) — this couples drag to attitude and
+    is no longer a simple closed-form block, so it is differentiated
+    numerically here instead of hand-derived. This keeps the Jacobian
+    correct automatically if quad_pid_utils.dynamics() changes again.
+
+    Returns
+    -------
+    block : np.ndarray (3, 6) — d[dvx,dvy,dvz] / d[vx,vy,vz,phi,theta,psi]
+    """
+    idx = [3, 4, 5, 6, 7, 8]
+    block = np.zeros((3, 6))
+    for j, si in enumerate(idx):
+        xp = x.copy(); xp[si] += eps
+        xm = x.copy(); xm[si] -= eps
+        fp = dynamics(0.0, xp, quad, rotor_speeds)[3:6]
+        fm = dynamics(0.0, xm, quad, rotor_speeds)[3:6]
+        block[:, j] = (fp - fm) / (2.0 * eps)
+    return block
+
+
+def jacobian_F(x, Omega, quad, rotor_speeds, params):
+    """
+    Jacobian of the rigid-body dynamics ``f(x, u)`` evaluated at the current
+    state estimate.
+
+    The process model ``f`` is :func:`quad_pid_utils.dynamics`. This is a
+    hybrid Jacobian:
+      - Blocks 1, 4, 5, 6 (position kinematics, Euler-angle kinematics,
+        Euler's rotational equations + gyroscopic coupling) are closed-form.
+        These depend only on body-frame angular rates and inertia.
+      - Blocks 2, 3 (translational drag and thrust-to-attitude coupling) are
+        computed numerically via :func:`_numeric_translational_jacobian`.
 
     Parameters
     ----------
     x : np.ndarray (12,)
         Current state estimate ``[x,y,z, vx,vy,vz, phi,theta,psi, p,q,r]``.
-    T : float
-        Total thrust [N] at the current step (``kT * sum(omega_i^2)``).
     Omega : float
-        Net rotor speed ``w1 - w2 + w3 - w4`` [rad/s] for gyroscopic coupling.
+        Net rotor speed ``w1 + w2 - w3 - w4`` [rad/s] for gyroscopic coupling.
+    quad : object
+        Quad-like object exposing the physical parameters as attributes
+        (m, g, l, kT, kQ, Ixx, Iyy, Izz, Ar, IR, Ax, Ay, Az) — passed straight
+        through to quad_pid_utils.dynamics() for the numeric block.
+    rotor_speeds : np.ndarray (4,)
+        Current actual rotor speeds [w1,w2,w3,w4], needed to re-evaluate
+        dynamics() for the numeric block.
     params : dict
         Quadcopter physical parameters (mass, inertia, drag, rotor inertia).
 
@@ -98,14 +138,11 @@ def jacobian_F(x, T, Omega, params):
     """
     _, _, _, vx, vy, vz, phi, theta, psi, p, q, r = x
 
-    m   = params['m']
     Ixx = params['Ixx']; Iyy = params['Iyy']; Izz = params['Izz']
-    Ax  = params['Ax'];  Ay  = params['Ay'];  Az  = params['Az']
     Ar  = params['Ar'];  IR  = params['IR']
 
     sp = np.sin(phi);   cp = np.cos(phi)
     st = np.sin(theta); ct = np.cos(theta)
-    ss = np.sin(psi);   cs = np.cos(psi)
 
     # Guard the Euler-angle singularity at theta = +-90 deg: the kinematic
     # block carries 1/cos(theta) and tan(theta) terms.  For nominal flight
@@ -119,21 +156,9 @@ def jacobian_F(x, T, Omega, params):
     # Block 1 — d[pos]/d[vel] : identity
     F[0, 3] = F[1, 4] = F[2, 5] = 1.0
 
-    # Block 2 — d[vel]/d[vel] : translational drag
-    F[3, 3] = -Ax / m
-    F[4, 4] = -Ay / m
-    F[5, 5] = -Az / m
-
-    # Block 3 — d[vel]/d[att] : thrust projection (body -> inertial)
-    Tm = T / m
-    F[3, 6] = ( cp*ss - sp*st*cs) * Tm
-    F[3, 7] = ( cp*ct*cs        ) * Tm
-    F[3, 8] = ( sp*cs - cp*st*ss) * Tm
-    F[4, 6] = (-cp*cs - sp*st*ss) * Tm
-    F[4, 7] = ( cp*ct*ss        ) * Tm
-    F[4, 8] = ( sp*ss + cp*st*cs) * Tm
-    F[5, 6] = (-sp*ct           ) * Tm
-    F[5, 7] = (-cp*st           ) * Tm
+    # Blocks 2+3 — d[vel]/d[vel,att] : drag + thrust projection (numeric,
+    # matches quad_pid_utils2.py's DCM/body-frame-drag translational model)
+    F[3:6, 3:9] = _numeric_translational_jacobian(x, quad, rotor_speeds)
 
     # Block 4 — d[att-rate]/d[att] : Euler-angle kinematics
     sec2_theta = 1.0 / (ct**2)
@@ -183,26 +208,58 @@ H_GYRO = np.zeros((3, 12)); H_GYRO[0, 9] = H_GYRO[1, 10] = H_GYRO[2, 11] = 1.0  
 H_MAG = np.zeros((1, 12));  H_MAG[0, 8] = 1.0                                   # psi
 
 
-def accel_h(x, g=9.81):
-    """Nonlinear accelerometer model: body-frame specific force from gravity.
+def accel_h(x, quad=None, rotor_speeds=None, g=9.81):
+    """Nonlinear accelerometer model: body-frame specific force.
 
-    ``h(x) = [ g*sin(theta), -g*sin(phi)*cos(theta) ]`` — the reaction to
-    gravity an ideal body-frame accelerometer reads at near-hover.
+    Full model: ``f_body = BI @ (a_inertial + [0,0,g])``, where
+    ``a_inertial = dynamics(x)[3:6]`` is the actual (gravity-inclusive)
+    translational acceleration and ``BI`` is quad_pid_utils.dynamics()'s own
+    body-from-inertial matrix — i.e. this predicts exactly what
+    ``imu.accelerometer`` simulates (gravity reaction + the vehicle's own
+    drag/thrust-induced acceleration), not gravity alone. That match is what
+    lets the accelerometer update carry real information about velocity
+    instead of being mostly-discarded, R_acc-inflated noise.
+
+    Backward-compatible fallback: if ``quad``/``rotor_speeds`` are omitted,
+    returns the gravity-only term.
     """
     phi, theta = x[6], x[7]
-    return np.array([g * np.sin(theta),
-                     -g * np.sin(phi) * np.cos(theta)])
+    if quad is None or rotor_speeds is None:
+        return np.array([g * np.sin(theta), -g * np.sin(phi) * np.cos(theta)])
+
+    a_inertial = dynamics(0.0, x, quad, rotor_speeds)[3:6].copy()
+    a_inertial[2] += g   # cancel dynamics()'s built-in "-g" so BI acts on pure specific force
+    psi = x[8]
+    BI = dcm321(phi, theta, psi) @ dcm321(phi=np.pi)
+    f_body = BI @ a_inertial
+    return f_body[:2]
 
 
-def accel_H(x, g=9.81):
-    """Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12)."""
+def accel_H(x, quad=None, rotor_speeds=None, g=9.81, eps=1e-6):
+    """Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12).
+
+    Numeric (central differences) when ``quad``/``rotor_speeds`` are given,
+    since the full model routes through quad_pid_utils.dynamics() (DCM/
+    body-frame-drag) and isn't practical to hand-differentiate reliably —
+    same rationale as jacobian_F's Block 2/3. Falls back to the closed-form
+    gravity-only Jacobian otherwise.
+    """
     phi, theta = x[6], x[7]
-    sp = np.sin(phi);  cp = np.cos(phi)
-    st = np.sin(theta); ct = np.cos(theta)
+    if quad is None or rotor_speeds is None:
+        sp = np.sin(phi);  cp = np.cos(phi)
+        st = np.sin(theta); ct = np.cos(theta)
+        H = np.zeros((2, 12))
+        H[0, 7] =  g * ct
+        H[1, 6] = -g * cp * ct
+        H[1, 7] =  g * sp * st
+        return H
+
     H = np.zeros((2, 12))
-    H[0, 7] =  g * ct          # d ax / d theta
-    H[1, 6] = -g * cp * ct     # d ay / d phi
-    H[1, 7] =  g * sp * st     # d ay / d theta
+    for si in (3, 4, 5, 6, 7, 8):   # vx,vy,vz,phi,theta,psi
+        xp = x.copy(); xp[si] += eps
+        xm = x.copy(); xm[si] -= eps
+        H[:, si] = (accel_h(xp, quad, rotor_speeds, g) -
+                    accel_h(xm, quad, rotor_speeds, g)) / (2.0 * eps)
     return H
 
 
@@ -325,10 +382,13 @@ class imu:
         ay = -self.g * sp * ct
 
         if x_true_prev is not None:  # inertial term (NOT modelled by accel_h)
+            # Rotated via BI = dcm321(phi,theta,psi) @ dcm321(phi=pi), matching
+            # quad_pid_utils.dynamics()'s actual body-from-inertial convention.
             dvx = (x_true[3] - x_true_prev[3]) / dt
             dvy = (x_true[4] - x_true_prev[4]) / dt
-            ax += (ct*cs)*dvx + (ct*ss)*dvy
-            ay += (sp*st*cs - cp*ss)*dvx + (sp*st*ss + cp*cs)*dvy
+            dvz = (x_true[5] - x_true_prev[5]) / dt
+            ax += (ct*cs)*dvx - (ct*ss)*dvy + st*dvz
+            ay += (sp*st*cs - cp*ss)*dvx - (sp*st*ss + cp*cs)*dvy - (sp*ct)*dvz
 
         return np.array([ax, ay]) + self.acc_bias + np.random.randn(2) * self.acc_std
 
@@ -595,6 +655,7 @@ class ekf12(c4d.filters.ekf):
         """
         x_now = np.asarray(self.X).ravel().copy()
         x_dot = dynamics(0.0, x_now, self, rotor_speeds)   # self carries params
+        self._last_rotor_speeds = np.asarray(rotor_speeds).copy()
 
         # Adaptive velocity process noise (accel-magnitude scheduled).
         accel_mag = np.linalg.norm(x_dot[3:6])
@@ -606,9 +667,10 @@ class ekf12(c4d.filters.ekf):
         # Jacobian at the predicted, yaw-wrapped state.
         x_pred = x_now + dt * x_dot
         x_pred[8] = self._wrap(x_pred[8])
-        T     = self.kT * np.sum(rotor_speeds**2)
-        Omega = rotor_speeds[0] - rotor_speeds[1] + rotor_speeds[2] - rotor_speeds[3]
-        Fc = jacobian_F(x_pred, T, Omega, self._params)
+        # X-configuration gyro-coupling term (w1+w2-w3-w4), matching
+        # quad_pid_utils.dynamics()'s motor layout.
+        Omega = rotor_speeds[0] + rotor_speeds[1] - rotor_speeds[2] - rotor_speeds[3]
+        Fc = jacobian_F(x_pred, Omega, self, rotor_speeds, self._params)
         F_d = np.eye(12) + dt * Fc + (0.5 * dt * dt) * (Fc @ Fc)
 
         # Framework predict: X += x_dot*dt ;  P = F_d P F_d^T + Q
@@ -623,8 +685,9 @@ class ekf12(c4d.filters.ekf):
 
     def update_accelerometer(self, z_acc):
         x = np.asarray(self.X).ravel()
-        innov = np.asarray(z_acc).ravel() - accel_h(x)
-        self._gated_update(innov, accel_H(x), self.R_acc, self._GATE_ACC)
+        rs = getattr(self, '_last_rotor_speeds', None)
+        innov = np.asarray(z_acc).ravel() - accel_h(x, self, rs)
+        self._gated_update(innov, accel_H(x, self, rs), self.R_acc, self._GATE_ACC)
 
     def update_magnetometer(self, z_mag):
         # Circular innovation keeps the wrapped measurement off the state vector.
@@ -670,10 +733,10 @@ def default_ekf_config():
     estimation analogue of the controller-gain block in ``quad_pid_utils.py``.
     """
     Q = np.diag(np.array([
-        0.005, 0.005, 0.008,   # x, y, z        [m]
-        0.020, 0.020, 0.025,   # vx, vy, vz     [m/s]  (adaptively scaled)
-        0.008, 0.008, 0.010,   # phi, theta, psi[rad]
-        0.012, 0.012, 0.012,   # p, q, r        [rad/s]
+        0.005, 0.005, 0.008,   # x, y, z           [m]
+        0.020, 0.020, 0.025,   # vx, vy, vz        [m/s]  
+        0.008, 0.008, 0.010,   # phi, theta, psi   [rad]
+        0.012, 0.012, 0.012,   # p, q, r           [rad/s]
     ])**2)
     P0 = np.diag(np.array([
         0.50, 0.50, 0.80,
