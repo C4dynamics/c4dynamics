@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 - mountain_car.py: predefined environment for the RL mountain car problem
 
 
+## [2.3.7] - 2026-07-22
+### Added
+- an envirorments file for abstracted plant models in learning controller.
+  includes a predefined helicopter class for the learning controller example. 
+
+
 ## [2.3.6] - 2026-03-03
 ### Changed
 - add all use-case notebooks support for google colab.
