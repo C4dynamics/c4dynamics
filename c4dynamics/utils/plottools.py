@@ -1,10 +1,16 @@
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
-import numpy as np  # noqa: F401
-
+from matplotlib import font_manager
+import matplotlib as mpl
 import sys
-
 sys.path.append(".")
+
+available = {f.name for f in font_manager.fontManager.ttflist}
+if "Times New Roman" in available:
+    mpl.rcParams["font.family"] = "Times New Roman"
+else:
+    mpl.rcParams["font.family"] = "serif"
+
 
 
 # pragma: no cover
@@ -77,11 +83,11 @@ def plotdefaults(ax, title, xlabel="", ylabel="", fontsize=8, ilines=None):
     #
     # axis
     ##
-    ax.set_title(title, fontsize=fontsize, fontname="Times New Roman")
-    ax.set_xlabel(xlabel, fontsize=fontsize, fontname="Times New Roman")
-    ax.set_ylabel(ylabel, fontsize=fontsize, fontname="Times New Roman")
+    ax.set_title(title, fontsize=fontsize)
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    ax.set_ylabel(ylabel, fontsize=fontsize)
     ax.grid(alpha=0.5)
-    ax.tick_params(axis="both", labelsize=fontsize, labelfontfamily="Times New Roman")
+    ax.tick_params(axis="both", labelsize=fontsize)
 
     ax.yaxis.set_major_formatter(ScalarFormatter())
     ax.yaxis.get_major_formatter().set_useOffset(False)
@@ -91,5 +97,5 @@ def plotdefaults(ax, title, xlabel="", ylabel="", fontsize=8, ilines=None):
 if __name__ == "__main__":
 
     from c4dynamics import rundoctests
-
     rundoctests(sys.modules[__name__])
+
