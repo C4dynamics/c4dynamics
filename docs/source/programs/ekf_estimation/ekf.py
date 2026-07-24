@@ -381,7 +381,8 @@ class imu:
         ax = self.g * st            # gravity projection (modelled by accel_h)
         ay = -self.g * sp * ct
 
-        if x_true_prev is not None:  # inertial term (NOT modelled by accel_h)
+        if x_true_prev is not None:  
+            # inertial term (NOT modelled by accel_h)
             # Rotated via BI = dcm321(phi,theta,psi) @ dcm321(phi=pi), matching
             # quad_pid_utils.dynamics()'s actual body-from-inertial convention.
             dvx = (x_true[3] - x_true_prev[3]) / dt
@@ -462,9 +463,7 @@ class imu:
             ax[0].plot(t, gyro_meas[:, i], "--", lw=1,
                        label=f"{labels[i]} measured")
 
-        ax[0].set_ylabel("Angular rate [rad/s]")
-        ax[0].set_title("Gyroscope")
-        ax[0].grid(True)
+        c4d.plotdefaults(ax[0], 'Gyroscope', '', 'Heading [deg]', fontsize = 12)
         ax[0].legend(ncol=3)
 
         ax[1].plot(t, accel_true[:, 0], lw=2, label="ax true")
@@ -472,10 +471,7 @@ class imu:
         ax[1].plot(t, accel_true[:, 1], lw=2, label="ay true")
         ax[1].plot(t, accel_meas[:, 1], "--", label="ay measured")
 
-        ax[1].set_xlabel("Time [s]")
-        ax[1].set_ylabel("Acceleration [m/s²]")
-        ax[1].set_title("Accelerometer")
-        ax[1].grid(True)
+        c4d.plotdefaults(ax[1], 'Accelerometer', 'Time [s]', 'Acceleration [m/s²]', fontsize = 12)
         ax[1].legend()
 
         plt.tight_layout()
@@ -544,10 +540,7 @@ class magnetometer:
         ax.plot(t, np.rad2deg(psi_meas),
                 '.', ms=3, label='Magnetometer')
 
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Heading [deg]')
-        ax.set_title('Magnetometer Measurements')
-        ax.grid(True)
+        c4d.plotdefaults(ax, 'Magnetometer Measurements', 'Time [s]', 'Heading [deg]', fontsize = 12)
         ax.legend()
 
         fig.tight_layout()
