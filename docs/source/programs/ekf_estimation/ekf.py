@@ -2,20 +2,20 @@
 ekf.py — Extended Kalman Filter state estimation for the 12-state quadcopter
 ============================================================================
 
-This module is the estimation companion to ``quad_pid_utils.py``.  Where the
+This module is the estimation companion to ``c4dynamics.controllers.quad_pid``.  Where the
 cascade-PID module provides the *plant* and the *controller*, this module
 provides the *sensors* and the *estimator* that let the same quadcopter fly its
 figure-8 using an **estimated** state reconstructed from noisy GPS and IMU
 measurements rather than from perfect truth.
 
-It is organised exactly like ``quad_pid_utils.py`` — a single reusable module
+It is organised exactly like ``c4dynamics.controllers.quad_pid`` — a single reusable module
 that the notebook (``ekf.ipynb``) drives through a configuration dictionary and
 a single call to :func:`run_fig8_ekf`.
 
 Design
 ------
 * The **truth** vehicle is a :class:`c4dynamics.rigidbody`, propagated with the
-  shared :func:`quad_pid_utils.dynamics` (the *same* model the EKF uses as its
+  shared :func:`c4dynamics.controllers.quad_pid.dynamics <c4dynamics.controllers.quad_pid.dynamics>` (the *same* model the EKF uses as its
   process model).
 * The **estimate** is an :class:`ekf <c4dynamics.filters.ekf>` whose 12 state
   variables carry the *same names and order* as the truth.  Because the
@@ -37,9 +37,9 @@ State vector (shared with the truth rigidbody and the cascade-PID model)::
      0  1  2   3   4   5   6     7     8   9  10 11
 
 Frames: body = forward-right-down (FRD), inertial = ENU, 3-2-1 Euler angles —
-identical to ``quad_pid_utils.py`` (X motor configuration, dcm321-based
+identical to ``c4dynamics.controllers.quad_pid`` (X motor configuration, dcm321-based
 rotations). jacobian_F's translational blocks are computed numerically
-against quad_pid_utils.dynamics() directly, so this
+against dynamics() directly (see jacobian_F docstring) so this
 consistency is enforced by construction rather than by hand-derivation.
 
 Contents
@@ -61,9 +61,10 @@ from collections import deque
 from scipy.integrate import solve_ivp
 
 import c4dynamics as c4d
-
-from quad_pid_utils import (dynamics, position_reference, velocity_reference,
-                            InitializeControllers, dcm321)
+from c4dynamics.rotmat import dcm321
+from c4dynamics.controllers.quad_pid import (dynamics, position_reference,
+                                             velocity_reference, InitializeControllers)
+from c4dynamics.sensors.navigation import gps, imu, magnetometer
 
 # State-variable names, in the canonical c4dynamics rigidbody order.
 STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
@@ -77,15 +78,15 @@ STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
 def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
     """
     Numerically differentiate the translational rows of
-    :func:`quad_pid_utils.dynamics` (indices 3,4,5 = dvx,dvy,dvz) with respect
+    :func:`c4dynamics.controllers.quad_pid.dynamics <c4dynamics.controllers.quad_pid.dynamics>` (indices 3,4,5 = dvx,dvy,dvz) with respect
     to [vx,vy,vz,phi,theta,psi] (state indices 3..8), via central differences.
 
-    quad_pid_utils2's translational model rotates velocity into the body
+    c4dynamics.controllers.quad_pid's translational model rotates velocity into the body
     frame, applies drag there, then rotates the resulting force back to
     inertial (``BI``/``dcm321``-based) — this couples drag to attitude and
     is no longer a simple closed-form block, so it is differentiated
     numerically here instead of hand-derived. This keeps the Jacobian
-    correct automatically if quad_pid_utils.dynamics() changes again.
+    correct automatically if dynamics() changes again.
 
     Returns
     -------
@@ -107,24 +108,29 @@ def jacobian_F(x, Omega, quad, rotor_speeds, params):
     Jacobian of the rigid-body dynamics ``f(x, u)`` evaluated at the current
     state estimate.
 
-    The process model ``f`` is :func:`quad_pid_utils.dynamics`. This is a
+    The process model ``f`` is :func:`c4dynamics.controllers.quad_pid.dynamics <c4dynamics.controllers.quad_pid.dynamics>`. This is a
     hybrid Jacobian:
       - Blocks 1, 4, 5, 6 (position kinematics, Euler-angle kinematics,
         Euler's rotational equations + gyroscopic coupling) are closed-form.
-        These depend only on body-frame angular rates and inertia.
+        These depend only on body-frame angular rates and inertia, so they
+        are unaffected by the inertial-frame/motor-layout convention and are
+        identical regardless of inertial-frame/motor-layout convention.
       - Blocks 2, 3 (translational drag and thrust-to-attitude coupling) are
-        computed numerically via :func:`_numeric_translational_jacobian`.
+        computed numerically via :func:`_numeric_translational_jacobian`,
+        since the DCM/body-frame-drag translational model couples drag to
+        attitude and is impractical to hand-differentiate reliably.
 
     Parameters
     ----------
     x : np.ndarray (12,)
         Current state estimate ``[x,y,z, vx,vy,vz, phi,theta,psi, p,q,r]``.
     Omega : float
-        Net rotor speed ``w1 + w2 - w3 - w4`` [rad/s] for gyroscopic coupling.
+        Net rotor speed ``w1 + w2 - w3 - w4`` [rad/s] for gyroscopic coupling
+        (X-configuration convention, matching dynamics()).
     quad : object
         Quad-like object exposing the physical parameters as attributes
         (m, g, l, kT, kQ, Ixx, Iyy, Izz, Ar, IR, Ax, Ay, Az) — passed straight
-        through to quad_pid_utils.dynamics() for the numeric block.
+        through to dynamics() for the numeric block.
     rotor_speeds : np.ndarray (4,)
         Current actual rotor speeds [w1,w2,w3,w4], needed to re-evaluate
         dynamics() for the numeric block.
@@ -157,7 +163,7 @@ def jacobian_F(x, Omega, quad, rotor_speeds, params):
     F[0, 3] = F[1, 4] = F[2, 5] = 1.0
 
     # Blocks 2+3 — d[vel]/d[vel,att] : drag + thrust projection (numeric,
-    # matches quad_pid_utils2.py's DCM/body-frame-drag translational model)
+    # matches c4dynamics.controllers.quad_pid's DCM/body-frame-drag translational model)
     F[3:6, 3:9] = _numeric_translational_jacobian(x, quad, rotor_speeds)
 
     # Block 4 — d[att-rate]/d[att] : Euler-angle kinematics
@@ -213,7 +219,7 @@ def accel_h(x, quad=None, rotor_speeds=None, g=9.81):
 
     Full model: ``f_body = BI @ (a_inertial + [0,0,g])``, where
     ``a_inertial = dynamics(x)[3:6]`` is the actual (gravity-inclusive)
-    translational acceleration and ``BI`` is quad_pid_utils.dynamics()'s own
+    translational acceleration and ``BI`` is dynamics()'s own
     body-from-inertial matrix — i.e. this predicts exactly what
     ``imu.accelerometer`` simulates (gravity reaction + the vehicle's own
     drag/thrust-induced acceleration), not gravity alone. That match is what
@@ -221,7 +227,7 @@ def accel_h(x, quad=None, rotor_speeds=None, g=9.81):
     instead of being mostly-discarded, R_acc-inflated noise.
 
     Backward-compatible fallback: if ``quad``/``rotor_speeds`` are omitted,
-    returns the gravity-only term.
+    returns the gravity-only term (old behaviour).
     """
     phi, theta = x[6], x[7]
     if quad is None or rotor_speeds is None:
@@ -239,7 +245,7 @@ def accel_H(x, quad=None, rotor_speeds=None, g=9.81, eps=1e-6):
     """Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12).
 
     Numeric (central differences) when ``quad``/``rotor_speeds`` are given,
-    since the full model routes through quad_pid_utils.dynamics() (DCM/
+    since the full model routes through dynamics() (DCM/
     body-frame-drag) and isn't practical to hand-differentiate reliably —
     same rationale as jacobian_F's Block 2/3. Falls back to the closed-form
     gravity-only Jacobian otherwise.
@@ -264,298 +270,12 @@ def accel_H(x, quad=None, rotor_speeds=None, g=9.81, eps=1e-6):
 
 
 # ============================================================================
-#  SENSORS   (truth -> noisy, biased measurement)
+#  SENSORS
 # ============================================================================
 #
-# Each sensor follows the c4dynamics sensor pattern: it is constructed with its
-# error parameters and exposes a ``measure`` method that maps the *true* state
-# to a measurement.  Truth reaches the estimator only through these calls.
-#
-# White-noise standard deviations are 1-sigma.  A constant additive ``bias`` is
-# supported for every channel (default zero, matching the reference prototype);
-# enabling it reproduces the realistic GPS/IMU bias effects.
-
-class gps:
-    """GPS receiver — measures inertial position ``[x, y, z]`` (10 Hz)."""
-
-    def __init__(self, noise_std=0.5, bias=None):
-        self.noise_std = noise_std
-        self.bias = np.zeros(3) if bias is None else np.asarray(bias, float)
-
-    def measure(self, x_true):
-        return x_true[0:3] + self.bias + np.random.randn(3) * self.noise_std
-
-    @staticmethod
-    def demo(duration=20.0, dt=0.1, seed=1, show=True):
-        """
-        Demonstrate GPS position measurements.
-
-        Simulates a smooth 3D trajectory and shows the noisy GPS position
-        measurements in comparison with the true trajectory.
-
-        Parameters
-        ----------
-        duration : float
-            Simulation duration [s].
-        dt : float
-            Sampling interval [s].
-        seed : int
-            Random seed for reproducibility.
-        show : bool
-            If True, display the figure.
-
-        Returns
-        -------
-        matplotlib.figure.Figure
-        """
-        import matplotlib.pyplot as plt
-
-        np.random.seed(seed)
-
-        sensor = gps(noise_std=0.5)
-
-        t = np.arange(0, duration, dt)
-
-        x_true = 5 * np.sin(0.3 * t)
-        y_true = 4 * np.cos(0.25 * t)
-        z_true = -2 + 0.5 * np.sin(0.6 * t)
-
-        z_meas = np.zeros((len(t), 3))
-
-        for k in range(len(t)):
-            x = np.zeros(12)
-            x[0:3] = [x_true[k], y_true[k], z_true[k]]
-            z_meas[k] = sensor.measure(x)
-
-        fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
-
-        labels = ['x', 'y', 'z']
-        truth = [x_true, y_true, z_true]
-
-        for i in range(3):
-            ax[i].plot(t, truth[i], 'k', lw=2, label='True')
-            ax[i].plot(t, z_meas[:, i], '.', ms=3,
-                       label='GPS measurement')
-            ax[i].set_ylabel(f'{labels[i]} [m]')
-            ax[i].grid(True)
-            ax[i].legend()
-
-        ax[-1].set_xlabel('Time [s]')
-        fig.suptitle('GPS Position Measurements')
-        fig.tight_layout()
-
-        if show:
-            plt.show()
-
-        return fig
-
-
-class imu:
-    """Inertial measurement unit — gyroscope and accelerometer (200 Hz).
-
-    The gyroscope measures body rates ``[p, q, r]``; the accelerometer measures
-    body-frame specific force ``[ax, ay]``.  The accelerometer simulator adds
-    the vehicle's translational (inertial) acceleration to the gravity
-    projection, because that is what a real IMU senses; the EKF's measurement
-    model :func:`accel_h` deliberately models only the gravity term, and the
-    difference is absorbed by an inflated accelerometer ``R``.
-    """
-
-    def __init__(self, gyro_std=0.01, acc_std=0.05,
-                 gyro_bias=None, acc_bias=None, g=9.81):
-        self.gyro_std = gyro_std
-        self.acc_std  = acc_std
-        self.gyro_bias = np.zeros(3) if gyro_bias is None else np.asarray(gyro_bias, float)
-        self.acc_bias  = np.zeros(2) if acc_bias  is None else np.asarray(acc_bias,  float)
-        self.g = g
-
-    def gyro(self, x_true):
-        return x_true[9:12] + self.gyro_bias + np.random.randn(3) * self.gyro_std
-
-    def accelerometer(self, x_true, x_true_prev=None, dt=0.005):
-        phi, theta, psi = x_true[6], x_true[7], x_true[8]
-        sp = np.sin(phi);  cp = np.cos(phi)
-        st = np.sin(theta); ct = np.cos(theta)
-        ss = np.sin(psi);  cs = np.cos(psi)
-
-        ax = self.g * st            # gravity projection (modelled by accel_h)
-        ay = -self.g * sp * ct
-
-        if x_true_prev is not None:  # inertial term (NOT modelled by accel_h)
-            # Rotated via BI = dcm321(phi,theta,psi) @ dcm321(phi=pi), matching
-            # quad_pid_utils.dynamics()'s actual body-from-inertial convention.
-            dvx = (x_true[3] - x_true_prev[3]) / dt
-            dvy = (x_true[4] - x_true_prev[4]) / dt
-            dvz = (x_true[5] - x_true_prev[5]) / dt
-            ax += (ct*cs)*dvx - (ct*ss)*dvy + st*dvz
-            ay += (sp*st*cs - cp*ss)*dvx - (sp*st*ss + cp*cs)*dvy - (sp*ct)*dvz
-
-        return np.array([ax, ay]) + self.acc_bias + np.random.randn(2) * self.acc_std
-
-    @staticmethod
-    def demo(duration=10.0, dt=0.01, seed=1, show=True):
-        """
-        Demonstrate IMU measurements.
-
-        Simulates smooth body-rate motion and shows the gyroscope and
-        accelerometer measurements in the presence of bias and white noise.
-
-        Parameters
-        ----------
-        duration : float
-            Simulation duration [s].
-        dt : float
-            Sampling interval [s].
-        seed : int
-            Random seed for reproducibility.
-        show : bool
-            If True, displays the figure.
-
-        Returns
-        -------
-        matplotlib.figure.Figure
-        """
-        import matplotlib.pyplot as plt
-
-        np.random.seed(seed)
-
-        sensor = imu(
-            gyro_std=0.02,
-            acc_std=0.05,
-            gyro_bias=[0.05, -0.03, 0.02],
-            acc_bias=[0.10, -0.05],
-        )
-
-        t = np.arange(0, duration, dt)
-
-        gyro_true = np.column_stack([
-            0.5*np.sin(0.8*t),
-            0.3*np.cos(0.6*t),
-            0.2*np.sin(1.5*t),
-        ])
-
-        phi = np.deg2rad(10*np.sin(0.4*t))
-        theta = np.deg2rad(8*np.cos(0.5*t))
-
-        accel_true = np.column_stack([
-            9.81*np.sin(theta),
-            -9.81*np.sin(phi)*np.cos(theta),
-        ])
-
-        gyro_meas = np.zeros_like(gyro_true)
-        accel_meas = np.zeros_like(accel_true)
-
-        for k in range(len(t)):
-            x = np.zeros(12)
-            x[6] = phi[k]
-            x[7] = theta[k]
-            x[9:12] = gyro_true[k]
-
-            gyro_meas[k] = sensor.gyro(x)
-            accel_meas[k] = sensor.accelerometer(x)
-
-        fig, ax = plt.subplots(2, 1, figsize=(9, 7), sharex=True)
-
-        labels = ["p", "q", "r"]
-        for i in range(3):
-            ax[0].plot(t, gyro_true[:, i], lw=2, label=f"{labels[i]} true")
-            ax[0].plot(t, gyro_meas[:, i], "--", lw=1,
-                       label=f"{labels[i]} measured")
-
-        ax[0].set_ylabel("Angular rate [rad/s]")
-        ax[0].set_title("Gyroscope")
-        ax[0].grid(True)
-        ax[0].legend(ncol=3)
-
-        ax[1].plot(t, accel_true[:, 0], lw=2, label="ax true")
-        ax[1].plot(t, accel_meas[:, 0], "--", label="ax measured")
-        ax[1].plot(t, accel_true[:, 1], lw=2, label="ay true")
-        ax[1].plot(t, accel_meas[:, 1], "--", label="ay measured")
-
-        ax[1].set_xlabel("Time [s]")
-        ax[1].set_ylabel("Acceleration [m/s²]")
-        ax[1].set_title("Accelerometer")
-        ax[1].grid(True)
-        ax[1].legend()
-
-        plt.tight_layout()
-
-        if show:
-            plt.show()
-
-        return fig
-
-
-class magnetometer:
-    """Magnetometer — measures heading (yaw) ``psi`` (50 Hz)."""
-
-    def __init__(self, noise_std=0.05, bias=0.0):
-        self.noise_std = noise_std
-        self.bias = bias
-
-    def measure(self, x_true):
-        return x_true[8:9] + self.bias + np.random.randn(1) * self.noise_std
-
-    @staticmethod
-    def demo(duration=20.0, dt=0.02, seed=1, show=True):
-        """
-        Demonstrate magnetometer heading measurements.
-
-        Simulates a changing vehicle heading and compares the true yaw angle
-        with noisy magnetometer measurements.
-
-        Parameters
-        ----------
-        duration : float
-            Simulation duration [s].
-        dt : float
-            Sampling interval [s].
-        seed : int
-            Random seed for reproducibility.
-        show : bool
-            If True, display the figure.
-
-        Returns
-        -------
-        matplotlib.figure.Figure
-        """
-        import matplotlib.pyplot as plt
-
-        np.random.seed(seed)
-
-        sensor = magnetometer(noise_std=0.05)
-
-        t = np.arange(0, duration, dt)
-
-        psi_true = 0.8 * np.sin(0.35 * t)
-
-        psi_meas = np.zeros(len(t))
-
-        for k in range(len(t)):
-            x = np.zeros(12)
-            x[8] = psi_true[k]
-            psi_meas[k] = sensor.measure(x)[0]
-
-        fig, ax = plt.subplots(figsize=(9, 4))
-
-        ax.plot(t, np.rad2deg(psi_true),
-                'k', lw=2, label='True heading')
-
-        ax.plot(t, np.rad2deg(psi_meas),
-                '.', ms=3, label='Magnetometer')
-
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Heading [deg]')
-        ax.set_title('Magnetometer Measurements')
-        ax.grid(True)
-        ax.legend()
-
-        fig.tight_layout()
-
-        if show:
-            plt.show()
-
-        return fig
+# gps, imu and magnetometer are generic navigation-sensor models, promoted to
+# c4dynamics.sensors.navigation (see import above) since they're reusable
+# beyond this example -- not redefined here.
 
 # ============================================================================
 #  EXTENDED KALMAN FILTER   (subclass of c4d.filters.ekf)
@@ -668,7 +388,7 @@ class ekf12(c4d.filters.ekf):
         x_pred = x_now + dt * x_dot
         x_pred[8] = self._wrap(x_pred[8])
         # X-configuration gyro-coupling term (w1+w2-w3-w4), matching
-        # quad_pid_utils.dynamics()'s motor layout.
+        # dynamics()'s motor layout.
         Omega = rotor_speeds[0] + rotor_speeds[1] - rotor_speeds[2] - rotor_speeds[3]
         Fc = jacobian_F(x_pred, Omega, self, rotor_speeds, self._params)
         F_d = np.eye(12) + dt * Fc + (0.5 * dt * dt) * (Fc @ Fc)
@@ -730,13 +450,13 @@ def default_ekf_config():
     initial covariance, initial-offset and sensor-noise levels, sensor rates).
 
     Returned as a dict so the notebook can display and tune it as data — the
-    estimation analogue of the controller-gain block in ``quad_pid_utils.py``.
+    estimation analogue of the controller-gain block in ``c4dynamics.controllers.quad_pid``.
     """
     Q = np.diag(np.array([
-        0.005, 0.005, 0.008,   # x, y, z           [m]
-        0.020, 0.020, 0.025,   # vx, vy, vz        [m/s]  
-        0.008, 0.008, 0.010,   # phi, theta, psi   [rad]
-        0.012, 0.012, 0.012,   # p, q, r           [rad/s]
+        0.005, 0.005, 0.008,   # x, y, z        [m]
+        0.020, 0.020, 0.025,   # vx, vy, vz     [m/s]  (adaptively scaled)
+        0.008, 0.008, 0.010,   # phi, theta, psi[rad]
+        0.012, 0.012, 0.012,   # p, q, r        [rad/s]
     ])**2)
     P0 = np.diag(np.array([
         0.50, 0.50, 0.80,
@@ -971,7 +691,7 @@ def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi')):
 def plot_trajectory(truth, est, config, t0=8.0, t1=82.0):
     """Figure-8 path: reference vs. true vs. estimated (top-down x-y view)."""
     import matplotlib.pyplot as plt
-    from quad_pid_utils import position_reference
+    from c4dynamics.controllers.quad_pid import position_reference
 
     # flown paths from the stored histories
     t,  x_true = truth.data('x');  _, y_true = truth.data('y')

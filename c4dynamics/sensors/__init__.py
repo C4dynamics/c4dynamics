@@ -2,7 +2,7 @@
 
 `c4dynamics` provides sensor models to simulate real world applications.
 The models include the functionality and the errors model
-of electro-optic, lasers, and electro-magnetic devices.
+of electro-optic, lasers, electro-magnetic, and navigation devices.
 
 
 .. list-table::
@@ -12,6 +12,12 @@ of electro-optic, lasers, and electro-magnetic devices.
     - Direction detector
   * - :class:`radar <c4dynamics.sensors.radar.radar>`
     - Range-direction detector
+  * - :class:`gps <c4dynamics.sensors.navigation.gps>`
+    - Inertial position receiver
+  * - :class:`imu <c4dynamics.sensors.navigation.imu>`
+    - Gyroscope + accelerometer
+  * - :class:`magnetometer <c4dynamics.sensors.navigation.magnetometer>`
+    - Heading (yaw) sensor
 
 
 
@@ -31,6 +37,9 @@ import sys
 from c4dynamics.sensors.radar import radar as radar  # noqa: F401
 from c4dynamics.sensors.lineofsight import lineofsight as lineofsight  # noqa: F401
 from c4dynamics.sensors.seeker import seeker as seeker  # noqa: F401
+from c4dynamics.sensors.navigation import gps as gps  # noqa: F401
+from c4dynamics.sensors.navigation import imu as imu  # noqa: F401
+from c4dynamics.sensors.navigation import magnetometer as magnetometer  # noqa: F401
 
 # Background Material
 # -------------------
@@ -48,13 +57,14 @@ from c4dynamics.sensors.seeker import seeker as seeker  # noqa: F401
 #       altitude radar
 #       lineofsight seeker
 
-# sensors:
+# navigation sensors (c4dynamics.sensors.navigation):
 # 	imu
 # 		accelerometers
 # 		roll gyro
 # 		rate gyro
 # 	gps
-# 	lidar
+# 	magnetometer
+# 	lidar  (not yet implemented)
 
 
 if __name__ == "__main__":
