@@ -188,5 +188,4 @@ def eqm6(rb: "rigidbody", F: Union[np.ndarray, list], M: Union[np.ndarray, list]
 if __name__ == "__main__":
 
     from c4dynamics import rundoctests
-
     rundoctests(sys.modules[__name__])

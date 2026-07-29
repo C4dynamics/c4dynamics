@@ -103,6 +103,7 @@ def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
     return block
 
 
+
 def jacobian_F(x, Omega, quad, rotor_speeds, params):
     """
     Jacobian of the rigid-body dynamics ``f(x, u)`` evaluated at the current
