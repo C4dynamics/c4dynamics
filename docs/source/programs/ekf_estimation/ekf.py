@@ -80,7 +80,7 @@ def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
     :func:`quad_pid_utils.dynamics` (indices 3,4,5 = dvx,dvy,dvz) with respect
     to [vx,vy,vz,phi,theta,psi] (state indices 3..8), via central differences.
 
-    quad_pid_utils2's translational model rotates velocity into the body
+    quad_pid_utils's translational model rotates velocity into the body
     frame, applies drag there, then rotates the resulting force back to
     inertial (``BI``/``dcm321``-based) — this couples drag to attitude and
     is no longer a simple closed-form block, so it is differentiated
@@ -100,6 +100,7 @@ def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
         fm = dynamics(0.0, xm, quad, rotor_speeds)[3:6]
         block[:, j] = (fp - fm) / (2.0 * eps)
     return block
+
 
 
 def jacobian_F(x, Omega, quad, rotor_speeds, params):
