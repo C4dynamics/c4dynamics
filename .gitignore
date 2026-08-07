@@ -146,3 +146,6 @@ docs/source/programs/pid_cascade_controller/quad_pid_utils_ziv.py
 optimize_gains.py
 theoretical_gains.py
 docs/source/programs/pid_cascade/quad_frame - Copy.png
+docs/source/programs/ekf_estimation/architecture.docx
+.gitignore
+docs/source/programs/ekf_estimation/ekf_architecture.drawio
