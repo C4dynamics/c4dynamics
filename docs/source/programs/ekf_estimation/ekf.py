@@ -308,7 +308,7 @@ class ekf12(c4d.filters.ekf):
     _GATE_MAG  = 3.84
     _GATE_ACC  = 5.99
 
-    def __init__(self, X0, P0, Q, R_gps, R_gyro, R_mag, R_acc, params):
+    def __init__(self, X0, P0, Q, R_gps, R_gyro, R_mag, R_acc, params, dt_ref=0.005):
         # X0 may be a dict {name: value} or a 12-vector.
         if not isinstance(X0, dict):
             X0 = {n: float(v) for n, v in zip(STATE_NAMES, np.asarray(X0).ravel())}
@@ -333,14 +333,58 @@ class ekf12(c4d.filters.ekf):
         self._innov_window    = deque(maxlen=10)
         self._innov_maxlen    = 10
 
+        # ``Q`` (both the diag() config values and the adaptive velocity
+        # scaling below) is tuned for one predict step of duration ``dt_ref``
+        # (the 200 Hz baseline used throughout this example). ``predict()``
+        # rescales it linearly by dt/dt_ref every call, so calling predict()
+        # at a different step size (e.g. sub-stepped for a high-rate IMU
+        # experiment) injects the same *continuous-time* noise density
+        # instead of the same fixed amount per call regardless of dt.
+        self._Q_ref   = Q.copy()
+        self._dt_ref  = float(dt_ref)
+
         # Adaptive velocity Q — open the velocity channel during manoeuvres.
         self._Q_vel_base = np.diag(Q[3:6, 3:6]).copy()
+
+        # jacobian_stride: recompute the *numeric* Jacobians (jacobian_F's
+        # translational block, accel_H) only every `jacobian_stride` calls,
+        # reusing the last value in between. Neither Jacobian affects the
+        # state estimate (that's propagated directly from the nonlinear
+        # dynamics()); they only shape the covariance P, which evolves far
+        # more smoothly than the state does, so a slightly stale F_d/H_acc is
+        # a standard, well-understood EKF approximation — not a correctness
+        # risk of the kind a hand-derived-and-possibly-wrong closed form
+        # would be. Default 1 = recompute every call (exactly today's
+        # behaviour, bit-for-bit). Set >1 (e.g. via run_fig8_ekf) only to
+        # afford a high IMU rate in a sweep; leave at 1 for the reference run.
+        self.jacobian_stride = 1
+        self._jac_ctr = 0
+        self._accelH_ctr = 0
+        self._F_d_cached = None
+        self._accel_H_cached = None
+        self._P_jitter = 1e-9   # tiny diagonal floor, see _stabilize_P
 
     # ── helpers ──────────────────────────────────────────────────────────────
 
     @staticmethod
     def _wrap(a):
         return np.arctan2(np.sin(a), np.cos(a))
+
+    def _stabilize_P(self):
+        """
+        Defensive covariance hygiene, applied after every framework predict()
+        / update() call. Floating-point roundoff (especially from the 2nd-order
+        discrete F_d, or many corrections applied in a row with little GPS
+        aiding in between -- e.g. a GPS dropout) can erode P's symmetry and
+        positive-definiteness over many steps. This doesn't fix the
+        linearization-drift issue that shows up during a long GPS-denied
+        stretch (that's a modeling limitation, not a numerical one -- see
+        run_gps_dropout_sweep's docstring); it only guards against P itself
+        becoming asymmetric or singular enough to blow up a downstream
+        ``solve()``/inversion, independent of that.
+        """
+        self.P = 0.5 * (self.P + self.P.T)          # enforce symmetry
+        self.P += self._P_jitter * np.eye(self.P.shape[0])   # tiny PD floor
 
     def _gated_update(self, innov, H, R, gate):
         """Gate on NIS, then apply the framework update with innovation ``innov``.
@@ -360,6 +404,7 @@ class ekf12(c4d.filters.ekf):
             return
         xvec = np.asarray(self.X).ravel()
         super().update(z=(H @ xvec + innov), H=H, R=R)
+        self._stabilize_P()
 
     # ── predict ──────────────────────────────────────────────────────────────
 
@@ -372,29 +417,49 @@ class ekf12(c4d.filters.ekf):
         adaptive process noise ``Q``.  The framework ``ekf.predict`` performs
         the state and covariance propagation; this method supplies ``f``, the
         adaptive ``Q``, and ``F_d`` evaluated at the predicted state.
+
+        ``Q`` is first rescaled to the actual step size (``Q_ref * dt /
+        dt_ref``, see ``__init__``), *then* the accel-magnitude-scheduled
+        velocity scaling is applied on top — so calling ``predict`` more or
+        less often than the ``dt_ref`` baseline (e.g. a sub-stepped, high
+        IMU-rate run) injects the same total process noise per second rather
+        than the same amount per call.
         """
         x_now = np.asarray(self.X).ravel().copy()
         x_dot = dynamics(0.0, x_now, self, rotor_speeds)   # self carries params
         self._last_rotor_speeds = np.asarray(rotor_speeds).copy()
 
-        # Adaptive velocity process noise (accel-magnitude scheduled).
+        # Rescale the reference (dt_ref-tuned) Q to this step's actual dt.
+        q_dt_scale = dt / self._dt_ref
+        self.Q = self._Q_ref * q_dt_scale
+
+        # Adaptive velocity process noise (accel-magnitude scheduled), applied
+        # on top of the dt-rescaled base.
         accel_mag = np.linalg.norm(x_dot[3:6])
         scale = min(2.0, 1.0 + (accel_mag - 0.4) * 1.5) if accel_mag > 0.4 else 1.0
-        self.Q[3, 3] = self._Q_vel_base[0] * scale
-        self.Q[4, 4] = self._Q_vel_base[1] * scale
-        self.Q[5, 5] = self._Q_vel_base[2] * scale
+        self.Q[3, 3] = self._Q_vel_base[0] * q_dt_scale * scale
+        self.Q[4, 4] = self._Q_vel_base[1] * q_dt_scale * scale
+        self.Q[5, 5] = self._Q_vel_base[2] * q_dt_scale * scale
 
-        # Jacobian at the predicted, yaw-wrapped state.
+        # Jacobian at the predicted, yaw-wrapped state. The numeric block
+        # inside jacobian_F (6 extra dynamics() calls) is the expensive part;
+        # cache it across `jacobian_stride` calls (default 1 = every call,
+        # unchanged) since only P uses it, not the state estimate above.
         x_pred = x_now + dt * x_dot
         x_pred[8] = self._wrap(x_pred[8])
         # X-configuration gyro-coupling term (w1+w2-w3-w4), matching
         # dynamics()'s motor layout.
         Omega = rotor_speeds[0] + rotor_speeds[1] - rotor_speeds[2] - rotor_speeds[3]
-        Fc = jacobian_F(x_pred, Omega, self, rotor_speeds, self._params)
+        if self._F_d_cached is None or self._jac_ctr % self.jacobian_stride == 0:
+            self._Fc_cached = jacobian_F(x_pred, Omega, self, rotor_speeds, self._params)
+        self._jac_ctr += 1
+        Fc = self._Fc_cached
         F_d = np.eye(12) + dt * Fc + (0.5 * dt * dt) * (Fc @ Fc)
+        self._F_d_cached = F_d
 
         # Framework predict: X += x_dot*dt ;  P = F_d P F_d^T + Q
         super().predict(F=F_d, fx=x_dot, dt=dt, Q=self.Q)
+        self._stabilize_P()
         self.psi = self._wrap(self.psi)     # wrap yaw after integration
 
     # ── per-sensor updates ────────────────────────────────────────────────────
@@ -406,8 +471,14 @@ class ekf12(c4d.filters.ekf):
     def update_accelerometer(self, z_acc):
         x = np.asarray(self.X).ravel()
         rs = getattr(self, '_last_rotor_speeds', None)
-        innov = np.asarray(z_acc).ravel() - accel_h(x, self, rs)
-        self._gated_update(innov, accel_H(x, self, rs), self.R_acc, self._GATE_ACC)
+        innov = np.asarray(z_acc).ravel() - accel_h(x, self, rs)   # always fresh
+        # accel_H (the expensive part -- 12 extra dynamics() calls via central
+        # differences) is cached across `jacobian_stride` calls, same
+        # rationale as jacobian_F's numeric block in predict().
+        if self._accel_H_cached is None or self._accelH_ctr % self.jacobian_stride == 0:
+            self._accel_H_cached = accel_H(x, self, rs)
+        self._accelH_ctr += 1
+        self._gated_update(innov, self._accel_H_cached, self.R_acc, self._GATE_ACC)
 
     def update_magnetometer(self, z_mag):
         # Circular innovation keeps the wrapped measurement off the state vector.
@@ -490,7 +561,8 @@ def default_ekf_config():
 #  CLOSED-LOOP ESTIMATION-CONTROL SIMULATION
 # ============================================================================
 
-def run_fig8_ekf(config, ekf_cfg=None):
+def run_fig8_ekf(config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
+                  gps_dropout=None, imu_noise_density_model=True, verbose=True):
     """
     Single closed-loop simulation: the quadcopter flies the figure-8 using the
     EKF estimate, while the EKF reconstructs that estimate from noisy GPS/IMU
@@ -503,9 +575,37 @@ def run_fig8_ekf(config, ekf_cfg=None):
     ----------
     config : dict
         The same quad/trajectory/controller/sim configuration used by the
-        cascade-PID example.
+        cascade-PID example. ``config['sim']['dt']`` is the **control** rate
+        (200 Hz by default): the rate-loop controller and the rotor-speed
+        commands always run at this fixed rate, independent of ``imu_rate_hz``.
     ekf_cfg : dict, optional
         EKF noise / initialization block (see :func:`default_ekf_config`).
+    imu_rate_hz : float, optional
+        Gyro/accelerometer sampling rate [Hz]. Defaults to ``1/config['sim']['dt']``
+        (200 Hz) — the original, single-rate behaviour, byte-for-byte. Rates
+        below 200 Hz simply skip IMU updates on some steps (like GPS/mag decimation
+        below); rates above 200 Hz make the *EKF's own* predict/update cycle
+        (and the truth propagation) sub-step *within* each 200 Hz control frame,
+        holding the commanded rotor speeds fixed across the sub-steps — so the
+        rate-controller bandwidth and every other loop stay exactly as
+        configured. The simulated gyro/accel noise std and R_gyro/R_acc are
+        also rescaled by ``sqrt(imu_rate_hz / 200)`` — a real IMU's noise
+        *density* is fixed, not its per-sample noise, so a faster IMU gets
+        noisier individual samples, not free extra precision. With both of
+        these controlled for, IMU rate is the only thing that changes across
+        a sweep. See :func:`run_imu_rate_sweep` for a scan across several rates.
+    jacobian_stride : int, optional
+        Recompute the numeric EKF Jacobians every N calls instead of every
+        call (see :class:`ekf12`). Default 1 = off, byte-for-byte unchanged.
+    gps_dropout : (float, float), optional
+        ``(t_start, t_end)`` window [s] during which GPS updates are skipped
+        entirely — magnetometer and IMU keep updating as usual. Simulates a
+        GPS-denied period: with the one *absolute position* aiding source
+        gone, the estimate has to dead-reckon on IMU (and gyro/mag for
+        attitude) alone until GPS returns, which is exactly the regime where
+        IMU rate should matter (Section 5.3) — unlike the always-aided case,
+        where GPS's own 10 Hz correction dominates regardless of IMU rate.
+        See :func:`run_gps_dropout_sweep`.
 
     Returns
     -------
@@ -516,10 +616,40 @@ def run_fig8_ekf(config, ekf_cfg=None):
     if ekf_cfg is None:
         ekf_cfg = default_ekf_config()
 
-    dt, tf = config['sim']['dt'], config['sim']['tf']
+    dt, tf = config['sim']['dt'], config['sim']['tf']       # control ("inner-loop") rate, fixed
     qp = config['quad']
     A, B, omega, z_ref = (config['trajectory']['A'], config['trajectory']['B'],
                           config['trajectory']['omega'], config['trajectory']['z_ref'])
+    # Takeoff/landing durations default to the reference example's 8 s/8 s,
+    # but are configurable so a shorter run (e.g. the IMU-rate sweep below,
+    # which uses much shorter tf to keep runtime reasonable) can scale them
+    # down and still reach a real cruise phase instead of staying stuck
+    # mid-climb the whole time.
+    t_takeoff = config['trajectory'].get('t_takeoff', 8.0)
+    t_land    = config['trajectory'].get('t_land', 8.0)
+
+    if imu_rate_hz is None:
+        imu_rate_hz = 1.0 / dt
+
+    # `dt` (=Ts_inner) stays the actuator/rate-controller period throughout.
+    # `dt_sim` is the actual per-iteration integration/estimation step: the
+    # finer of the control period and the requested IMU period, snapped so it
+    # divides Ts_inner exactly. IMU updates fire every `imu_decim` sim-steps.
+    Ts_inner = dt
+    dt_sim = min(Ts_inner, 1.0 / imu_rate_hz)
+    n_per_ctrl = max(1, round(Ts_inner / dt_sim))
+    dt_sim = Ts_inner / n_per_ctrl
+    imu_decim = max(1, round((1.0 / imu_rate_hz) / dt_sim))
+
+    # `ekf_cfg['gyro_std']/['acc_std']/['R_gyro']/['R_acc']` are calibrated for
+    # one sample at the 200 Hz reference rate. A real IMU's noise *density* is
+    # what's fixed, not its per-sample noise -- sampling faster means each
+    # individual sample is noisier (sigma ~ sqrt(rate)), not free extra
+    # precision. Rescale so a faster IMU is only better because it propagates
+    # the estimate more often, not because each sample is unrealistically as
+    # clean as a slower sensor's.
+    imu_rate_ref = 1.0 / dt
+    imu_noise_scale = np.sqrt(imu_rate_hz / imu_rate_ref) if imu_noise_density_model else 1.0
 
     # ── Truth vehicle ────────────────────────────────────────────────────────
     truth = c4d.rigidbody()
@@ -533,22 +663,31 @@ def run_fig8_ekf(config, ekf_cfg=None):
     x0 = np.zeros(12)                       # truth starts at rest on the ground
     x0[0:3] += np.random.randn(3) * ekf_cfg['x0_pos_sigma']
     x0[6:9] += np.random.randn(3) * ekf_cfg['x0_att_sigma']
+    # dt_ref=dt: Q in ekf_cfg is tuned for one Ts_inner(=dt)-long predict step;
+    # ekf12.predict() rescales it internally to whatever dt_sim actually is.
+    R_gyro_eff = ekf_cfg['R_gyro'] * imu_noise_scale**2
+    R_acc_eff  = ekf_cfg['R_acc']  * imu_noise_scale**2
     est = ekf12(x0, ekf_cfg['P0'], ekf_cfg['Q'],
-                ekf_cfg['R_gps'], ekf_cfg['R_gyro'],
-                ekf_cfg['R_mag'], ekf_cfg['R_acc'], qp)
+                ekf_cfg['R_gps'], R_gyro_eff,
+                ekf_cfg['R_mag'], R_acc_eff, qp, dt_ref=dt)
+    est.jacobian_stride = jacobian_stride
 
     # ── Sensors ──────────────────────────────────────────────────────────────
     gps_sensor = gps(noise_std=ekf_cfg['gps_std'])
-    imu_sensor = imu(gyro_std=ekf_cfg['gyro_std'], acc_std=ekf_cfg['acc_std'])
+    imu_sensor = imu(gyro_std=ekf_cfg['gyro_std'] * imu_noise_scale,
+                      acc_std=ekf_cfg['acc_std'] * imu_noise_scale)
     mag_sensor = magnetometer(noise_std=ekf_cfg['mag_std'])
-    gps_rate, mag_rate = ekf_cfg['gps_rate'], ekf_cfg['mag_rate']
+    # gps_rate/mag_rate are counts of Ts_inner periods (e.g. gps_rate=20 -> 10 Hz
+    # at the 200 Hz baseline); convert to sim-step counts at the actual dt_sim.
+    gps_decim = max(1, round(ekf_cfg['gps_rate'] * dt / dt_sim))
+    mag_decim = max(1, round(ekf_cfg['mag_rate'] * dt / dt_sim))
 
     # ── Controllers read the ESTIMATE directly ────────────────────────────────
     outer_ctrl, mid_ctrl, inner_ctrl, allocator = InitializeControllers(
         config['controller'], est)
 
     Ts_outer, Ts_middle = 1.0 / 50.0, 1.0 / 100.0
-    outer_time = middle_time = 0.0
+    outer_time = middle_time = inner_time = 0.0
     psi_d = phi_d = theta_d = 0.0
     p_d = q_d = r_d = 0.0
     T_cmd = truth.m * truth.g
@@ -556,14 +695,16 @@ def run_fig8_ekf(config, ekf_cfg=None):
     w_hover = np.sqrt(truth.m * truth.g / (4 * truth.kT))
     rotor_speeds = np.array([w_hover] * 4)
 
-    N = int(round(tf / dt))
-    t_hist = np.arange(N) * dt
+    N = int(round(tf / dt_sim))
+    t_hist = np.arange(N) * dt_sim
     nees = np.zeros(N)
     innov_gps, innov_gps_t = [], []
-    X_true_prev = np.asarray(truth.X).ravel().copy()
-    mag_ctr = gps_ctr = 0
+    x_true_imu_prev = np.asarray(truth.X).ravel().copy()   # true state at the last IMU sample
+    mag_ctr = gps_ctr = imu_ctr = 0
 
-    print(f'EKF closed-loop  |  tf = {tf} s  |  dt = {dt} s')
+    if verbose:
+        print(f'EKF closed-loop  |  tf = {tf} s  |  control dt = {dt} s  |  '
+              f'IMU = {imu_rate_hz:g} Hz  (sim dt = {dt_sim:g} s)')
 
     for k in range(N):
         t = t_hist[k]
@@ -579,57 +720,392 @@ def run_fig8_ekf(config, ekf_cfg=None):
         except np.linalg.LinAlgError:
             nees[k] = np.nan
 
-        # 2. predict
-        est.predict(dt, rotor_speeds)
+        # 2. predict, at the actual sim step (may sub-step within a control frame)
+        est.predict(dt_sim, rotor_speeds)
 
-        # 3. correct — IMU every step, mag 50 Hz, GPS 10 Hz (truth via sensors)
-        est.update_gyro(imu_sensor.gyro(x_true))
-        est.update_accelerometer(
-            imu_sensor.accelerometer(x_true, x_true_prev=X_true_prev, dt=dt))
+        # 3. correct — IMU at imu_rate_hz, mag 50 Hz, GPS 10 Hz (truth via sensors)
+        imu_ctr += 1
+        if imu_ctr >= imu_decim:
+            imu_dt = imu_decim * dt_sim   # actual elapsed time since the last IMU sample
+            est.update_gyro(imu_sensor.gyro(x_true))
+            est.update_accelerometer(
+                imu_sensor.accelerometer(x_true, x_true_prev=x_true_imu_prev, dt=imu_dt))
+            x_true_imu_prev = x_true.copy()
+            imu_ctr = 0
 
         mag_ctr += 1
-        if mag_ctr >= mag_rate:
+        if mag_ctr >= mag_decim:
             est.update_magnetometer(mag_sensor.measure(x_true))
             mag_ctr = 0
 
         gps_ctr += 1
-        if gps_ctr >= gps_rate:
-            z_gps = gps_sensor.measure(x_true)
-            innov_gps.append(z_gps - np.asarray(est.X).ravel()[0:3]); innov_gps_t.append(t)
-            est.update_gps(z_gps)
+        if gps_ctr >= gps_decim:
+            in_dropout = gps_dropout is not None and gps_dropout[0] <= t <= gps_dropout[1]
+            if not in_dropout:
+                z_gps = gps_sensor.measure(x_true)
+                innov_gps.append(z_gps - np.asarray(est.X).ravel()[0:3]); innov_gps_t.append(t)
+                est.update_gps(z_gps)
             gps_ctr = 0
 
-        # 4. cascade PID on the ESTIMATE -> rotor speeds
-        xd, yd, zd = position_reference(t, A, B, omega, z_ref, t_sim=tf)
-        vxd_ff, vyd_ff = velocity_reference(t, A, B, omega, t_sim=tf)
+        # Divergence guard: once X or P goes non-finite (e.g. an unbounded
+        # covariance during a long GPS-denied stretch feeding an overflowed
+        # matmul), stop rather than let a NaN/Inf state reach solve_ivp --
+        # scipy's adaptive RK45 can hang retrying ever-smaller steps against
+        # a NaN derivative instead of failing fast. Truncating the run here
+        # is what lets a diverged trial actually finish (with garbage tail
+        # values a caller can detect via NEES/isfinite) instead of never
+        # returning at all.
+        if not (np.all(np.isfinite(np.asarray(est.X))) and np.all(np.isfinite(est.P))):
+            if verbose:
+                print(f'EKF diverged at t={t:.3f}s (non-finite state/covariance); '
+                      f'stopping early.')
+            # truth/est only have entries up to (and including) this
+            # iteration's store() call; truncate the pre-allocated diagnostic
+            # arrays to match so every returned array stays the same length.
+            t_hist, nees = t_hist[:k + 1], nees[:k + 1]
+            break
 
-        outer_time += dt
+        # 4. cascade PID on the ESTIMATE -> rotor speeds
+        xd, yd, zd = position_reference(t, A, B, omega, z_ref,
+                                         t_takeoff=t_takeoff, t_land=t_land, t_sim=tf)
+        vxd_ff, vyd_ff = velocity_reference(t, A, B, omega,
+                                             t_takeoff=t_takeoff, t_land=t_land, t_sim=tf)
+
+        outer_time += dt_sim
         if outer_time >= Ts_outer:
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
                 xd, yd, zd, vxd_ff, vyd_ff, psi_d, est, Ts_outer)
             truth.F = T_cmd
             outer_time = 0.0
 
-        middle_time += dt
+        middle_time += dt_sim
         if middle_time >= Ts_middle:
             p_d, q_d, r_d = mid_ctrl.compute(phi_d, theta_d, psi_d, est, Ts_middle)
             middle_time = 0.0
 
-        truth.tau_phi, truth.tau_theta, truth.tau_psi = inner_ctrl.compute(
-            p_d, q_d, r_d, est, dt)
-        rotor_speeds = np.array(allocator.allocate(
-            truth.F, truth.tau_phi, truth.tau_theta, truth.tau_psi))
+        # Rate loop + allocator stay pinned to Ts_inner (=dt): commanded rotor
+        # speeds are held fixed across any finer IMU sub-steps within a frame.
+        inner_time += dt_sim
+        if inner_time >= Ts_inner:
+            truth.tau_phi, truth.tau_theta, truth.tau_psi = inner_ctrl.compute(
+                p_d, q_d, r_d, est, Ts_inner)
+            rotor_speeds = np.array(allocator.allocate(
+                truth.F, truth.tau_phi, truth.tau_theta, truth.tau_psi))
+            inner_time = 0.0
 
-        # 5. propagate the TRUTH one step
-        X_true_prev = x_true.copy()
-        sol = solve_ivp(dynamics, [t, t + dt], truth.X,
+        # 5. propagate the TRUTH one sim step
+        sol = solve_ivp(dynamics, [t, t + dt_sim], truth.X,
                         args=(truth, rotor_speeds), method='RK45')
         truth.X = sol.y[:, -1]
 
-    print('EKF closed-loop complete.')
+    if verbose:
+        print('EKF closed-loop complete.')
     diag = {'t': t_hist, 'nees': nees,
             'innov_gps_t': np.array(innov_gps_t), 'innov_gps': np.array(innov_gps)}
     return truth, est, diag
+
+
+# ============================================================================
+#  IMU UPDATE-RATE EXPERIMENT
+# ============================================================================
+
+def run_imu_rate_sweep(config, ekf_cfg=None, imu_rates_hz=(100, 200, 400, 800, 1600, 2000),
+                        n_trials=3, seeds=None, t0=None, t1=None, nees_diverged=50.0,
+                        jacobian_stride=1):
+    """
+    Run the closed-loop figure-8 simulation at several IMU sampling rates and
+    return the RMS position-tracking error at each rate.
+
+    Everything else — the control loop, GPS/magnetometer rates, gyro/accel
+    noise *density* — is held fixed (see :func:`run_fig8_ekf`); only the IMU
+    rate varies, so the resulting curve isolates its effect.
+
+    Each rate is run ``n_trials`` times with different random seeds and the
+    RMSE is averaged, since a single noisy realization is a poor basis for a
+    trend line. A trial whose mean NEES exceeds ``nees_diverged`` is treated
+    as a (rare) filter/controller divergence unrelated to IMU rate — e.g. an
+    unlucky noise draw pushing the altitude-loop integrator into saturation —
+    and excluded from that rate's average rather than silently corrupting it.
+
+    Parameters
+    ----------
+    config : dict
+        Same config as :func:`run_fig8_ekf`. Prefer a shorter ``tf`` (and
+        correspondingly shorter ``t_takeoff``/``t_land`` in ``config['trajectory']``)
+        than the full 90 s demo — runtime grows with both duration and rate.
+    ekf_cfg : dict, optional
+        As in :func:`run_fig8_ekf`. Each trial gets its own seed (below),
+        overriding ``ekf_cfg['seed']``.
+    imu_rates_hz : sequence of float
+        IMU rates to test [Hz].
+    n_trials : int
+        Independent noise realizations averaged per rate.
+    seeds : sequence of int, optional
+        Explicit seeds, length >= n_trials. Defaults to ``1..n_trials``.
+    t0, t1 : float, optional
+        RMSE evaluation window [s] (passed to :func:`compute_metrics`).
+        Defaults to the middle 80% of ``tf`` (skips takeoff/landing).
+    nees_diverged : float
+        Mean-NEES threshold above which a trial is excluded as diverged.
+    jacobian_stride : int
+        Recompute the (expensive, numeric) EKF Jacobians every N calls instead
+        of every call, reusing the last value in between — a real, measured
+        speedup at high IMU rates (roughly half of runtime at 2000 Hz is spent
+        in these two Jacobians alone), at the cost of a slightly stale
+        covariance between refreshes. Only P is affected; the state estimate
+        itself never depends on the Jacobian. Default 1 = off (every call,
+        identical to not having this parameter at all). Try 4-5 if you widen
+        the rate range and need more headroom.
+
+    Returns
+    -------
+    dict  {'rate_hz': array, 'rmse_pos_mean': array, 'rmse_pos_std': array,
+           'n_ok': array, 'trials': {rate: [rmse_pos, ...]}}
+    """
+    if ekf_cfg is None:
+        ekf_cfg = default_ekf_config()
+    tf = config['sim']['tf']
+    if t0 is None:
+        t0 = 0.1 * tf
+    if t1 is None:
+        t1 = 0.9 * tf
+    if seeds is None:
+        seeds = list(range(1, n_trials + 1))
+
+    rate_hz, rmse_mean, rmse_std, n_ok = [], [], [], []
+    trials_by_rate = {}
+
+    for rate in imu_rates_hz:
+        pos_rmses = []
+        for trial, seed in enumerate(seeds[:n_trials]):
+            cfg_trial = dict(ekf_cfg)
+            cfg_trial['seed'] = seed
+            truth, est, diag = run_fig8_ekf(config, cfg_trial, imu_rate_hz=rate,
+                                             jacobian_stride=jacobian_stride, verbose=False)
+            m = compute_metrics(truth, est, diag, t0=t0, t1=t1, verbose=False)
+            if not np.isfinite(m['nees_mean']) or m['nees_mean'] > nees_diverged:
+                print(f'  [rate={rate:g} Hz, seed={seed}] excluded '
+                      f'(mean NEES = {m["nees_mean"]:.1f} > {nees_diverged:g}, likely diverged)')
+                continue
+            pos_rmse = np.sqrt(m['rmse']['x']**2 + m['rmse']['y']**2 + m['rmse']['z']**2)
+            pos_rmses.append(pos_rmse)
+        trials_by_rate[rate] = pos_rmses
+        rate_hz.append(rate)
+        n_ok.append(len(pos_rmses))
+        if pos_rmses:
+            rmse_mean.append(float(np.mean(pos_rmses)))
+            rmse_std.append(float(np.std(pos_rmses)))
+        else:
+            rmse_mean.append(np.nan)
+            rmse_std.append(np.nan)
+        print(f'IMU rate = {rate:6g} Hz  ->  RMS position error = '
+              f'{rmse_mean[-1]:.4f} m  (n={n_ok[-1]}/{n_trials})')
+
+    return {'rate_hz': np.array(rate_hz, dtype=float),
+            'rmse_pos_mean': np.array(rmse_mean),
+            'rmse_pos_std': np.array(rmse_std),
+            'n_ok': np.array(n_ok),
+            'trials': trials_by_rate}
+
+
+def plot_imu_rate_sweep(sweep, show=True):
+    """
+    Plot RMS position-tracking error vs. IMU update rate (log-x), with
+    per-rate standard deviation across trials shown as error bars.
+    """
+    import matplotlib.pyplot as plt
+
+    rate, mean, std = sweep['rate_hz'], sweep['rmse_pos_mean'], sweep['rmse_pos_std']
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.errorbar(rate, mean, yerr=std, marker='o', ms=6, lw=2, capsize=4)
+    ax.set_xscale('log')
+    ax.set_xlabel('IMU update rate [Hz]')
+    ax.set_ylabel('RMS position tracking error [m]')
+    ax.set_title('Effect of IMU sampling rate on estimation + control performance')
+    ax.grid(True, which='both', alpha=0.3)
+    fig.tight_layout()
+
+    if show:
+        plt.show()
+    return fig
+
+
+# ============================================================================
+#  GPS DROPOUT EXPERIMENT
+# ============================================================================
+
+def run_gps_dropout_sweep(config, ekf_cfg=None, imu_rates_hz=(20, 50, 100, 200, 400),
+                           dropout_window=None, n_trials=5, seeds=None,
+                           jacobian_stride=4, nees_diverged=50.0):
+    """
+    Disable GPS for a window mid-flight and measure how position error grows
+    during that window, at several IMU rates.
+
+    With GPS gone, the estimate has to dead-reckon on IMU (gyro + accel) and
+    magnetometer alone until GPS returns — the strapdown-style regime
+    described in Section 5.3, where IMU rate should actually matter, unlike
+    the always-GPS-aided case (Section 8's original design) where GPS's own
+    10 Hz correction dominates regardless of IMU rate.
+
+    Each rate is run ``n_trials`` times (different seeds) since dropout drift
+    is inherently noisy — it depends on the specific noise realization active
+    right when GPS drops out, not just IMU rate. Rather than compare a single
+    noisy endpoint, this averages the *entire* position-error-vs-time curve
+    during the dropout across trials, which is far more stable.
+
+    Parameters
+    ----------
+    config : dict
+        Same shape as :func:`run_fig8_ekf`'s config.
+    ekf_cfg : dict, optional
+        As in :func:`run_fig8_ekf`.
+    imu_rates_hz : sequence of float
+        IMU rates to test.
+    dropout_window : (float, float)
+        ``(t_start, t_end)`` GPS-off window [s]. Must fall within
+        ``config['sim']['tf']``, comfortably inside the cruise phase (after
+        ``t_takeoff``, before ``tf - t_land``). **Keep this short, around
+        1.5 s.** This EKF is a first-order (not iterated/unscented) filter:
+        its correction is a linearization around the *current* estimate, and
+        once real drift accumulates during a long GPS-denied stretch, each
+        further correction is computed from an increasingly wrong
+        linearization point -- a known EKF weakness, not specific to this
+        codebase. Verified empirically: a ~1.5 s window shows a real, modest
+        "faster IMU drifts less" effect; push much past ~2 s and the trend
+        can invert as linearization breaks down, which demonstrates a
+        different (and separate) point than intended here.
+    n_trials, seeds : as in :func:`run_imu_rate_sweep`.
+    jacobian_stride : int
+        Forwarded to :func:`run_fig8_ekf` (default 4 here, not 1 — this
+        experiment doesn't need every-step Jacobian freshness, and the
+        speedup is verified negligible in accuracy; see the profiling in the
+        module notes).
+    nees_diverged : float
+        Mean-NEES threshold (evaluated over the dropout window) above which a
+        trial is excluded as diverged, same rationale as
+        :func:`run_imu_rate_sweep`.
+
+    Returns
+    -------
+    dict {'rate_hz', 'dropout_t' (seconds since dropout start),
+          'drift_curve_mean': {rate: array}, 'drift_curve_std': {rate: array},
+          'rms_during_mean': array, 'rms_during_std': array, 'n_ok': array}
+    """
+    if ekf_cfg is None:
+        ekf_cfg = default_ekf_config()
+    if dropout_window is None:
+        tf = config['sim']['tf']
+        dropout_window = (0.4 * tf, min(0.4 * tf + 1.5, 0.9 * tf))
+    if seeds is None:
+        seeds = list(range(1, n_trials + 1))
+    t_start, t_end = dropout_window
+
+    rate_list, rms_mean, rms_std, n_ok = [], [], [], []
+    curve_mean, curve_std, curve_t = {}, {}, {}
+
+    for rate in imu_rates_hz:
+        trial_curves, trial_rms = [], []
+        dropout_t_grid = np.array([])
+        for seed in seeds[:n_trials]:
+            cfg_trial = dict(ekf_cfg)
+            cfg_trial['seed'] = seed
+            truth, est, diag = run_fig8_ekf(config, cfg_trial, imu_rate_hz=rate,
+                                             jacobian_stride=jacobian_stride,
+                                             gps_dropout=dropout_window, verbose=False)
+            t = diag['t']
+            mask = (t >= t_start) & (t <= t_end)
+            if not mask.any():
+                continue
+            xt = np.asarray(truth.data('x')[1])[mask]
+            yt = np.asarray(truth.data('y')[1])[mask]
+            zt = np.asarray(truth.data('z')[1])[mask]
+            xe = np.asarray(est.data('x')[1])[mask]
+            ye = np.asarray(est.data('y')[1])[mask]
+            ze = np.asarray(est.data('z')[1])[mask]
+            pos_err = np.sqrt((xt - xe)**2 + (yt - ye)**2 + (zt - ze)**2)
+            nees_during = diag['nees'][mask]
+            nees_mean = float(np.nanmean(nees_during))
+            if (not np.isfinite(nees_mean) or nees_mean > nees_diverged
+                    or not np.all(np.isfinite(pos_err))):
+                print(f'  [rate={rate:g} Hz, seed={seed}] excluded '
+                      f'(mean NEES during dropout = {nees_mean:.1f} > {nees_diverged:g}, '
+                      f'or non-finite error, likely diverged)')
+                continue
+            if dropout_t_grid.size == 0:
+                dropout_t_grid = t[mask] - t_start
+            trial_curves.append(pos_err)
+            trial_rms.append(float(np.sqrt(np.mean(pos_err**2))))
+
+        n_ok.append(len(trial_rms))
+        rate_list.append(rate)
+        if trial_rms:
+            # Trials at the same rate share dt_sim, so curves are equal-length.
+            min_len = min(len(c) for c in trial_curves)
+            stacked = np.array([c[:min_len] for c in trial_curves])
+            curve_mean[rate] = stacked.mean(axis=0)
+            curve_std[rate] = stacked.std(axis=0)
+            curve_t[rate] = dropout_t_grid[:min_len]
+            rms_mean.append(float(np.mean(trial_rms)))
+            rms_std.append(float(np.std(trial_rms)))
+        else:
+            curve_mean[rate] = np.array([])
+            curve_std[rate] = np.array([])
+            curve_t[rate] = np.array([])
+            rms_mean.append(np.nan)
+            rms_std.append(np.nan)
+        print(f'IMU rate = {rate:6g} Hz  ->  RMS position error during '
+              f'{t_end - t_start:g}s GPS dropout = {rms_mean[-1]:.4f} m  '
+              f'(n={n_ok[-1]}/{n_trials})')
+
+    return {'rate_hz': np.array(rate_list, dtype=float),
+            'dropout_window': dropout_window,
+            'drift_curve_t': curve_t,
+            'drift_curve_mean': curve_mean,
+            'drift_curve_std': curve_std,
+            'rms_during_mean': np.array(rms_mean),
+            'rms_during_std': np.array(rms_std),
+            'n_ok': np.array(n_ok)}
+
+
+def plot_gps_dropout(sweep, show=True):
+    """
+    Two panels: (left) position error vs. time-since-dropout-start, one curve
+    per IMU rate, shaded by trial std; (right) RMS position error during the
+    dropout vs. IMU rate — the same summary style as :func:`plot_imu_rate_sweep`.
+    """
+    import matplotlib.pyplot as plt
+
+    rates = sweep['rate_hz']
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+
+    cmap = plt.cm.viridis(np.linspace(0, 0.9, len(rates)))
+    for rate, color in zip(rates, cmap):
+        t = sweep['drift_curve_t'][rate]
+        m = sweep['drift_curve_mean'][rate]
+        s = sweep['drift_curve_std'][rate]
+        if len(t) == 0:
+            continue
+        ax1.plot(t, m, lw=2, color=color, label=f'{rate:g} Hz')
+        ax1.fill_between(t, m - s, m + s, color=color, alpha=0.15)
+    ax1.set_xlabel('Time since GPS dropout start [s]')
+    ax1.set_ylabel('Position error [m]')
+    ax1.set_title('Drift during GPS-denied dead-reckoning')
+    ax1.legend(title='IMU rate', fontsize=9)
+    ax1.grid(True, alpha=0.3)
+
+    ax2.errorbar(rates, sweep['rms_during_mean'], yerr=sweep['rms_during_std'],
+                 marker='o', ms=6, lw=2, capsize=4, color='tab:red')
+    ax2.set_xscale('log')
+    ax2.set_xlabel('IMU update rate [Hz]')
+    ax2.set_ylabel('RMS position error during dropout [m]')
+    ax2.set_title('Summary: dropout-window RMS vs. IMU rate')
+    ax2.grid(True, which='both', alpha=0.3)
+
+    fig.tight_layout()
+    if show:
+        plt.show()
+    return fig
 
 
 # ============================================================================
