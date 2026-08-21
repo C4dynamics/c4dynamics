@@ -14,13 +14,6 @@ of electro-optic, lasers, electro-magnetic, and navigation devices.
     - Range-direction detector
   * - :class:`gps <c4dynamics.sensors.navigation.gps>`
     - Inertial position receiver
-  * - :class:`imu <c4dynamics.sensors.navigation.imu>`
-    - Gyroscope + accelerometer
-  * - :class:`magnetometer <c4dynamics.sensors.navigation.magnetometer>`
-    - Heading (yaw) sensor
-
-
-
 
 """
 
