@@ -1,9 +1,9 @@
 """
-ekf.py — Extended Kalman Filter state estimation for the 12-state quadcopter
+ekf.py — Extended Kalman Filter state estimation for the quadcopter
 ============================================================================
 
-This module is the estimation companion to ``c4dynamics.controllers.quad_pid``.  Where the
-cascade-PID module provides the *plant* and the *controller*, this module
+This module is the estimation companion to ``c4dynamics.controllers.quad_pid``.
+Where the cascade-PID module provides the *plant* and the *controller*, this module
 provides the *sensors* and the *estimator* that let the same quadcopter fly its
 figure-8 using an **estimated** state reconstructed from noisy GPS and IMU
 measurements rather than from perfect truth.
@@ -49,7 +49,7 @@ Contents
     H_GPS, H_GYRO, H_MAG  constant measurement matrices
     accel_h, accel_H      nonlinear accelerometer measurement model + Jacobian
     gps, imu, magnetometer simulated sensors (truth -> measurement)
-    ekf12                 the 12-state EKF (subclass of c4d.filters.ekf)
+    ekf_quad              the quadrotor EKF (subclass of c4d.filters.ekf)
     default_ekf_config    reference EKF noise / initialization block
     run_fig8_ekf          single closed-loop estimation-control simulation
     compute_metrics       RMSE (true vs estimated) + filter-consistency (NEES)
@@ -66,6 +66,7 @@ from c4dynamics.controllers.quad_pid import (dynamics, position_reference,
                                              velocity_reference, InitializeControllers)
 from c4dynamics.sensors.navigation import gps, imu, magnetometer
 from c4dynamics import g_ms2 as g
+EPS = 1e-6
 
 # State-variable names, in the canonical c4dynamics rigidbody order.
 STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
@@ -76,7 +77,7 @@ STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
 #  PROCESS MODEL JACOBIAN   F = df/dx   (12 x 12)
 # ============================================================================
 
-def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
+def _numeric_translational_jacobian(x, quad, rotor_speeds):
     """
     Numerically differentiate the translational rows of
     :func:`c4dynamics.controllers.quad_pid.dynamics <c4dynamics.controllers.quad_pid.dynamics>` (indices 3,4,5 = dvx,dvy,dvz) with respect
@@ -96,11 +97,11 @@ def _numeric_translational_jacobian(x, quad, rotor_speeds, eps=1e-6):
     idx = [3, 4, 5, 6, 7, 8]
     block = np.zeros((3, 6))
     for j, si in enumerate(idx):
-        xp = x.copy(); xp[si] += eps
-        xm = x.copy(); xm[si] -= eps
+        xp = x.copy(); xp[si] += EPS
+        xm = x.copy(); xm[si] -= EPS
         fp = dynamics(0.0, xp, quad, rotor_speeds)[3:6]
         fm = dynamics(0.0, xm, quad, rotor_speeds)[3:6]
-        block[:, j] = (fp - fm) / (2.0 * eps)
+        block[:, j] = (fp - fm) / (2.0 * EPS)
     return block
 
 
@@ -243,7 +244,7 @@ def accel_h(x, quad=None, rotor_speeds=None):
     return f_body[:2]
 
 
-def accel_H(x, quad=None, rotor_speeds=None, eps=1e-6):
+def accel_H(x, quad=None, rotor_speeds=None):
     """Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12).
 
     Numeric (central differences) when ``quad``/``rotor_speeds`` are given,
@@ -254,8 +255,10 @@ def accel_H(x, quad=None, rotor_speeds=None, eps=1e-6):
     """
     phi, theta = x[6], x[7]
     if quad is None or rotor_speeds is None:
-        sp = np.sin(phi);  cp = np.cos(phi)
-        st = np.sin(theta); ct = np.cos(theta)
+        sp = np.sin(phi)
+        cp = np.cos(phi)
+        st = np.sin(theta)
+        ct = np.cos(theta)
         H = np.zeros((2, 12))
         H[0, 7] =  g * ct
         H[1, 6] = -g * cp * ct
@@ -264,10 +267,12 @@ def accel_H(x, quad=None, rotor_speeds=None, eps=1e-6):
 
     H = np.zeros((2, 12))
     for si in (3, 4, 5, 6, 7, 8):   # vx,vy,vz,phi,theta,psi
-        xp = x.copy(); xp[si] += eps
-        xm = x.copy(); xm[si] -= eps
+        xp = x.copy()
+        xp[si] += EPS
+        xm = x.copy()
+        xm[si] -= EPS
         H[:, si] = (accel_h(xp, quad, rotor_speeds, g) -
-                    accel_h(xm, quad, rotor_speeds, g)) / (2.0 * eps)
+                    accel_h(xm, quad, rotor_speeds, g)) / (2.0 * EPS)
     return H
 
 
@@ -276,7 +281,7 @@ def accel_H(x, quad=None, rotor_speeds=None, eps=1e-6):
 #  EXTENDED KALMAN FILTER   (subclass of c4d.filters.ekf)
 # ============================================================================
 
-class ekf12(c4d.filters.ekf):
+class ekf_quad(c4d.filters.ekf):
     """
     12-state quadcopter EKF.
 
@@ -287,14 +292,16 @@ class ekf12(c4d.filters.ekf):
     The class adds, as a thin layer over the framework's ``predict``/``update``:
 
     * a **2nd-order discretization** of the analytical Jacobian,
-    * **innovation gating** (chi-squared NIS test) on every sensor,
+    * per-sensor **innovation gating** (chi-squared NIS test),
     * **adaptive GPS measurement noise** (Mehra-style, two-phase),
     * **adaptive velocity process noise** during high-acceleration segments,
     * the **nonlinear accelerometer** measurement.
 
-    The framework ``update`` is reused for the gain and covariance step; the
-    (possibly nonlinear or angle-wrapped) innovation is supplied to it so the
-    correction is identical to the reference prototype.
+    The NIS gate, the gain/covariance step, and covariance stabilization
+    (symmetrize + tiny diagonal floor) are all native to the framework's
+    ``kalman.predict``/``update`` (via ``gate=``/``innov=``/``P_jitter=``);
+    this layer only has to supply the (possibly nonlinear or angle-wrapped)
+    innovation itself.
     """
 
     # Chi-squared 95% gates, by measurement dimension.
@@ -307,7 +314,9 @@ class ekf12(c4d.filters.ekf):
         # X0 may be a dict {name: value} or a 12-vector.
         if not isinstance(X0, dict):
             X0 = {n: float(v) for n, v in zip(STATE_NAMES, np.asarray(X0).ravel())}
-        super().__init__(X=X0, P0=P0, Q=Q.copy())
+        # P_jitter: tiny diagonal floor, symmetrized alongside; native to the
+        # framework's predict()/update() now -- see kalman.__init__.
+        super().__init__(X=X0, P0=P0, Q=Q.copy(), P_jitter=1e-9)
 
         self.R_gps  = R_gps.copy()
         self.R_gyro = R_gyro.copy()
@@ -357,7 +366,6 @@ class ekf12(c4d.filters.ekf):
         self._accelH_ctr = 0
         self._F_d_cached = None
         self._accel_H_cached = None
-        self._P_jitter = 1e-9   # tiny diagonal floor, see _stabilize_P
 
     # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -365,41 +373,17 @@ class ekf12(c4d.filters.ekf):
     def _wrap(a):
         return np.arctan2(np.sin(a), np.cos(a))
 
-    def _stabilize_P(self):
-        """
-        Defensive covariance hygiene, applied after every framework predict()
-        / update() call. Floating-point roundoff (especially from the 2nd-order
-        discrete F_d, or many corrections applied in a row with little GPS
-        aiding in between -- e.g. a GPS dropout) can erode P's symmetry and
-        positive-definiteness over many steps. This doesn't fix the
-        linearization-drift issue that shows up during a long GPS-denied
-        stretch (that's a modeling limitation, not a numerical one -- see
-        run_gps_dropout_sweep's docstring); it only guards against P itself
-        becoming asymmetric or singular enough to blow up a downstream
-        ``solve()``/inversion, independent of that.
-        """
-        self.P = 0.5 * (self.P + self.P.T)          # enforce symmetry
-        self.P += self._P_jitter * np.eye(self.P.shape[0])   # tiny PD floor
-
     def _gated_update(self, innov, H, R, gate):
-        """Gate on NIS, then apply the framework update with innovation ``innov``.
+        """Apply the framework update with innovation ``innov``, gated on NIS.
 
-        The framework ``update`` forms its innovation as ``z - H @ X``; feeding
-        ``z = H @ X + innov`` makes that innovation exactly ``innov``, which lets
-        the nonlinear-accelerometer and angle-wrapped-yaw corrections reuse the
-        framework gain/covariance step unchanged.
+        The gate, the innovation override (needed here for the nonlinear-
+        accelerometer and angle-wrapped-yaw corrections), and the post-update
+        covariance hygiene (symmetrize + tiny diagonal floor, since
+        ``P_jitter`` was set at construction) are all native to
+        ``kalman.update`` now -- this is a thin pass-through kept only to
+        name the operation at each call site below.
         """
-        innov = np.atleast_1d(innov).astype(float)
-        S = H @ self.P @ H.T + R
-        try:
-            nis = float(innov @ np.linalg.solve(S, innov))
-        except np.linalg.LinAlgError:
-            return
-        if nis > gate:
-            return
-        xvec = np.asarray(self.X).ravel()
-        super().update(z=(H @ xvec + innov), H=H, R=R)
-        self._stabilize_P()
+        return super().update(innov=innov, H=H, R=R, gate=gate)
 
     # ── predict ──────────────────────────────────────────────────────────────
 
@@ -452,9 +436,9 @@ class ekf12(c4d.filters.ekf):
         F_d = np.eye(12) + dt * Fc + (0.5 * dt * dt) * (Fc @ Fc)
         self._F_d_cached = F_d
 
-        # Framework predict: X += x_dot*dt ;  P = F_d P F_d^T + Q
+        # Framework predict: X += x_dot*dt ;  P = F_d P F_d^T + Q, stabilized
+        # (symmetrized + tiny diagonal floor) natively since P_jitter is set.
         super().predict(F=F_d, fx=x_dot, dt=dt, Q=self.Q)
-        self._stabilize_P()
         self.psi = self._wrap(self.psi)     # wrap yaw after integration
 
     # ── per-sensor updates ────────────────────────────────────────────────────
@@ -569,7 +553,7 @@ def run_fig8_ekf(
     measurements of the truth.
 
     One time loop, two parallel ``state`` objects — the truth ``rigidbody`` and
-    the ``ekf12`` estimate — both recorded via ``store``/``data``.
+    the ``ekf_quad`` estimate — both recorded via ``store``/``data``.
 
     Parameters
     ----------
@@ -596,7 +580,7 @@ def run_fig8_ekf(
         a sweep. See :func:`run_imu_rate_sweep` for a scan across several rates.
     jacobian_stride : int, optional
         Recompute the numeric EKF Jacobians every N calls instead of every
-        call (see :class:`ekf12`). Default 1 = off, byte-for-byte unchanged.
+        call (see :class:`ekf_quad`). Default 1 = off, byte-for-byte unchanged.
     gps_dropout : (float, float), optional
         ``(t_start, t_end)`` window [s] during which GPS updates are skipped
         entirely — magnetometer and IMU keep updating as usual. Simulates a
@@ -610,7 +594,7 @@ def run_fig8_ekf(
     Returns
     -------
     truth : c4d.rigidbody          true state history  (truth.data(...))
-    est   : ekf12                  estimated state + covariance history
+    est   : ekf_quad                  estimated state + covariance history
     diag  : dict                   {'t', 'nees', 'innov_gps_t', 'innov_gps'}
     """
     if ekf_cfg is None:
@@ -664,10 +648,10 @@ def run_fig8_ekf(
     x0[0:3] += np.random.randn(3) * ekf_cfg['x0_pos_sigma']
     x0[6:9] += np.random.randn(3) * ekf_cfg['x0_att_sigma']
     # dt_ref=dt: Q in ekf_cfg is tuned for one Ts_inner(=dt)-long predict step;
-    # ekf12.predict() rescales it internally to whatever dt_sim actually is.
+    # ekf_quad.predict() rescales it internally to whatever dt_sim actually is.
     R_gyro_eff = ekf_cfg['R_gyro'] * imu_noise_scale**2
     R_acc_eff  = ekf_cfg['R_acc']  * imu_noise_scale**2
-    est = ekf12(x0, ekf_cfg['P0'], ekf_cfg['Q'],
+    est = ekf_quad(x0, ekf_cfg['P0'], ekf_cfg['Q'],
                 ekf_cfg['R_gps'], R_gyro_eff,
                 ekf_cfg['R_mag'], R_acc_eff, qp, dt_ref=dt)
     est.jacobian_stride = jacobian_stride
@@ -1196,3 +1180,6 @@ def plot_trajectory(truth, est, config, t0=8.0, t1=82.0):
     ax.legend(loc='upper right', fontsize=9)
     ax.grid(alpha=0.3)
     return fig
+
+
+
