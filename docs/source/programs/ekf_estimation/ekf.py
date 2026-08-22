@@ -65,6 +65,7 @@ from c4dynamics.rotmat import dcm321
 from c4dynamics.controllers.quad_pid import (dynamics, position_reference,
                                              velocity_reference, InitializeControllers)
 from c4dynamics.sensors.navigation import gps, imu, magnetometer
+from c4dynamics import g_ms2 as g
 
 # State-variable names, in the canonical c4dynamics rigidbody order.
 STATE_NAMES = ['x', 'y', 'z', 'vx', 'vy', 'vz',
@@ -214,15 +215,16 @@ H_GYRO = np.zeros((3, 12)); H_GYRO[0, 9] = H_GYRO[1, 10] = H_GYRO[2, 11] = 1.0  
 H_MAG = np.zeros((1, 12));  H_MAG[0, 8] = 1.0                                   # psi
 
 
-def accel_h(x, quad=None, rotor_speeds=None, g=9.81):
-    """Nonlinear accelerometer model: body-frame specific force.
+def accel_h(x, quad=None, rotor_speeds=None):
+    """Accelerometer model: body-frame specific force.
 
     Full model: ``f_body = BI @ (a_inertial + [0,0,g])``, where
     ``a_inertial = dynamics(x)[3:6]`` is the actual (gravity-inclusive)
     translational acceleration and ``BI`` is dynamics()'s own
     body-from-inertial matrix — i.e. this predicts exactly what
-    ``imu.accelerometer`` simulates (gravity reaction + the vehicle's own
-    drag/thrust-induced acceleration), not gravity alone. That match is what
+    ``imu.measure`` simulates on its accelerometer channel (gravity reaction
+    + the vehicle's own drag/thrust-induced acceleration).
+    That match is what
     lets the accelerometer update carry real information about velocity
     instead of being mostly-discarded, R_acc-inflated noise.
 
@@ -241,7 +243,7 @@ def accel_h(x, quad=None, rotor_speeds=None, g=9.81):
     return f_body[:2]
 
 
-def accel_H(x, quad=None, rotor_speeds=None, g=9.81, eps=1e-6):
+def accel_H(x, quad=None, rotor_speeds=None, eps=1e-6):
     """Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12).
 
     Numeric (central differences) when ``quad``/``rotor_speeds`` are given,
@@ -269,13 +271,6 @@ def accel_H(x, quad=None, rotor_speeds=None, g=9.81, eps=1e-6):
     return H
 
 
-# ============================================================================
-#  SENSORS
-# ============================================================================
-#
-# gps, imu and magnetometer are generic navigation-sensor models, promoted to
-# c4dynamics.sensors.navigation (see import above) since they're reusable
-# beyond this example -- not redefined here.
 
 # ============================================================================
 #  EXTENDED KALMAN FILTER   (subclass of c4d.filters.ekf)
@@ -535,6 +530,7 @@ def default_ekf_config():
         0.05, 0.05, 0.05,
         0.10, 0.10, 0.10,
     ])**2)
+
     return {
         'Q'      : Q,
         'P0'     : P0,
@@ -554,6 +550,8 @@ def default_ekf_config():
         'gps_rate': 20,   # 10 Hz
         'mag_rate': 4,    # 50 Hz
         'seed'    : 42,
+        'ideal_imu': False,
+        'ideal_magnetometer': False,
     }
 
 
@@ -561,8 +559,10 @@ def default_ekf_config():
 #  CLOSED-LOOP ESTIMATION-CONTROL SIMULATION
 # ============================================================================
 
-def run_fig8_ekf(config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
-                  gps_dropout=None, imu_noise_density_model=True, verbose=True):
+def run_fig8_ekf(
+        config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
+        gps_dropout=None, imu_noise_density_model=True, verbose=True
+    ):
     """
     Single closed-loop simulation: the quadcopter flies the figure-8 using the
     EKF estimate, while the EKF reconstructs that estimate from noisy GPS/IMU
@@ -674,7 +674,7 @@ def run_fig8_ekf(config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
 
     # ── Sensors ──────────────────────────────────────────────────────────────
     gps_sensor = gps(noise_std=ekf_cfg['gps_std'])
-    imu_sensor = imu(gyro_std=ekf_cfg['gyro_std'] * imu_noise_scale,
+    imu_sensor = imu(isideal=ekf_cfg['ideal_imu'], gyro_std=ekf_cfg['gyro_std'] * imu_noise_scale,
                       acc_std=ekf_cfg['acc_std'] * imu_noise_scale)
     mag_sensor = magnetometer(noise_std=ekf_cfg['mag_std'])
     # gps_rate/mag_rate are counts of Ts_inner periods (e.g. gps_rate=20 -> 10 Hz
@@ -699,7 +699,6 @@ def run_fig8_ekf(config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
     t_hist = np.arange(N) * dt_sim
     nees = np.zeros(N)
     innov_gps, innov_gps_t = [], []
-    x_true_imu_prev = np.asarray(truth.X).ravel().copy()   # true state at the last IMU sample
     mag_ctr = gps_ctr = imu_ctr = 0
 
     if verbose:
@@ -724,13 +723,16 @@ def run_fig8_ekf(config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
         est.predict(dt_sim, rotor_speeds)
 
         # 3. correct — IMU at imu_rate_hz, mag 50 Hz, GPS 10 Hz (truth via sensors)
+        # imu_sensor.measure() takes the truth rigidbody directly and keeps its own
+        # previous-sample state internally, so the inertial term's dt is just t - t_prev.
+        # az_meas is unused: this filter's predict step already knows the commanded
+        # thrust, so az carries little the accelerometer update would add (see imu's
+        # docstring); only (ax, ay) — the tilt-sensitive axes — feed update_accelerometer.
         imu_ctr += 1
         if imu_ctr >= imu_decim:
-            imu_dt = imu_decim * dt_sim   # actual elapsed time since the last IMU sample
-            est.update_gyro(imu_sensor.gyro(x_true))
-            est.update_accelerometer(
-                imu_sensor.accelerometer(x_true, x_true_prev=x_true_imu_prev, dt=imu_dt))
-            x_true_imu_prev = x_true.copy()
+            ax_meas, ay_meas, az_meas, p_meas, q_meas, r_meas = imu_sensor.measure(truth, t=t)
+            est.update_gyro([p_meas, q_meas, r_meas])
+            est.update_accelerometer([ax_meas, ay_meas])
             imu_ctr = 0
 
         mag_ctr += 1
@@ -935,9 +937,11 @@ def plot_imu_rate_sweep(sweep, show=True):
 #  GPS DROPOUT EXPERIMENT
 # ============================================================================
 
-def run_gps_dropout_sweep(config, ekf_cfg=None, imu_rates_hz=(20, 50, 100, 200, 400),
-                           dropout_window=None, n_trials=5, seeds=None,
-                           jacobian_stride=4, nees_diverged=50.0):
+def run_gps_dropout_sweep(
+        config, ekf_cfg=None, imu_rates_hz=(20, 50, 100, 200, 400),
+        dropout_window=None, n_trials=5, seeds=None,
+        jacobian_stride=4, nees_diverged=50.0,
+    ):
     """
     Disable GPS for a window mid-flight and measure how position error grows
     during that window, at several IMU rates.
@@ -1096,7 +1100,7 @@ def plot_gps_dropout(sweep, show=True):
 
     ax2.errorbar(rates, sweep['rms_during_mean'], yerr=sweep['rms_during_std'],
                  marker='o', ms=6, lw=2, capsize=4, color='tab:red')
-    ax2.set_xscale('log')
+    # ax2.set_xscale('log')
     ax2.set_xlabel('IMU update rate [Hz]')
     ax2.set_ylabel('RMS position error during dropout [m]')
     ax2.set_title('Summary: dropout-window RMS vs. IMU rate')

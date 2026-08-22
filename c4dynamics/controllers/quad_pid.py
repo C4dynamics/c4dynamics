@@ -72,6 +72,13 @@ def dynamics(t, y, quad, rotor_speeds):
     Accepts and returns arrays compatible with c4d.rigidbody.X:
         X = [x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]
 
+    Where:
+
+    - :math:`x, y, z` are the inertial position coordinates
+    - :math:`v_x, v_y, v_z` are the inertial velocity coordinates
+    - :math:`\\varphi, \\theta, \\psi` are the Euler angles (roll, pitch, yaw)
+    - :math:`p, q, r` are the body rates about the roll, pitch, yaw axes
+
 
     Frame and motor convention:
 

@@ -12,11 +12,16 @@ throughout :mod:`c4dynamics.sensors` (compare :class:`radar
 
 Unlike :class:`radar`/:class:`seeker` (which operate on a
 :class:`rigidbody <c4dynamics.states.lib.rigidbody.rigidbody>` origin and a
-target), these sensors are written against a plain 12-state vector
-``[x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]`` (the same ordering used
-by :class:`rigidbody` and by :mod:`c4dynamics.controllers.quad_pid`), so they
-drop directly into an EKF/UKF `predict`/`update` loop without an
-intermediate adapter.
+target), :class:`gps` and :class:`magnetometer` are written against a plain
+12-state vector ``[x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]`` (the same
+ordering used by :class:`rigidbody` and by
+:mod:`c4dynamics.controllers.quad_pid`), so they drop directly into an
+EKF/UKF `predict`/`update` loop without an intermediate adapter.
+:class:`imu` measures rates and inertial acceleration, both of which are
+derivatives of that state, so it takes the truth
+:class:`rigidbody <c4dynamics.states.lib.rigidbody.rigidbody>` object itself
+rather than a bare vector, and keeps its own previous-sample history
+internally between calls to :meth:`imu.measure <imu.measure>`.
 
 .. list-table::
   :header-rows: 0
@@ -388,48 +393,302 @@ class gps:
         return fig
 
 
-class imu:
-    """Inertial measurement unit — gyroscope and accelerometer (200 Hz).
+class imu(c4d.state):
+    """
+    Inertial measurement unit — gyroscope and accelerometer.
 
-    The gyroscope measures body rates ``[p, q, r]``; the accelerometer measures
-    body-frame specific force ``[ax, ay]``.  The accelerometer simulator adds
-    the vehicle's translational (inertial) acceleration to the gravity
-    projection, because that is what a real IMU senses; the EKF's measurement
-    model :func:`accel_h` deliberately models only the gravity term, and the
-    difference is absorbed by an inflated accelerometer ``R``.
+    The `imu` class models a strapdown gyroscope and accelerometer pair.
+    The gyroscope measures body rates ``[p, q, r]``.
+    The accelerometer measures the full body-frame specific force
+    ``[ax, ay, az]``.
+
+    An `imu` instance is
+    a :class:`state <c4dynamics.states.state.state>` whose state
+    vector is the last measured sample, ``X = [ax, ay, az, p, q, r]``. This
+    gives `imu` the :meth:`store() <c4dynamics.states.state.state.store>`
+    and :meth:`data() <c4dynamics.states.state.state.data>` methods for free
+    (:meth:`measure` uses `store` internally, see below).
+
+
+    Parameters
+    ==========
+    gyro_std : float, optional
+        Standard deviation of the gyroscope noise, [rad/s]. Defaults ``0.01``.
+    acc_std : float, optional
+        Standard deviation of the accelerometer noise, [m/s²]. Defaults ``0.05``.
+    gyro_bias : array_like, optional
+        Constant gyroscope bias ``[bp, bq, br]``, [rad/s]. Defaults ``[0, 0, 0]``.
+    acc_bias : array_like, optional
+        Constant accelerometer bias ``[bax, bay, baz]``, [m/s²]. Defaults ``[0, 0, 0]``.
+    g : float, optional
+        Gravitational acceleration, [m/s²]. Defaults ``9.81``.
+    isideal : bool, optional
+        A flag indicating whether the errors model is off. Defaults `False`.
+    dt : float, optional
+        Fallback timestep, [s], used for the accelerometer's finite-difference
+        inertial term when consecutive calls to :meth:`measure` don't carry
+        increasing `t` values. Defaults ``0.005`` (:math:`200Hz`).
+
+
+    See Also
+    ========
+    .ekf
+    .gps
+    .magnetometer
+
+
+    **Functionality**
+
+    At each sample the imu returns rate and acceleration measurements based
+    on the true state of a rigid body. Let the true state be:
+
+    .. math::
+
+        X = [x, y, z, v_x, v_y, v_z, \\varphi, \\theta, \\psi, p, q, r]^T
+
+    Where:
+
+    - :math:`x, y, z` are the inertial position coordinates
+    - :math:`v_x, v_y, v_z` are the inertial velocity coordinates
+    - :math:`\\varphi, \\theta, \\psi` are the Euler angles (roll, pitch, yaw)
+    - :math:`p, q, r` are the body rates about the roll, pitch, yaw axes
+
+    The gyroscope measurement is the last three states directly:
+
+    .. math::
+
+        [p, q, r]_{meas} = [p, q, r] + bias_{gyro} + noise_{gyro}
+
+    The accelerometer measures the full body-frame specific force, i.e.
+    gravity reaction plus the vehicle's own coordinate acceleration:
+
+    .. math::
+
+        [a_x, a_y, a_z]_{ideal} = [BI] \\cdot \\big(\\dot{v} + [0,\\ 0,\\ g]^T\\big)
+
+    where :math:`[BI]` is the body-from-inertial DCM and :math:`\\dot{v}` is
+    the inertial-velocity derivative. Since `measure` is given only the
+    current true state, :math:`\\dot{v}` is approximated by a finite
+    difference against the *previous* call's true state:
+
+    .. math::
+
+        \\dot{v} \\approx {v(t) - v(t_{prev}) \\over t - t_{prev}}
+
+    which is why :meth:`measure` keeps the previous sample as an internal
+    attribute (`t_prev`, `x_prev`) rather than asking the caller for it: the
+    first call to `measure` (no previous sample yet) therefore reports the
+    gravity term alone.
+
+
+
+    **Errors Model**
+
+    - ``Bias``: a constant offset, set at construction through `gyro_bias` /
+      `acc_bias` and unchanged between measurements.
+    - ``Noise``: a zero-mean Gaussian sample, drawn independently at every
+      call to :meth:`measure`, with standard deviation `gyro_std` / `acc_std`.
+
+    The errors model can be disabled by applying ``isideal = True`` at the
+    imu construction stage: the gyroscope and accelerometer standard
+    deviations and biases are then muted (forced to zero), regardless of
+    the ``gyro_std`` / ``acc_std`` / ``gyro_bias`` / ``acc_bias`` arguments,
+    and :meth:`measure` returns the noise-free, bias-free truth.
+
+
+    **Construction**
+
+    An imu instance is created by making a direct call to the constructor:
+
+    .. code::
+
+        >>> imu_sensor = c4d.sensors.imu()
+
+    Initialization does not require any mandatory arguments.
+
+
+    Examples
+    ========
+
+    Import required packages:
+
+    .. code::
+
+        >>> import c4dynamics as c4d
+        >>> import numpy as np
+
+    **Ideal imu**
+
+    An ideal imu can be created by muting the errors model:
+
+    .. code::
+
+        >>> imu_ideal = c4d.sensors.imu(isideal = True)
+        >>> rb = c4d.rigidbody(theta = -0.1, p = 0.2, q = -0.1, r = 0.05)
+        >>> ax, ay, az, p, q, r = imu_ideal.measure(rb)
+        >>> np.array([p, q, r]) # doctest: +NUMPY_FORMAT
+        [0.2  -0.1  0.05]
+        >>> ax # doctest: +ELLIPSIS
+        -0.979...
+        >>> az # doctest: +ELLIPSIS
+        -9.760...
+
+    **Non-ideal imu**
+
+    .. code::
+
+        >>> np.random.seed(100)
+        >>> imu_sensor = c4d.sensors.imu(gyro_std = 0.01, acc_std = 0.05)
+        >>> rb = c4d.rigidbody()
+        >>> imu_sensor.measure(rb) # doctest: +ELLIPSIS
+        (-0.012..., 0.049..., -9.784..., -0.017..., 0.003..., 0.011...)
+
+    **Store**
+
+    Passing ``store = True`` stores the sampled `[ax, ay, az, p, q, r]` along
+    with the given timestamp; the histories are then available through
+    :meth:`data() <c4dynamics.states.state.state.data>`:
+
+    .. code::
+
+        >>> np.random.seed(200)
+        >>> imu_sensor = c4d.sensors.imu(isideal = True)
+        >>> rb = c4d.rigidbody()
+        >>> for t in np.arange(0, 0.02, 0.005):
+        ...     rb.p = 0.1 * t
+        ...     imu_sensor.measure(rb, t = t, store = True) # doctest: +IGNORE_OUTPUT
+        >>> imu_sensor.data('p')
+        (array([0.   , 0.005, 0.01 , 0.015]), array([0.    , 0.0005, 0.001 , 0.0015]))
+
+
+    **Demo**
+
+    The built-in :meth:`demo` method provides a compact demonstration of the
+    imu errors model and plots the true and measured rates and accelerations:
+
+    .. code::
+
+        >>> fig = c4d.sensors.imu.demo(show = True)
+
+    The same demonstration can be run without displaying the figure by using
+    ``show = False``.
     """
 
-    def __init__(self, gyro_std=0.01, acc_std=0.05,
-                 gyro_bias=None, acc_bias=None, g=9.81):
+    def __init__(self, gyro_std=0.01, acc_std=0.05, gyro_bias=None,
+                 acc_bias=None, g=9.81, isideal=False, dt=0.005):
+        super().__init__(ax=0.0, ay=0.0, az=0.0, p=0.0, q=0.0, r=0.0)
+
         self.gyro_std = gyro_std
         self.acc_std  = acc_std
         self.gyro_bias = np.zeros(3) if gyro_bias is None else np.asarray(gyro_bias, float)
-        self.acc_bias  = np.zeros(2) if acc_bias  is None else np.asarray(acc_bias,  float)
-        self.g = g
+        self.acc_bias  = np.zeros(3) if acc_bias  is None else np.asarray(acc_bias,  float)
+        self.g  = g
+        self.dt = dt
 
-    def gyro(self, x_true):
-        return x_true[9:12] + self.gyro_bias + np.random.randn(3) * self.gyro_std
+        if isideal:
+            self.gyro_std  = 0.0
+            self.acc_std   = 0.0
+            self.gyro_bias = np.zeros(3)
+            self.acc_bias  = np.zeros(3)
 
-    def accelerometer(self, x_true, x_true_prev=None, dt=0.005):
+        self._x_prev = None   # true state at the previous call to measure()
+        self._t_prev = None   # its timestamp
+
+    def measure(self, rb: "c4d.rigidbody", t: float = -1, store: bool = False):  # type: ignore
+        """
+        Measures body rates and specific acceleration of a rigid body.
+
+        If `store = True`, the method stores the measured sample
+        `[ax, ay, az, p, q, r]` along with a timestamp (`t = -1` by default,
+        if not provided otherwise).
+
+
+        Parameters
+        ----------
+        rb : rigidbody
+            A :class:`rigidbody <c4dynamics.states.lib.rigidbody.rigidbody>`
+            object (or any 12-variable state object using the same
+            ``[x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]`` ordering)
+            providing the true reference state for the sample.
+        t : float, optional
+            Timestamp [seconds]. Defaults -1.
+        store : bool, optional
+            A flag indicating whether to store the measured values. Defaults `False`.
+
+        Returns
+        -------
+        out : tuple
+            Accelerations and rates, `(ax, ay, az, p, q, r)`,
+            [m/s², m/s², m/s², rad/s, rad/s, rad/s].
+
+
+        Note
+        ----
+        The accelerometer's inertial term requires a previous sample. As
+        `measure` keeps that sample internally (there's no `x_true_prev`
+        argument to pass), the very first call after construction reports
+        the gravity-projection term alone.
+
+
+        Example
+        -------
+
+        `measure` in a program simulating an imu riding a rigid body
+        through a short maneuver, storing the samples for later use:
+
+        .. code::
+
+            >>> import c4dynamics as c4d
+            >>> import numpy as np
+            >>> np.random.seed(321)
+            >>> rb = c4d.rigidbody()
+            >>> imu_sensor = c4d.sensors.imu()
+            >>> dt = 0.005
+            >>> for t in np.arange(0, 1, dt):
+            ...     rb.inteqm(np.zeros(3), np.zeros(3), dt) # doctest: +IGNORE_OUTPUT
+            ...     imu_sensor.measure(rb, t = t, store = True) # doctest: +IGNORE_OUTPUT
+            ...     rb.store(t)
+            >>> imu_sensor.data('p')[1].shape
+            (200,)
+        """
+
+        x_true = np.asarray(rb.X).ravel()
+
+        # ---- gyroscope: body rates -------------------------------------
+        p, q, r = x_true[9:12] + self.gyro_bias + np.random.randn(3) * self.gyro_std
+
+        # ---- accelerometer: body-frame specific force -------------------
         phi, theta, psi = x_true[6], x_true[7], x_true[8]
-        sp = np.sin(phi);  cp = np.cos(phi)
-        st = np.sin(theta); ct = np.cos(theta)
-        ss = np.sin(psi);  cs = np.cos(psi)
+        sp, cp = np.sin(phi), np.cos(phi)
+        st, ct = np.sin(theta), np.cos(theta)
 
-        ax = self.g * st            # gravity projection (modelled by accel_h)
+        ax = self.g * st            # gravity projection
         ay = -self.g * sp * ct
+        az = -self.g * cp * ct
 
-        if x_true_prev is not None:  # inertial term (NOT modelled by accel_h)
-            # Rotated via BI = dcm321(phi,theta,psi) @ dcm321(phi=pi), matching
-            # quad_pid.dynamics()'s actual body-from-inertial convention
-            # (NOT the unflipped standard dcm321 — see derivation notes).
-            dvx = (x_true[3] - x_true_prev[3]) / dt
-            dvy = (x_true[4] - x_true_prev[4]) / dt
-            dvz = (x_true[5] - x_true_prev[5]) / dt
+        if self._x_prev is not None:  # inertial term, needs a previous sample
+            dtc = self.dt
+            if t != -1 and self._t_prev is not None and self._t_prev != -1 and t > self._t_prev:
+                dtc = t - self._t_prev
+
+            ss, cs = np.sin(psi), np.cos(psi)
+            dvx = (x_true[3] - self._x_prev[3]) / dtc
+            dvy = (x_true[4] - self._x_prev[4]) / dtc
+            dvz = (x_true[5] - self._x_prev[5]) / dtc
             ax += (ct*cs)*dvx - (ct*ss)*dvy + st*dvz
             ay += (sp*st*cs - cp*ss)*dvx - (sp*st*ss + cp*cs)*dvy - (sp*ct)*dvz
+            az += (sp*ss + st*cp*cs)*dvx + (sp*cs - ss*st*cp)*dvy - (cp*ct)*dvz
 
-        return np.array([ax, ay]) + self.acc_bias + np.random.randn(2) * self.acc_std
+        ax, ay, az = np.array([ax, ay, az]) + self.acc_bias + np.random.randn(3) * self.acc_std
+
+        self.ax, self.ay, self.az, self.p, self.q, self.r = ax, ay, az, p, q, r
+
+        self._x_prev, self._t_prev = x_true.copy(), t
+
+        if store:
+            self.store(t)
+
+        return self.ax, self.ay, self.az, self.p, self.q, self.r
 
     @staticmethod
     def demo(duration=10.0, dt=0.01, seed=1, show=True):
@@ -462,7 +721,7 @@ class imu:
             gyro_std=0.02,
             acc_std=0.05,
             gyro_bias=[0.05, -0.03, 0.02],
-            acc_bias=[0.10, -0.05],
+            acc_bias=[0.10, -0.05, 0.15],
         )
 
         t = np.arange(0, duration, dt)
@@ -479,19 +738,25 @@ class imu:
         accel_true = np.column_stack([
             9.81*np.sin(theta),
             -9.81*np.sin(phi)*np.cos(theta),
+            -9.81*np.cos(phi)*np.cos(theta),
         ])
 
         gyro_meas = np.zeros_like(gyro_true)
         accel_meas = np.zeros_like(accel_true)
 
-        for k in range(len(t)):
-            x = np.zeros(12)
-            x[6] = phi[k]
-            x[7] = theta[k]
-            x[9:12] = gyro_true[k]
+        rb = c4d.rigidbody()
 
-            gyro_meas[k] = sensor.gyro(x)
-            accel_meas[k] = sensor.accelerometer(x)
+        for k in range(len(t)):
+            rb.phi = phi[k]
+            rb.theta = theta[k]
+            rb.p, rb.q, rb.r = gyro_true[k]
+
+            # rb.vx/vy/vz stay 0 throughout, so the accelerometer's
+            # finite-difference inertial term evaluates to 0 regardless of
+            # dt, leaving the gravity projection alone -- matching accel_true.
+            ax_k, ay_k, az_k, p_k, q_k, r_k = sensor.measure(rb)
+            gyro_meas[k] = [p_k, q_k, r_k]
+            accel_meas[k] = [ax_k, ay_k, az_k]
 
         fig, ax = plt.subplots(2, 1, figsize=(9, 7), sharex=True)
 
@@ -506,16 +771,16 @@ class imu:
         ax[0].grid(True)
         ax[0].legend(ncol=3)
 
-        ax[1].plot(t, accel_true[:, 0], lw=2, label="ax true")
-        ax[1].plot(t, accel_meas[:, 0], "--", label="ax measured")
-        ax[1].plot(t, accel_true[:, 1], lw=2, label="ay true")
-        ax[1].plot(t, accel_meas[:, 1], "--", label="ay measured")
+        acc_labels = ["ax", "ay", "az"]
+        for i in range(3):
+            ax[1].plot(t, accel_true[:, i], lw=2, label=f"{acc_labels[i]} true")
+            ax[1].plot(t, accel_meas[:, i], "--", label=f"{acc_labels[i]} measured")
 
         ax[1].set_xlabel("Time [s]")
         ax[1].set_ylabel("Acceleration [m/s²]")
         ax[1].set_title("Accelerometer")
         ax[1].grid(True)
-        ax[1].legend()
+        ax[1].legend(ncol=3)
 
         plt.tight_layout()
 
@@ -528,9 +793,12 @@ class imu:
 class magnetometer:
     """Magnetometer — measures heading (yaw) ``psi`` (50 Hz)."""
 
-    def __init__(self, noise_std=0.05, bias=0.0):
+    def __init__(self, noise_std=0.05, bias=0.0, isideal=False):
         self.noise_std = noise_std
         self.bias = bias
+        if isideal:
+            self.noise_std = 0.0
+            self.bias = 0.0
 
     def measure(self, x_true):
         return x_true[8:9] + self.bias + np.random.randn(1) * self.noise_std
