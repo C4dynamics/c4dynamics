@@ -5,7 +5,7 @@ ekf.py — Extended Kalman Filter state estimation for the quadcopter
 This module is the estimation companion to ``c4dynamics.controllers.quad_pid``.
 Where the cascade-PID module provides the *plant* and the *controller*, this module
 provides the *sensors* and the *estimator* that let the same quadcopter fly its
-figure-8 using an **estimated** state reconstructed from noisy GPS and IMU
+figure-8 using an estimated state reconstructed from noisy GPS and IMU
 measurements rather than from perfect truth.
 
 It is organised exactly like ``c4dynamics.controllers.quad_pid`` — a single reusable module
@@ -14,15 +14,15 @@ a single call to :func:`run_fig8_ekf`.
 
 Design
 ------
-* The **truth** vehicle is a :class:`c4dynamics.rigidbody`, propagated with the
+* The truth vehicle is a :class:`c4dynamics.rigidbody`, propagated with the
   shared :func:`c4dynamics.controllers.quad_pid.dynamics <c4dynamics.controllers.quad_pid.dynamics>` (the *same* model the EKF uses as its
   process model).
-* The **estimate** is an :class:`ekf <c4dynamics.filters.ekf>` whose 12 state
+* The estimate is an :class:`ekf <c4dynamics.filters.ekf>` whose 12 state
   variables carry the *same names and order* as the truth.  Because the
   framework EKF is itself a ``state`` object, the estimate stores itself
   (``store``/``data``), exposes named components (``est.phi`` …), and is read
   directly by the cascade-PID controllers — no proxy object is needed.
-* The **sensors** follow the c4dynamics sensor pattern: each exposes a
+* The sensors follow the c4dynamics sensor pattern: each exposes a
   ``measure`` method that maps the *true* state to a noisy, biased measurement.
   Truth reaches the estimator only through these measurements.
 
@@ -271,8 +271,8 @@ def accel_H(x, quad=None, rotor_speeds=None):
         xp[si] += EPS
         xm = x.copy()
         xm[si] -= EPS
-        H[:, si] = (accel_h(xp, quad, rotor_speeds, g) -
-                    accel_h(xm, quad, rotor_speeds, g)) / (2.0 * EPS)
+        H[:, si] = (accel_h(xp, quad, rotor_speeds) -
+                    accel_h(xm, quad, rotor_speeds)) / (2.0 * EPS)
     return H
 
 
@@ -283,19 +283,21 @@ def accel_H(x, quad=None, rotor_speeds=None):
 
 class ekf_quad(c4d.filters.ekf):
     """
-    12-state quadcopter EKF.
+    Quadcopter EKF.
 
     Built on :class:`c4dynamics.filters.ekf`, so the estimate is a first-class
-    ``state`` object: it stores itself (``store``/``data``), prints and indexes
-    by name (``est.phi``), and is read directly by the cascade-PID controllers.
+    ``state`` object:
+    it stores itself (``store``/``data``), prints and indexes
+    by name (``est.phi``),
+    and is read directly by the cascade-PID controllers.
 
     The class adds, as a thin layer over the framework's ``predict``/``update``:
 
-    * a **2nd-order discretization** of the analytical Jacobian,
-    * per-sensor **innovation gating** (chi-squared NIS test),
-    * **adaptive GPS measurement noise** (Mehra-style, two-phase),
-    * **adaptive velocity process noise** during high-acceleration segments,
-    * the **nonlinear accelerometer** measurement.
+    * a 2nd-order discretization of the analytical Jacobian,
+    * per-sensor innovation gating (chi-squared NIS test),
+    * adaptive GPS measurement noise (Mehra-style, two-phase),
+    * adaptive velocity process noise during high-acceleration segments,
+    * the nonlinear accelerometer measurement.
 
     The NIS gate, the gain/covariance step, and covariance stabilization
     (symmetrize + tiny diagonal floor) are all native to the framework's
@@ -305,7 +307,7 @@ class ekf_quad(c4d.filters.ekf):
     """
 
     # Chi-squared 95% gates, by measurement dimension.
-    _GATE_GPS  = 16.27
+    _GATE_GPS  = 7.81 # 16.27
     _GATE_GYRO = 7.81
     _GATE_MAG  = 3.84
     _GATE_ACC  = 5.99
@@ -373,17 +375,6 @@ class ekf_quad(c4d.filters.ekf):
     def _wrap(a):
         return np.arctan2(np.sin(a), np.cos(a))
 
-    def _gated_update(self, innov, H, R, gate):
-        """Apply the framework update with innovation ``innov``, gated on NIS.
-
-        The gate, the innovation override (needed here for the nonlinear-
-        accelerometer and angle-wrapped-yaw corrections), and the post-update
-        covariance hygiene (symmetrize + tiny diagonal floor, since
-        ``P_jitter`` was set at construction) are all native to
-        ``kalman.update`` now -- this is a thin pass-through kept only to
-        name the operation at each call site below.
-        """
-        return super().update(innov=innov, H=H, R=R, gate=gate)
 
     # ── predict ──────────────────────────────────────────────────────────────
 
@@ -445,7 +436,7 @@ class ekf_quad(c4d.filters.ekf):
 
     def update_gyro(self, z_gyro):
         innov = np.asarray(z_gyro).ravel() - (H_GYRO @ np.asarray(self.X).ravel())
-        self._gated_update(innov, H_GYRO, self.R_gyro, self._GATE_GYRO)
+        super().update(innov=innov, H=H_GYRO, R=self.R_gyro, gate=self._GATE_GYRO)
 
     def update_accelerometer(self, z_acc):
         x = np.asarray(self.X).ravel()
@@ -457,12 +448,12 @@ class ekf_quad(c4d.filters.ekf):
         if self._accel_H_cached is None or self._accelH_ctr % self.jacobian_stride == 0:
             self._accel_H_cached = accel_H(x, self, rs)
         self._accelH_ctr += 1
-        self._gated_update(innov, self._accel_H_cached, self.R_acc, self._GATE_ACC)
+        super().update(innov=innov, H=self._accel_H_cached, R=self.R_acc, gate=self._GATE_ACC)
 
     def update_magnetometer(self, z_mag):
         # Circular innovation keeps the wrapped measurement off the state vector.
         innov = self._wrap(float(z_mag[0]) - float(self.psi))
-        self._gated_update(np.array([innov]), H_MAG, self.R_mag, self._GATE_MAG)
+        super().update(innov=innov, H=H_MAG, R=self.R_mag, gate=self._GATE_MAG)
 
     def update_gps(self, z_gps):
         """GPS position update with two-phase adaptive measurement noise.
@@ -488,8 +479,7 @@ class ekf_quad(c4d.filters.ekf):
         # Phase B — apply previous pending scale, gate, update.
         self._r_scale = self._r_scale_pending
         self.R_gps = self._R_gps_base * self._r_scale
-        self._gated_update(innov, H_GPS, self.R_gps, self._GATE_GPS)
-
+        super().update(innov=innov, H=H_GPS, R=self.R_gps, gate=self._GATE_GPS)
 
 # ============================================================================
 #  REFERENCE EKF CONFIGURATION BLOCK
@@ -559,7 +549,7 @@ def run_fig8_ekf(
     ----------
     config : dict
         The same quad/trajectory/controller/sim configuration used by the
-        cascade-PID example. ``config['sim']['dt']`` is the **control** rate
+        cascade-PID example. ``config['sim']['dt']`` is the control rate
         (200 Hz by default): the rate-loop controller and the rotor-speed
         commands always run at this fixed rate, independent of ``imu_rate_hz``.
     ekf_cfg : dict, optional
@@ -575,9 +565,9 @@ def run_fig8_ekf(
         configured. The simulated gyro/accel noise std and R_gyro/R_acc are
         also rescaled by ``sqrt(imu_rate_hz / 200)`` — a real IMU's noise
         *density* is fixed, not its per-sample noise, so a faster IMU gets
-        noisier individual samples, not free extra precision. With both of
-        these controlled for, IMU rate is the only thing that changes across
-        a sweep. See :func:`run_imu_rate_sweep` for a scan across several rates.
+        noisier individual samples, not free extra precision.
+        With both of these controlled for, IMU rate is the only thing that changes across
+        a sweep.
     jacobian_stride : int, optional
         Recompute the numeric EKF Jacobians every N calls instead of every
         call (see :class:`ekf_quad`). Default 1 = off, byte-for-byte unchanged.
@@ -729,7 +719,8 @@ def run_fig8_ekf(
             in_dropout = gps_dropout is not None and gps_dropout[0] <= t <= gps_dropout[1]
             if not in_dropout:
                 z_gps = gps_sensor.measure(x_true)
-                innov_gps.append(z_gps - np.asarray(est.X).ravel()[0:3]); innov_gps_t.append(t)
+                innov_gps.append(z_gps - np.asarray(est.X).ravel()[0:3])
+                innov_gps_t.append(t)
                 est.update_gps(z_gps)
             gps_ctr = 0
 
@@ -792,132 +783,6 @@ def run_fig8_ekf(
 
 
 # ============================================================================
-#  IMU UPDATE-RATE EXPERIMENT
-# ============================================================================
-
-def run_imu_rate_sweep(config, ekf_cfg=None, imu_rates_hz=(100, 200, 400, 800, 1600, 2000),
-                        n_trials=3, seeds=None, t0=None, t1=None, nees_diverged=50.0,
-                        jacobian_stride=1):
-    """
-    Run the closed-loop figure-8 simulation at several IMU sampling rates and
-    return the RMS position-tracking error at each rate.
-
-    Everything else — the control loop, GPS/magnetometer rates, gyro/accel
-    noise *density* — is held fixed (see :func:`run_fig8_ekf`); only the IMU
-    rate varies, so the resulting curve isolates its effect.
-
-    Each rate is run ``n_trials`` times with different random seeds and the
-    RMSE is averaged, since a single noisy realization is a poor basis for a
-    trend line. A trial whose mean NEES exceeds ``nees_diverged`` is treated
-    as a (rare) filter/controller divergence unrelated to IMU rate — e.g. an
-    unlucky noise draw pushing the altitude-loop integrator into saturation —
-    and excluded from that rate's average rather than silently corrupting it.
-
-    Parameters
-    ----------
-    config : dict
-        Same config as :func:`run_fig8_ekf`. Prefer a shorter ``tf`` (and
-        correspondingly shorter ``t_takeoff``/``t_land`` in ``config['trajectory']``)
-        than the full 90 s demo — runtime grows with both duration and rate.
-    ekf_cfg : dict, optional
-        As in :func:`run_fig8_ekf`. Each trial gets its own seed (below),
-        overriding ``ekf_cfg['seed']``.
-    imu_rates_hz : sequence of float
-        IMU rates to test [Hz].
-    n_trials : int
-        Independent noise realizations averaged per rate.
-    seeds : sequence of int, optional
-        Explicit seeds, length >= n_trials. Defaults to ``1..n_trials``.
-    t0, t1 : float, optional
-        RMSE evaluation window [s] (passed to :func:`compute_metrics`).
-        Defaults to the middle 80% of ``tf`` (skips takeoff/landing).
-    nees_diverged : float
-        Mean-NEES threshold above which a trial is excluded as diverged.
-    jacobian_stride : int
-        Recompute the (expensive, numeric) EKF Jacobians every N calls instead
-        of every call, reusing the last value in between — a real, measured
-        speedup at high IMU rates (roughly half of runtime at 2000 Hz is spent
-        in these two Jacobians alone), at the cost of a slightly stale
-        covariance between refreshes. Only P is affected; the state estimate
-        itself never depends on the Jacobian. Default 1 = off (every call,
-        identical to not having this parameter at all). Try 4-5 if you widen
-        the rate range and need more headroom.
-
-    Returns
-    -------
-    dict  {'rate_hz': array, 'rmse_pos_mean': array, 'rmse_pos_std': array,
-           'n_ok': array, 'trials': {rate: [rmse_pos, ...]}}
-    """
-    if ekf_cfg is None:
-        ekf_cfg = default_ekf_config()
-    tf = config['sim']['tf']
-    if t0 is None:
-        t0 = 0.1 * tf
-    if t1 is None:
-        t1 = 0.9 * tf
-    if seeds is None:
-        seeds = list(range(1, n_trials + 1))
-
-    rate_hz, rmse_mean, rmse_std, n_ok = [], [], [], []
-    trials_by_rate = {}
-
-    for rate in imu_rates_hz:
-        pos_rmses = []
-        for trial, seed in enumerate(seeds[:n_trials]):
-            cfg_trial = dict(ekf_cfg)
-            cfg_trial['seed'] = seed
-            truth, est, diag = run_fig8_ekf(config, cfg_trial, imu_rate_hz=rate,
-                                             jacobian_stride=jacobian_stride, verbose=False)
-            m = compute_metrics(truth, est, diag, t0=t0, t1=t1, verbose=False)
-            if not np.isfinite(m['nees_mean']) or m['nees_mean'] > nees_diverged:
-                print(f'  [rate={rate:g} Hz, seed={seed}] excluded '
-                      f'(mean NEES = {m["nees_mean"]:.1f} > {nees_diverged:g}, likely diverged)')
-                continue
-            pos_rmse = np.sqrt(m['rmse']['x']**2 + m['rmse']['y']**2 + m['rmse']['z']**2)
-            pos_rmses.append(pos_rmse)
-        trials_by_rate[rate] = pos_rmses
-        rate_hz.append(rate)
-        n_ok.append(len(pos_rmses))
-        if pos_rmses:
-            rmse_mean.append(float(np.mean(pos_rmses)))
-            rmse_std.append(float(np.std(pos_rmses)))
-        else:
-            rmse_mean.append(np.nan)
-            rmse_std.append(np.nan)
-        print(f'IMU rate = {rate:6g} Hz  ->  RMS position error = '
-              f'{rmse_mean[-1]:.4f} m  (n={n_ok[-1]}/{n_trials})')
-
-    return {'rate_hz': np.array(rate_hz, dtype=float),
-            'rmse_pos_mean': np.array(rmse_mean),
-            'rmse_pos_std': np.array(rmse_std),
-            'n_ok': np.array(n_ok),
-            'trials': trials_by_rate}
-
-
-def plot_imu_rate_sweep(sweep, show=True):
-    """
-    Plot RMS position-tracking error vs. IMU update rate (log-x), with
-    per-rate standard deviation across trials shown as error bars.
-    """
-    import matplotlib.pyplot as plt
-
-    rate, mean, std = sweep['rate_hz'], sweep['rmse_pos_mean'], sweep['rmse_pos_std']
-
-    fig, ax = plt.subplots(figsize=(7, 5))
-    ax.errorbar(rate, mean, yerr=std, marker='o', ms=6, lw=2, capsize=4)
-    ax.set_xscale('log')
-    ax.set_xlabel('IMU update rate [Hz]')
-    ax.set_ylabel('RMS position tracking error [m]')
-    ax.set_title('Effect of IMU sampling rate on estimation + control performance')
-    ax.grid(True, which='both', alpha=0.3)
-    fig.tight_layout()
-
-    if show:
-        plt.show()
-    return fig
-
-
-# ============================================================================
 #  GPS DROPOUT EXPERIMENT
 # ============================================================================
 
@@ -953,8 +818,8 @@ def run_gps_dropout_sweep(
     dropout_window : (float, float)
         ``(t_start, t_end)`` GPS-off window [s]. Must fall within
         ``config['sim']['tf']``, comfortably inside the cruise phase (after
-        ``t_takeoff``, before ``tf - t_land``). **Keep this short, around
-        1.5 s.** This EKF is a first-order (not iterated/unscented) filter:
+        ``t_takeoff``, before ``tf - t_land``). Keep this short, around
+        1.5 s. This EKF is a first-order (not iterated/unscented) filter:
         its correction is a linearization around the *current* estimate, and
         once real drift accumulates during a long GPS-denied stretch, each
         further correction is computed from an increasingly wrong
@@ -963,7 +828,10 @@ def run_gps_dropout_sweep(
         "faster IMU drifts less" effect; push much past ~2 s and the trend
         can invert as linearization breaks down, which demonstrates a
         different (and separate) point than intended here.
-    n_trials, seeds : as in :func:`run_imu_rate_sweep`.
+    n_trials : int
+        Independent noise realizations averaged per rate.
+    seeds : sequence of int, optional
+        Explicit seeds, length >= n_trials. Defaults to ``1..n_trials``.
     jacobian_stride : int
         Forwarded to :func:`run_fig8_ekf` (default 4 here, not 1 — this
         experiment doesn't need every-step Jacobian freshness, and the
@@ -971,8 +839,7 @@ def run_gps_dropout_sweep(
         module notes).
     nees_diverged : float
         Mean-NEES threshold (evaluated over the dropout window) above which a
-        trial is excluded as diverged, same rationale as
-        :func:`run_imu_rate_sweep`.
+        trial is excluded as diverged.
 
     Returns
     -------
@@ -1060,7 +927,7 @@ def plot_gps_dropout(sweep, show=True):
     """
     Two panels: (left) position error vs. time-since-dropout-start, one curve
     per IMU rate, shaded by trial std; (right) RMS position error during the
-    dropout vs. IMU rate — the same summary style as :func:`plot_imu_rate_sweep`.
+    dropout vs.
     """
     import matplotlib.pyplot as plt
 
