@@ -516,7 +516,10 @@ class kalman(c4d.state):
         Returns
         -------
         K : numpy.ndarray or None
-            Kalman gain, or `None` if the update was rejected by `gate`.
+            Kalman gain, or `None` if the update was rejected by `gate`,
+            or if ``S = H @ P @ H.T + R`` is numerically singular (in
+            which case `X` and `P` are likewise left unchanged, exactly
+            as for a gate rejection).
 
 
         Raises
@@ -630,7 +633,17 @@ class kalman(c4d.state):
                 )
 
             S = self.H @ self.P @ self.H.T + self.R
-            K = self.P @ self.H.T @ np.linalg.inv(S)
+            try:
+                # A singular S means P (and/or R) has already diverged
+                # beyond recovery -- e.g. an unbounded covariance from a
+                # long run of gated-out updates overflowing to inf/nan.
+                # Reject the update exactly like a failed gate (X and P
+                # untouched) instead of letting an uncaught LinAlgError
+                # crash the caller; this mirrors the try/except already
+                # used below for the gate's own np.linalg.solve(S, ...).
+                K = self.P @ self.H.T @ np.linalg.inv(S)
+            except np.linalg.LinAlgError:
+                return None
         else:
             K = self._Kinf
             S = None  # computed lazily below, only if a gate is requested

@@ -724,14 +724,16 @@ def run_fig8_ekf(
                 est.update_gps(z_gps)
             gps_ctr = 0
 
-        # Divergence guard: once X or P goes non-finite (e.g. an unbounded
-        # covariance during a long GPS-denied stretch feeding an overflowed
-        # matmul), stop rather than let a NaN/Inf state reach solve_ivp --
+        # Divergence guard:
+        # once X or P goes non-finite (e.g. an unbounded covariance during a
+        # long GPS-denied stretch feeding an overflowed matmul),
+        # stop rather than let a NaN/Inf state reach solve_ivp
+        # --
         # scipy's adaptive RK45 can hang retrying ever-smaller steps against
-        # a NaN derivative instead of failing fast. Truncating the run here
-        # is what lets a diverged trial actually finish (with garbage tail
-        # values a caller can detect via NEES/isfinite) instead of never
-        # returning at all.
+        # a NaN derivative instead of failing fast.
+        # Truncating the run here is what lets a diverged trial
+        # actually finish (with garbage tail values a caller can
+        # detect via NEES/isfinite) instead of never returning at all.
         if not (np.all(np.isfinite(np.asarray(est.X))) and np.all(np.isfinite(est.P))):
             if verbose:
                 print(f'EKF diverged at t={t:.3f}s (non-finite state/covariance); '
