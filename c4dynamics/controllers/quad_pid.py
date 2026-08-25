@@ -104,7 +104,7 @@ def dynamics(t, y, quad, rotor_speeds):
     Torque mapping:
     roll (phi):       L * (-F1 + F2 + F3 - F4)
     pitch (theta):    L * (F1 - F2 + F3 - F4)
-    yaw (psi):        kM / kT * (F1 + F2 - F3 - F4)
+    yaw (psi):        kQ / kT * (F1 + F2 - F3 - F4)
 
     Parameters
     ----------
@@ -123,7 +123,7 @@ def dynamics(t, y, quad, rotor_speeds):
     g   = quad.g    # gravity [m/s^2]
     L   = quad.l    # arm length [m]
     kT  = quad.kT   # thrust coefficient
-    kM  = quad.kQ   # torque coefficient
+    kQ  = quad.kQ   # torque coefficient
     IR  = quad.IR   # rotor inertia [kg.m^2]
     Ixx = quad.Ixx  # roll inertia [kg.m^2]
     Iyy = quad.Iyy  # pitch inertia [kg.m^2]
@@ -133,7 +133,7 @@ def dynamics(t, y, quad, rotor_speeds):
     Az  = quad.Az   # drag coefficient (z)
     Ar  = quad.Ar   # angular drag coefficient
 
-    gamma = kM / kT
+    gamma = kQ / kT
 
     F1 = kT * w1**2
     F2 = kT * w2**2

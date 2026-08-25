@@ -306,11 +306,11 @@ class ekf_quad(c4d.filters.ekf):
     innovation itself.
     """
 
-    # Chi-squared 95% gates, by measurement dimension.
-    _GATE_GPS  = 7.81 # 16.27
-    _GATE_GYRO = 7.81
-    _GATE_MAG  = 3.84
-    _GATE_ACC  = 5.99
+    # Chi-squared gates, by measurement dimension:
+    _GATE_GPS  = 16.27 # 99.9% gate, 3 dimensions
+    _GATE_GYRO = 7.81  # 95%, 3 dimensions
+    _GATE_MAG  = 3.84  # 95%, 1 dimension
+    _GATE_ACC  = 5.99  # 95%, 2 dimensions
 
     def __init__(self, X0, P0, Q, R_gps, R_gyro, R_mag, R_acc, params, dt_ref=0.005):
         # X0 may be a dict {name: value} or a 12-vector.
@@ -526,6 +526,7 @@ def default_ekf_config():
         'seed'    : 42,
         'ideal_imu': False,
         'ideal_magnetometer': False,
+        'ideal_gps': False,
     }
 
 
@@ -548,10 +549,12 @@ def run_fig8_ekf(
     Parameters
     ----------
     config : dict
-        The same quad/trajectory/controller/sim configuration used by the
-        cascade-PID example. ``config['sim']['dt']`` is the control rate
-        (200 Hz by default): the rate-loop controller and the rotor-speed
-        commands always run at this fixed rate, independent of ``imu_rate_hz``.
+        A dict with ``quad``/``trajectory``/``controller``/``sim`` blocks
+        configuring the vehicle parameters, the figure-8 reference
+        trajectory, the PID gains, and simulation timing.
+        ``config['sim']['dt']`` is the control rate (200 Hz by default):
+        the rate-loop controller and the rotor-speed commands always run
+        at this fixed rate, independent of ``imu_rate_hz``.
     ekf_cfg : dict, optional
         EKF noise / initialization block (see :func:`default_ekf_config`).
     imu_rate_hz : float, optional
@@ -647,7 +650,7 @@ def run_fig8_ekf(
     est.jacobian_stride = jacobian_stride
 
     # ── Sensors ──────────────────────────────────────────────────────────────
-    gps_sensor = gps(noise_std=ekf_cfg['gps_std'])
+    gps_sensor = gps(noise_std=ekf_cfg['gps_std'], isideal=ekf_cfg.get('ideal_gps', False))
     imu_sensor = imu(isideal=ekf_cfg['ideal_imu'], gyro_std=ekf_cfg['gyro_std'] * imu_noise_scale,
                       acc_std=ekf_cfg['acc_std'] * imu_noise_scale)
     mag_sensor = magnetometer(noise_std=ekf_cfg['mag_std'])
@@ -700,8 +703,7 @@ def run_fig8_ekf(
         # imu_sensor.measure() takes the truth rigidbody directly and keeps its own
         # previous-sample state internally, so the inertial term's dt is just t - t_prev.
         # az_meas is unused: this filter's predict step already knows the commanded
-        # thrust, so az carries little the accelerometer update would add (see imu's
-        # docstring); only (ax, ay) — the tilt-sensitive axes — feed update_accelerometer.
+        # thrust, so az carries little the accelerometer update would add; only (ax, ay) — the tilt-sensitive axes — feed update_accelerometer.
         imu_ctr += 1
         if imu_ctr >= imu_decim:
             ax_meas, ay_meas, az_meas, p_meas, q_meas, r_meas = imu_sensor.measure(truth, t=t)

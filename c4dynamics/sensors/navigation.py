@@ -64,6 +64,9 @@ class gps:
     bias : array_like, optional
         Constant position bias ``[bx, by, bz]``, [m].  Defaults to
         ``[0, 0, 0]``.
+    isideal : bool, optional
+        If ``True``, overrides ``noise_std`` and ``bias`` to zero, producing
+        an ideal (noise-free, bias-free) GPS. Defaults to ``False``.
 
 
     See Also
@@ -254,9 +257,12 @@ class gps:
     ``show=False``.
     """
 
-    def __init__(self, noise_std=0.5, bias=None):
+    def __init__(self, noise_std=0.5, bias=None, isideal=False):
         self.noise_std = noise_std
         self.bias = np.zeros(3) if bias is None else np.asarray(bias, float)
+        if isideal:
+            self.noise_std = 0.0
+            self.bias = np.zeros(3)
 
     def measure(self, x_true):
         """
