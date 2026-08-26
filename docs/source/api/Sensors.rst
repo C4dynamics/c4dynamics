@@ -1,8 +1,13 @@
-Sensors 
+Sensors
 =======
 
 
 .. automodule:: c4dynamics.sensors
+
+.. seealso::
+
+  For the background theory and detailed explanations behind these sensor models,
+  see the :doc:`Sensors </concepts/sensors>` concept page.
 
 .. toctree::
   :hidden:

@@ -338,6 +338,7 @@ class ekf_quad(c4d.filters.ekf):
         self._r_scale_pending = 1.0
         self._innov_window    = deque(maxlen=10)
         self._innov_maxlen    = 10
+        self._alpha_mehra     = 0.30
 
         # ``Q`` (both the diag() config values and the adaptive velocity
         # scaling below) is tuned for one predict step of duration ``dt_ref``
@@ -472,9 +473,8 @@ class ekf_quad(c4d.filters.ekf):
             C_innov = (arr.T @ arr) / len(arr)
             S_expected = H_GPS @ self.P @ H_GPS.T + self.R_gps
             ratio = np.trace(C_innov) / np.trace(S_expected)
-            alpha = 0.30
             new_scale = max(1.0, min(30.0, ratio))
-            self._r_scale_pending = (1 - alpha) * self._r_scale + alpha * new_scale
+            self._r_scale_pending = (1 - self._alpha_mehra) * self._r_scale + self._alpha_mehra * new_scale
 
         # Phase B — apply previous pending scale, gate, update.
         self._r_scale = self._r_scale_pending
