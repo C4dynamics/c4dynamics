@@ -52,6 +52,7 @@ estimated state reconstructed from
 :mod:`c4dynamics.sensors.navigation` measurements.
 """
 
+import warnings
 import numpy as np
 import c4dynamics as c4d
 from matplotlib import pyplot as plt
@@ -197,6 +198,60 @@ def dynamics(t, y, quad, rotor_speeds):
 
     # Return in rigidbody order: [x,y,z, vx,vy,vz, phi,theta,psi, p,q,r]
     return np.array([dx, dy, dz, dvx, dvy, dvz, dphi, dtheta, dpsi, dp, dq, dr])
+
+
+# ============================================================
+#  GROUND-CONTACT GUARD  (shared by every simulation loop below)
+# ============================================================
+
+# Altitude [m] above which the vehicle counts as "airborne". This exists
+# solely to distinguish "still at rest on the ground at t=0" (z=0, must
+# not be flagged) from having genuinely left it -- it is NOT a tolerance
+# for "how big a dip counts as a real crash". There is no ground-collision
+# model here, so any dip back to z<=0 after clearing this, however brief
+# or small, is a real ground strike: a real vehicle doesn't un-crash and
+# resume climbing the way this sim's unconstrained physics would let it.
+# Keep this small.
+GROUND_TAKEOFF_EPS = 0.05
+
+
+def ground_contact(z, took_off):
+    """
+    Ground-contact guard shared by every quadcopter simulation loop
+    (the plain cascade-PID example and the EKF closed-loop example alike).
+
+    There is no ground-collision model in :func:`dynamics` -- z is free to
+    go negative and the physics keeps integrating as if nothing happened.
+    This guard exists purely to catch that and let the caller stop the
+    simulation (with a warning) rather than silently continue on an
+    unphysical, below-ground trajectory.
+
+    `took_off` latches true once the vehicle climbs above
+    `GROUND_TAKEOFF_EPS`; a ground hit is only reported once it has
+    latched, so the initial at-rest-on-the-ground state is never flagged.
+    A hit is then reported the moment `z` comes back down to zero or below
+    -- whether that's a genuine mid-flight crash or (harmlessly) the very
+    end of a normal scripted landing, in which case the simulation was
+    about to end anyway.
+
+    Parameters
+    ----------
+    z : float
+        Current true altitude [m] (inertial ENU convention, ground = 0).
+    took_off : bool
+        Whether the vehicle has, at any earlier point this run, climbed
+        above `GROUND_TAKEOFF_EPS`.
+
+    Returns
+    -------
+    took_off : bool
+        Updated latch -- pass this back in on the next call.
+    hit_ground : bool
+        True if the vehicle is airborne-latched and `z <= 0` right now.
+    """
+    took_off = took_off or (z > GROUND_TAKEOFF_EPS)
+    hit_ground = took_off and (z <= 0.0)
+    return took_off, hit_ground
 
 
 # ============================================================
@@ -714,6 +769,7 @@ def run_fig8_pid(config):
     p_d = q_d = r_d = 0.0
     T_cmd = quad.m * quad.g  # start at hover thrust
     rotor_speeds = np.array([np.sqrt(T_cmd / (4 * quad.kT))] * 4)
+    took_off = False
 
     print(f"Simulation start  |  tf = {tf} s  |  dt = {dt} s")
 
@@ -727,6 +783,13 @@ def run_fig8_pid(config):
         quad.store(t)
         quad.storeparams(["F", "tau_phi", "tau_theta", "tau_psi",
                           "w1", "w2", "w3", "w4"], t=t)
+
+        # ── Ground-contact guard ──
+        took_off, hit_ground = ground_contact(quad.z, took_off)
+        if hit_ground:
+            warnings.warn(f'Quadcopter hit the ground at t={t:.3f} s '
+                           f'(z={quad.z:.4f} m); stopping simulation.', c4d.c4warn)
+            break
 
         # ── Reference at current time ──
         xd, yd, zd = position_reference(t, A, B, omega, z_ref, t_sim=tf)

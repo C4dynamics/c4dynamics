@@ -21,7 +21,7 @@ QUAD_PARAMS = {
     "g": 9.81,
     "l": 0.225,
     "kT": 2.98e-6,
-    "kQ": 0.0382,
+    "kQ": 0.0382 * 2.98e-6,  # = gamma * kT, gamma = kQ/kT ~ 3.8 cm yaw-reaction lever
     "Ixx": 4.856e-3,
     "Iyy": 4.856e-3,
     "Izz": 8.801e-3,

@@ -56,6 +56,7 @@ Contents
     plot_estimation       true-vs-estimated visualisation with +-2 sigma bands
 """
 
+import warnings
 import numpy as np
 from collections import deque
 from scipy.integrate import solve_ivp
@@ -63,7 +64,8 @@ from scipy.integrate import solve_ivp
 import c4dynamics as c4d
 from c4dynamics.rotmat import dcm321
 from c4dynamics.controllers.quad_pid import (dynamics, position_reference,
-                                             velocity_reference, InitializeControllers)
+                                             velocity_reference, InitializeControllers,
+                                             ground_contact)
 from c4dynamics.sensors.navigation import gps, imu, magnetometer
 from c4dynamics import g_ms2 as g
 EPS = 1e-6
@@ -677,6 +679,7 @@ def run_fig8_ekf(
     nees = np.zeros(N)
     innov_gps, innov_gps_t = [], []
     mag_ctr = gps_ctr = imu_ctr = 0
+    took_off = False
 
     if verbose:
         print(f'EKF closed-loop  |  tf = {tf} s  |  control dt = {dt} s  |  '
@@ -695,6 +698,18 @@ def run_fig8_ekf(
             nees[k] = float(x_err @ np.linalg.solve(est.P, x_err))
         except np.linalg.LinAlgError:
             nees[k] = np.nan
+
+        # Ground-contact guard (shared with the plain cascade-PID example):
+        # stop as soon as the real (truth) vehicle comes back down to z <= 0
+        # after having been airborne -- there's no ground-collision model in
+        # dynamics(), so continuing past this point would just integrate an
+        # unphysical, below-ground trajectory.
+        took_off, hit_ground = ground_contact(truth.z, took_off)
+        if hit_ground:
+            warnings.warn(f'Quadcopter hit the ground at t={t:.3f} s '
+                           f'(z={truth.z:.4f} m); stopping simulation.', c4d.c4warn)
+            t_hist, nees = t_hist[:k + 1], nees[:k + 1]
+            break
 
         # 2. predict, at the actual sim step (may sub-step within a control frame)
         est.predict(dt_sim, rotor_speeds)

@@ -149,3 +149,7 @@ docs/source/programs/pid_cascade/quad_frame - Copy.png
 docs/source/programs/ekf_estimation/architecture.docx
 .gitignore
 docs/source/programs/ekf_estimation/ekf_architecture.drawio
+c4dynamics/controllers/quad_pid.py
+.gitignore
+docs/source/programs/ekf_estimation/Book1.xlsx
+docs/source/programs/ekf_estimation/~$Book1.xlsx
