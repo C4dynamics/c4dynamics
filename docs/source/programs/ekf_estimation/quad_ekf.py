@@ -51,6 +51,7 @@ Contents
     gps, imu, magnetometer simulated sensors (truth -> measurement)
     ekf_quad              the quadrotor EKF (subclass of c4d.filters.ekf)
     default_ekf_config    reference EKF noise / initialization block
+                           (imported from the sibling ekf_config.py)
     run_fig8_ekf          single closed-loop estimation-control simulation
     compute_metrics       RMSE (true vs estimated) + filter-consistency (NEES)
     plot_estimation       true-vs-estimated visualisation with +-2 sigma bands
@@ -68,6 +69,7 @@ from c4dynamics.controllers.quad_pid import (dynamics, position_reference,
                                              ground_contact)
 from c4dynamics.sensors.navigation import gps, imu, magnetometer
 from c4dynamics import g_ms2 as g
+from docs.source.programs.ekf_estimation.ekf_config import default_ekf_config
 EPS = 1e-6
 
 # State-variable names, in the canonical c4dynamics rigidbody order.
@@ -484,57 +486,11 @@ class ekf_quad(c4d.filters.ekf):
         super().update(innov=innov, H=H_GPS, R=self.R_gps, gate=self._GATE_GPS)
 
 # ============================================================================
-#  REFERENCE EKF CONFIGURATION BLOCK
-# ============================================================================
-
-def default_ekf_config():
-    """Reference EKF noise / initialization block (process Q, measurement R,
-    initial covariance, initial-offset and sensor-noise levels, sensor rates).
-
-    Returned as a dict so the notebook can display and tune it as data — the
-    estimation analogue of the controller-gain block in ``c4dynamics.controllers.quad_pid``.
-    """
-    Q = np.diag(np.array([
-        0.005, 0.005, 0.008,   # x, y, z        [m]
-        0.020, 0.020, 0.025,   # vx, vy, vz     [m/s]  (adaptively scaled)
-        0.008, 0.008, 0.010,   # phi, theta, psi[rad]
-        0.012, 0.012, 0.012,   # p, q, r        [rad/s]
-    ])**2)
-    P0 = np.diag(np.array([
-        0.50, 0.50, 0.80,
-        0.50, 0.50, 0.60,
-        0.05, 0.05, 0.05,
-        0.10, 0.10, 0.10,
-    ])**2)
-
-    return {
-        'Q'      : Q,
-        'P0'     : P0,
-        'R_gps'  : np.diag([0.50**2, 0.50**2, 0.50**2]),
-        'R_gyro' : np.diag([0.015**2, 0.015**2, 0.015**2]),
-        'R_mag'  : np.array([[0.055**2]]),
-        'R_acc'  : np.diag([0.10**2, 0.10**2]),
-        # initial-estimate offset (1-sigma) from truth
-        'x0_pos_sigma': 0.30,
-        'x0_att_sigma': 0.05,
-        # sensor white-noise levels (1-sigma) actually injected
-        'gps_std' : 0.50,
-        'gyro_std': 0.01,
-        'mag_std' : 0.05,
-        'acc_std' : 0.05,
-        # sensor decimation relative to the 200 Hz master loop
-        'gps_rate': 20,   # 10 Hz
-        'mag_rate': 4,    # 50 Hz
-        'seed'    : 42,
-        'ideal_imu': False,
-        'ideal_magnetometer': False,
-        'ideal_gps': False,
-    }
-
-
-# ============================================================================
 #  CLOSED-LOOP ESTIMATION-CONTROL SIMULATION
 # ============================================================================
+#
+# default_ekf_config() (used below as the ekf_cfg fallback) lives in the
+# sibling ekf_config.py, imported at the top of this module.
 
 def run_fig8_ekf(
         config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,

@@ -14,38 +14,15 @@ from c4dynamics.controllers.quad_pid import (
     InitializeControllers,
     ControlAllocator,
 )
+from c4dynamics.models.quad import default_quad_config
+from c4dynamics.controllers.controller_config import default_controller_config
 
 
-QUAD_PARAMS = {
-    "m": 0.468,
-    "g": 9.81,
-    "l": 0.225,
-    "kT": 2.98e-6,
-    "kQ": 0.0382 * 2.98e-6,  # = gamma * kT, gamma = kQ/kT ~ 3.8 cm yaw-reaction lever
-    "Ixx": 4.856e-3,
-    "Iyy": 4.856e-3,
-    "Izz": 8.801e-3,
-    "Ax": 0.30,
-    "Ay": 0.30,
-    "Az": 0.25,
-    "Ar": 0.20,
-    "IR": 3.357e-5,
-}
-
-CONTROLLER_PARAMS = {
-    "Kp_p": 0.80, "Ki_p": 0.0001, "Kd_p": 0.010,
-    "Kp_q": 0.80, "Ki_q": 0.0001, "Kd_q": 0.010,
-    "Kp_r": 0.60, "Ki_r": 0.0001, "Kd_r": 0.008,
-    "Kp_phi": 6.0, "Ki_phi": 0.0001, "Kd_phi": 0.80, "AW_phi": 0.5,
-    "Kp_theta": 6.0, "Ki_theta": 0.0001, "Kd_theta": 0.80, "AW_theta": 0.5,
-    "Kp_psi": 4.0, "Ki_psi": 0.5, "Kd_psi": 0.40, "AW_psi": 0.5,
-    "Kp_x": 0.80, "Ki_x": 0.00, "Kd_x": 0.50, "AW_x": 0.5,
-    "Kp_y": 1.00, "Ki_y": 0.00, "Kd_y": 0.70, "AW_y": 0.5,
-    "Kp_z": 8.0, "Ki_z": 8.0, "Kd_z": 1.50, "AW_z": 3.0,
-    "Kff_x": 0.35, "Kff_y": 0.40,
-    "N_rate": 50, "omega_max": 1000.0, "T_max_factor": 4, "T_min": 0.0,
-    "att_cmd_limit": 0.314, "yaw_rate_limit": 1.0,
-}
+# Reference vehicle/gains, shared with the cascade-PID and EKF examples --
+# see quad_config.py / controller_config.py. Not notebook-specific, so this
+# uses the canonical defaults as-is (no per-example override).
+QUAD_PARAMS = default_quad_config()
+CONTROLLER_PARAMS = default_controller_config()
 
 
 class TestQuadPid(unittest.TestCase):
