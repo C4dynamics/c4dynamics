@@ -122,8 +122,8 @@ def dynamics(t, y, quad, rotor_speeds):
     m   = quad.m    # mass [kg]
     g   = quad.g    # gravity [m/s^2]
     L   = quad.l    # arm length [m]
-    kT  = quad.kT   # thrust coefficient
-    kQ  = quad.kQ   # torque coefficient
+    kT  = quad.kT   # thrust coefficient [N/(rad/s)^2]
+    kQ  = quad.kQ   # torque coefficient [N.m/(rad/s)^2]
     IR  = quad.IR   # rotor inertia [kg.m^2]
     Ixx = quad.Ixx  # roll inertia [kg.m^2]
     Iyy = quad.Iyy  # pitch inertia [kg.m^2]

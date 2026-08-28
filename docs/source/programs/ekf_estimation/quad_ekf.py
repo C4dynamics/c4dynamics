@@ -473,7 +473,7 @@ class ekf_quad(c4d.filters.ekf):
             C_innov = (arr.T @ arr) / len(arr)
             S_expected = H_GPS @ self.P @ H_GPS.T + self.R_gps
             ratio = np.trace(C_innov) / np.trace(S_expected)
-            new_scale = max(1.0, min(30.0, ratio))
+            new_scale = max(1.0, min(30.0, ratio)) # never smaller than 1, never bigger than 30.
             self._r_scale_pending = (1 - self._alpha_mehra) * self._r_scale + self._alpha_mehra * new_scale
 
         # Phase B — apply previous pending scale, gate, update.
@@ -820,15 +820,15 @@ def run_gps_dropout_sweep(
     imu_rates_hz : sequence of float
         IMU rates to test.
     dropout_window : (float, float)
-        ``(t_start, t_end)`` GPS-off window [s]. Must fall within
-        ``config['sim']['tf']``, comfortably inside the cruise phase (after
-        ``t_takeoff``, before ``tf - t_land``). Keep this short, around
-        1.5 s. This EKF is a first-order (not iterated/unscented) filter:
+        ``(t_start, t_end)`` GPS-off window [s].
+        Must fall within ``config['sim']['tf']``, comfortably inside the cruise phase (after ``t_takeoff``, before ``tf - t_land``).
+        Keep this short, around 1.5 s. This EKF is a first-order (not iterated/unscented) filter:
         its correction is a linearization around the *current* estimate, and
         once real drift accumulates during a long GPS-denied stretch, each
         further correction is computed from an increasingly wrong
         linearization point -- a known EKF weakness, not specific to this
-        codebase. Verified empirically: a ~1.5 s window shows a real, modest
+        codebase.
+        Verified empirically: a ~1.5 s window shows a real, modest
         "faster IMU drifts less" effect; push much past ~2 s and the trend
         can invert as linearization breaks down, which demonstrates a
         different (and separate) point than intended here.
@@ -991,8 +991,12 @@ def compute_metrics(truth, est, diag, t0=8.0, t1=82.0, verbose=True):
     return {'rmse': rmse, 'nees_mean': nees_mean}
 
 
-def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi')):
-    """True-vs-estimated trajectories with +-2 sigma covariance bands + NEES."""
+def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi'), t0=0.0, t1=100.0):
+    """True-vs-estimated trajectories with +-2 sigma covariance bands + NEES.
+
+    ``t0``/``t1`` window the time axis (seconds) shown in every panel,
+    matching :func:`compute_metrics`'s default cruise-phase window.
+    """
     import matplotlib.pyplot as plt
 
     idx = {n: i for i, n in enumerate(STATE_NAMES)}
@@ -1003,8 +1007,12 @@ def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi')):
         t, xt = truth.data(n)
         _, xe = est.data(n)
         sig = np.sqrt(np.asarray(est.data(f'P{idx[n]}{idx[n]}')[1]))
+        t = np.asarray(t)
+        mask = (t >= t0) & (t <= t1)
+        t = t[mask]
+        xt = np.asarray(xt)[mask]; xe = np.asarray(xe)[mask]; sig = sig[mask]
         scale = c4d.r2d if n in ('phi', 'theta', 'psi', 'p', 'q', 'r') else 1.0
-        xt = np.asarray(xt) * scale; xe = np.asarray(xe) * scale; sig = sig * scale
+        xt = xt * scale; xe = xe * scale; sig = sig * scale
         ax.plot(t, xt, 'k-', lw=1.5, label='true')
         ax.plot(t, xe, 'C1--', lw=1.2, label='estimated')
         ax.fill_between(t, xe - 2*sig, xe + 2*sig, color='C1', alpha=0.2,
@@ -1014,7 +1022,9 @@ def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi')):
         ax.legend(loc='upper right', fontsize=8)
 
     ax = axes[-1]
-    ax.plot(diag['t'], diag['nees'], 'C0-', lw=0.8)
+    t_nees = np.asarray(diag['t'])
+    mask = (t_nees >= t0) & (t_nees <= t1)
+    ax.plot(t_nees[mask], np.asarray(diag['nees'])[mask], 'C0-', lw=0.8)
     ax.axhline(12, color='k', ls=':', lw=1, label='ideal (n=12)')
     c4d.plotdefaults(ax, 'Filter consistency (NEES)', 'time [s]', 'NEES', fontsize=10)
     ax.legend(loc='upper right', fontsize=8)
@@ -1023,8 +1033,12 @@ def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi')):
     fig.tight_layout()
     return fig
 
-def plot_trajectory(truth, est, config, t0=8.0, t1=82.0):
-    """Figure-8 path: reference vs. true vs. estimated (top-down x-y view)."""
+def plot_trajectory(truth, est, config, t0=0.0, t1=100.0):
+    """Figure-8 path: reference vs. true vs. estimated (top-down x-y view).
+
+    ``t0``/``t1`` window the flown/reference paths (seconds) to this range,
+    e.g. to exclude takeoff/landing.
+    """
     import matplotlib.pyplot as plt
     from c4dynamics.controllers.quad_pid import position_reference
 
@@ -1032,8 +1046,12 @@ def plot_trajectory(truth, est, config, t0=8.0, t1=82.0):
     t,  x_true = truth.data('x');  _, y_true = truth.data('y')
     _,  x_est  = est.data('x');    _, y_est  = est.data('y')
     t = np.asarray(t)
+    mask = (t >= t0) & (t <= t1)
+    t = t[mask]
+    x_true = np.asarray(x_true)[mask]; y_true = np.asarray(y_true)[mask]
+    x_est  = np.asarray(x_est)[mask];  y_est  = np.asarray(y_est)[mask]
 
-    # rebuild the reference figure-8 over the same time vector
+    # rebuild the reference figure-8 over the same (windowed) time vector
     A, B, omega, z_ref = (config['trajectory']['A'], config['trajectory']['B'],
                           config['trajectory']['omega'], config['trajectory']['z_ref'])
     tf = config['sim']['tf']
