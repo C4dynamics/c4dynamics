@@ -1,5 +1,5 @@
 """
-ekf.py — Extended Kalman Filter state estimation for the quadcopter
+quad_ekf.py — Extended Kalman Filter state estimation for the quadcopter
 ============================================================================
 
 This module is the estimation companion to ``c4dynamics.controllers.quad_pid``.
