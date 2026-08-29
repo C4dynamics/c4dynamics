@@ -55,6 +55,8 @@ Contents
     run_fig8_ekf          single closed-loop estimation-control simulation
     compute_metrics       RMSE (true vs estimated) + filter-consistency (NEES)
     plot_estimation       true-vs-estimated visualisation with +-2 sigma bands
+    plot_dashboard        2x3 results dashboard (reference/true/estimated),
+                           mirroring quad_pid.plot_results
 """
 
 import warnings
@@ -544,7 +546,7 @@ def run_fig8_ekf(
 
     Returns
     -------
-    truth : c4d.rigidbody          true state history  (truth.data(...))
+    quad_true : c4d.rigidbody          true state history  (quad_true.data(...))
     est   : ekf_quad                  estimated state + covariance history
     diag  : dict                   {'t', 'nees', 'innov_gps_t', 'innov_gps'}
     """
@@ -587,15 +589,15 @@ def run_fig8_ekf(
     imu_noise_scale = np.sqrt(imu_rate_hz / imu_rate_ref) if imu_noise_density_model else 1.0
 
     # ── Truth vehicle ────────────────────────────────────────────────────────
-    truth = c4d.rigidbody()
+    quad_true = c4d.rigidbody()
     for k, v in qp.items():
-        setattr(truth, k, v)
-    truth.F = truth.m * truth.g
-    truth.tau_phi = truth.tau_theta = truth.tau_psi = 0.0
+        setattr(quad_true, k, v)
+    quad_true.T = quad_true.m * quad_true.g
+    quad_true.tau_x = quad_true.tau_y = quad_true.tau_z = 0.0
 
     # ── Estimator (offset initial estimate) ──────────────────────────────────
     np.random.seed(ekf_cfg['seed'])
-    x0 = np.zeros(12)                       # truth starts at rest on the ground
+    x0 = np.zeros(12)                       # quad_true starts at rest on the ground
     x0[0:3] += np.random.randn(3) * ekf_cfg['x0_pos_sigma']
     x0[6:9] += np.random.randn(3) * ekf_cfg['x0_att_sigma']
     # dt_ref=dt: Q in ekf_cfg is tuned for one Ts_inner(=dt)-long predict step;
@@ -625,9 +627,9 @@ def run_fig8_ekf(
     outer_time = middle_time = inner_time = 0.0
     psi_d = phi_d = theta_d = 0.0
     p_d = q_d = r_d = 0.0
-    T_cmd = truth.m * truth.g
+    T_cmd = quad_true.m * quad_true.g
 
-    w_hover = np.sqrt(truth.m * truth.g / (4 * truth.kT))
+    w_hover = np.sqrt(quad_true.m * quad_true.g / (4 * quad_true.kT))
     rotor_speeds = np.array([w_hover] * 4)
 
     N = int(round(tf / dt_sim))
@@ -644,11 +646,11 @@ def run_fig8_ekf(
     for k in range(N):
         t = t_hist[k]
 
-        # 1. record truth, estimate (+ covariance via framework store), NEES
-        truth.store(t)
-        truth.storeparams(['F', 'tau_phi', 'tau_theta', 'tau_psi'], t=t)
+        # 1. record quad_true, estimate (+ covariance via framework store), NEES
+        quad_true.store(t)
+        quad_true.storeparams(['T', 'tau_x', 'tau_y', 'tau_z'], t=t)
         est.store(t)
-        x_true = np.asarray(truth.X).ravel()
+        x_true = np.asarray(quad_true.X).ravel()
         x_err = x_true - np.asarray(est.X).ravel()
         try:
             nees[k] = float(x_err @ np.linalg.solve(est.P, x_err))
@@ -656,28 +658,28 @@ def run_fig8_ekf(
             nees[k] = np.nan
 
         # Ground-contact guard (shared with the plain cascade-PID example):
-        # stop as soon as the real (truth) vehicle comes back down to z <= 0
+        # stop as soon as the real (quad_true) vehicle comes back down to z <= 0
         # after having been airborne -- there's no ground-collision model in
         # dynamics(), so continuing past this point would just integrate an
         # unphysical, below-ground trajectory.
-        took_off, hit_ground = ground_contact(truth.z, took_off)
+        took_off, hit_ground = ground_contact(quad_true.z, took_off)
         if hit_ground:
             warnings.warn(f'Quadcopter hit the ground at t={t:.3f} s '
-                           f'(z={truth.z:.4f} m); stopping simulation.', c4d.c4warn)
+                           f'(z={quad_true.z:.4f} m); stopping simulation.', c4d.c4warn)
             t_hist, nees = t_hist[:k + 1], nees[:k + 1]
             break
 
         # 2. predict, at the actual sim step (may sub-step within a control frame)
         est.predict(dt_sim, rotor_speeds)
 
-        # 3. correct — IMU at imu_rate_hz, mag 50 Hz, GPS 10 Hz (truth via sensors)
-        # imu_sensor.measure() takes the truth rigidbody directly and keeps its own
+        # 3. correct — IMU at imu_rate_hz, mag 50 Hz, GPS 10 Hz (quad_true via sensors)
+        # imu_sensor.measure() takes the quad_true rigidbody directly and keeps its own
         # previous-sample state internally, so the inertial term's dt is just t - t_prev.
         # az_meas is unused: this filter's predict step already knows the commanded
         # thrust, so az carries little the accelerometer update would add; only (ax, ay) — the tilt-sensitive axes — feed update_accelerometer.
         imu_ctr += 1
         if imu_ctr >= imu_decim:
-            ax_meas, ay_meas, az_meas, p_meas, q_meas, r_meas = imu_sensor.measure(truth, t=t)
+            ax_meas, ay_meas, az_meas, p_meas, q_meas, r_meas = imu_sensor.measure(quad_true, t=t)
             est.update_gyro([p_meas, q_meas, r_meas])
             est.update_accelerometer([ax_meas, ay_meas])
             imu_ctr = 0
@@ -711,7 +713,7 @@ def run_fig8_ekf(
             if verbose:
                 print(f'EKF diverged at t={t:.3f}s (non-finite state/covariance); '
                       f'stopping early.')
-            # truth/est only have entries up to (and including) this
+            # quad_true/est only have entries up to (and including) this
             # iteration's store() call; truncate the pre-allocated diagnostic
             # arrays to match so every returned array stays the same length.
             t_hist, nees = t_hist[:k + 1], nees[:k + 1]
@@ -727,7 +729,7 @@ def run_fig8_ekf(
         if outer_time >= Ts_outer:
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
                 xd, yd, zd, vxd_ff, vyd_ff, psi_d, est, Ts_outer)
-            truth.F = T_cmd
+            quad_true.T = T_cmd
             outer_time = 0.0
 
         middle_time += dt_sim
@@ -739,22 +741,22 @@ def run_fig8_ekf(
         # speeds are held fixed across any finer IMU sub-steps within a frame.
         inner_time += dt_sim
         if inner_time >= Ts_inner:
-            truth.tau_phi, truth.tau_theta, truth.tau_psi = inner_ctrl.compute(
+            quad_true.tau_x, quad_true.tau_y, quad_true.tau_z = inner_ctrl.compute(
                 p_d, q_d, r_d, est, Ts_inner)
             rotor_speeds = np.array(allocator.allocate(
-                truth.F, truth.tau_phi, truth.tau_theta, truth.tau_psi))
+                quad_true.T, quad_true.tau_x, quad_true.tau_y, quad_true.tau_z))
             inner_time = 0.0
 
-        # 5. propagate the TRUTH one sim step
-        sol = solve_ivp(dynamics, [t, t + dt_sim], truth.X,
-                        args=(truth, rotor_speeds), method='RK45')
-        truth.X = sol.y[:, -1]
+        # 5. propagate the quad_true one sim step
+        sol = solve_ivp(dynamics, [t, t + dt_sim], quad_true.X,
+                        args=(quad_true, rotor_speeds), method='RK45')
+        quad_true.X = sol.y[:, -1]
 
     if verbose:
         print('EKF closed-loop complete.')
     diag = {'t': t_hist, 'nees': nees,
             'innov_gps_t': np.array(innov_gps_t), 'innov_gps': np.array(innov_gps)}
-    return truth, est, diag
+    return quad_true, est, diag
 
 
 # ============================================================================
@@ -1039,6 +1041,118 @@ def plot_trajectory(truth, est, config, t0=0.0, t1=100.0):
                      'x  [m]', 'y  [m]', fontsize=11)
     ax.legend(loc='upper right', fontsize=9)
     ax.grid(alpha=0.3)
+    return fig
+
+
+def plot_dashboard(truth, est, config, t0=8.0, t1=82.0):
+    """
+    Same 2x3 results dashboard as the plain cascade-PID example
+    (:func:`c4dynamics.controllers.quad_pid.plot_results`), with the EKF
+    estimate overlaid wherever truth is plotted: reference vs. true vs.
+    estimated, instead of just reference vs. true.
+
+    Panels: 3D trajectory | XY plane | horizontal position tracking
+            Altitude (zoomed +-2 m around z_ref) | tracking/estimation error
+            | attitude angles
+
+    ``t0``/``t1`` window the time axis (seconds), matching
+    :func:`compute_metrics`'s default cruise-phase window.
+    """
+    import matplotlib.pyplot as plt
+    from c4dynamics.controllers.quad_pid import position_reference
+
+    A, B, omega, z_ref = (config['trajectory']['A'], config['trajectory']['B'],
+                          config['trajectory']['omega'], config['trajectory']['z_ref'])
+    t_sim = config['sim']['tf']
+
+    t, x_true = truth.data('x');  _, y_true = truth.data('y');  _, z_true = truth.data('z')
+    _, x_est  = est.data('x');    _, y_est  = est.data('y');    _, z_est  = est.data('z')
+    _, phi_true   = truth.data('phi',   scale=c4d.r2d)
+    _, theta_true = truth.data('theta', scale=c4d.r2d)
+    _, psi_true   = truth.data('psi',   scale=c4d.r2d)
+    _, phi_est    = est.data('phi',   scale=c4d.r2d)
+    _, theta_est  = est.data('theta', scale=c4d.r2d)
+    _, psi_est    = est.data('psi',   scale=c4d.r2d)
+
+    t = np.asarray(t)
+    mask = (t >= t0) & (t <= t1)
+    t = t[mask]
+    x_true, y_true, z_true = (np.asarray(a)[mask] for a in (x_true, y_true, z_true))
+    x_est,  y_est,  z_est  = (np.asarray(a)[mask] for a in (x_est, y_est, z_est))
+    phi_true, theta_true, psi_true = (np.asarray(a)[mask] for a in (phi_true, theta_true, psi_true))
+    phi_est,  theta_est,  psi_est  = (np.asarray(a)[mask] for a in (phi_est, theta_est, psi_est))
+
+    ref = np.array([position_reference(ti, A, B, omega, z_ref, t_sim=t_sim) for ti in t])
+    x_ref, y_ref, z_ref_hist = ref[:, 0], ref[:, 1], ref[:, 2]
+
+    # tracking error (true vs. reference) and estimation error (true vs. estimate)
+    pos_err = np.sqrt((x_true - x_ref)**2 + (y_true - y_ref)**2 + (z_true - z_ref_hist)**2)
+    est_err = np.sqrt((x_true - x_est)**2 + (y_true - y_est)**2 + (z_true - z_est)**2)
+
+    lw = 1.5
+    fig = plt.figure(figsize=(16, 10))
+    fig.suptitle('EKF Closed-Loop Quadcopter — Simulation Results', fontsize=16, fontweight='bold')
+
+    # -- 3D Trajectory --
+    ax3d = fig.add_subplot(2, 3, 1, projection='3d')
+    ax3d.plot(x_true, y_true, z_true, 'b-', linewidth=lw, label='Actual')
+    ax3d.plot(x_est, y_est, z_est, 'C1:', linewidth=lw + 0.3, label='Estimated')
+    ax3d.plot(x_ref, y_ref, z_ref_hist, 'r--', linewidth=lw, label='Reference')
+    ax3d.set_xlabel('X (m)'); ax3d.set_ylabel('Y (m)'); ax3d.set_zlabel('Z (m)')
+    ax3d.set_title('3D Trajectory')
+    ax3d.legend(fontsize=8); ax3d.grid(True)
+
+    # -- XY Plane --
+    ax = fig.add_subplot(2, 3, 2)
+    ax.plot(x_true, y_true, 'b-', linewidth=lw, label='Actual')
+    ax.plot(x_est, y_est, 'C1:', linewidth=lw, label='Estimated')
+    ax.plot(x_ref, y_ref, 'r--', linewidth=lw, label='Reference')
+    c4d.plotdefaults(ax, 'XY Plane', xlabel='X (m)', ylabel='Y (m)')
+    ax.legend(fontsize=8); ax.grid(True); ax.axis('equal')
+
+    # -- Horizontal position tracking --
+    ax = fig.add_subplot(2, 3, 3)
+    ax.plot(t, x_true, 'b-', linewidth=lw, label='X actual')
+    ax.plot(t, x_est, 'C1:', linewidth=lw, label='X estimated')
+    ax.plot(t, x_ref, 'r--', linewidth=lw, label='X ref')
+    ax.plot(t, y_true, 'g-', linewidth=lw, label='Y actual')
+    ax.plot(t, y_est, 'C2:', linewidth=lw, label='Y estimated')
+    ax.plot(t, y_ref, 'm--', linewidth=lw, label='Y ref')
+    ax.set_xlabel('Time (s)'); ax.set_ylabel('Position (m)')
+    ax.set_title('Horizontal Position Tracking')
+    ax.legend(fontsize=6); ax.grid(True)
+
+    # -- Altitude tracking (zoomed +-2 m around the z_ref plateau) --
+    ax = fig.add_subplot(2, 3, 4)
+    ax.plot(t, z_true, 'b-', linewidth=lw, label='Z actual')
+    ax.plot(t, z_est, 'C1:', linewidth=lw, label='Z estimated')
+    ax.plot(t, z_ref_hist, 'r--', linewidth=lw, label='Z ref')
+    ax.set_xlabel('Time (s)'); ax.set_ylabel('Altitude (m)')
+    ax.set_title('Altitude Tracking')
+    # ax.set_ylim(z_ref - 2, z_ref + 2)
+    ax.legend(fontsize=8); ax.grid(True)
+
+    # -- Position tracking / estimation error --
+    ax = fig.add_subplot(2, 3, 5)
+    ax.plot(t, pos_err, 'r-', linewidth=lw, label='Tracking error (true - ref)')
+    ax.plot(t, est_err, 'C1-', linewidth=lw, label='Estimation error (true - est)')
+    ax.set_xlabel('Time (s)'); ax.set_ylabel('Error (m)')
+    ax.set_title('Position Tracking / Estimation Error')
+    ax.legend(fontsize=8); ax.grid(True)
+
+    # -- Attitude angles --
+    ax = fig.add_subplot(2, 3, 6)
+    ax.plot(t, phi_true, 'b-', linewidth=lw, label='Roll (Phi)')
+    ax.plot(t, phi_est, 'b:', linewidth=lw, label='Roll est.')
+    ax.plot(t, theta_true, 'g-', linewidth=lw, label='Pitch (Theta)')
+    ax.plot(t, theta_est, 'g:', linewidth=lw, label='Pitch est.')
+    ax.plot(t, psi_true, 'r-', linewidth=lw, label='Yaw (Psi)')
+    ax.plot(t, psi_est, 'r:', linewidth=lw, label='Yaw est.')
+    ax.set_xlabel('Time (s)'); ax.set_ylabel('Angle (deg)')
+    ax.set_title('Attitude Angles')
+    ax.legend(fontsize=6); ax.grid(True)
+
+    plt.tight_layout()
     return fig
 
 

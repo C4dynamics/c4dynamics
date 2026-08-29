@@ -15,7 +15,7 @@ from c4dynamics.controllers.quad_pid import (
     ControlAllocator,
 )
 from c4dynamics.models.quad import default_quad_config
-from c4dynamics.controllers.controller_config import default_controller_config
+from c4dynamics.controllers.cascade_pid_config import default_controller_config
 
 
 # Reference vehicle/gains, shared with the cascade-PID and EKF examples --

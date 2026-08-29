@@ -604,7 +604,7 @@ class InnerRatePID:
 
         Returns
         -------
-        tau_phi, tau_theta, tau_psi : torque commands [N.m]
+        tau_x, tau_y, tau_z : torque commands [N.m]
         """
         ep = p_d - quad.p
         eq = q_d - quad.q
@@ -621,32 +621,32 @@ class InnerRatePID:
         dq = self.N_rate * (eq - self.eq_prev) / d
         dr = self.N_rate * (er - self.er_prev) / d
 
-        tau_phi_raw = self.Ixx * (
+        tau_x_raw = self.Ixx * (
             self.KP_p * ep + self.KI_p * self.int_p + self.KD_p * dp
         )
-        tau_theta_raw = self.Iyy * (
+        tau_y_raw = self.Iyy * (
             self.KP_q * eq + self.KI_q * self.int_q + self.KD_q * dq
         )
-        tau_psi_raw = self.Izz * (
+        tau_z_raw = self.Izz * (
             self.KP_r * er + self.KI_r * self.int_r + self.KD_r * dr
         )
 
-        tau_phi = np.clip(tau_phi_raw, -self.M_max, self.M_max)
-        tau_theta = np.clip(tau_theta_raw, -self.M_max, self.M_max)
-        tau_psi = np.clip(tau_psi_raw, -self.M_max, self.M_max)
+        tau_x = np.clip(tau_x_raw, -self.M_max, self.M_max)
+        tau_y = np.clip(tau_y_raw, -self.M_max, self.M_max)
+        tau_z = np.clip(tau_z_raw, -self.M_max, self.M_max)
 
         # Back-calculation anti-windup
         AW = 0.1
-        self.int_p += AW * (tau_phi - tau_phi_raw) / (self.Ixx * self.KI_p + 1e-9)
-        self.int_q += AW * (tau_theta - tau_theta_raw) / (self.Iyy * self.KI_q + 1e-9)
-        self.int_r += AW * (tau_psi - tau_psi_raw) / (self.Izz * self.KI_r + 1e-9)
+        self.int_p += AW * (tau_x - tau_x_raw) / (self.Ixx * self.KI_p + 1e-9)
+        self.int_q += AW * (tau_y - tau_y_raw) / (self.Iyy * self.KI_q + 1e-9)
+        self.int_r += AW * (tau_z - tau_z_raw) / (self.Izz * self.KI_r + 1e-9)
 
         self.ep_prev = ep
         self.eq_prev = eq
         self.er_prev = er
 
         # torques in body axes
-        return tau_phi, tau_theta, tau_psi
+        return tau_x, tau_y, tau_z
 
 
 # ============================================================
@@ -674,14 +674,14 @@ class ControlAllocator:
         self.sq_min = 0.0
         self.sq_max = omega_max**2
 
-    def allocate(self, T_cmd, tau_phi, tau_theta, tau_psi):
+    def allocate(self, T_cmd, tau_x, tau_y, tau_z):
         """
         Parameters
         ----------
-        T_cmd     : total thrust [N]
-        tau_phi   : roll  torque [N.m] (difference between left and right motors)
-        tau_theta : pitch torque [N.m] (difference between front and rear motors)
-        tau_psi   : yaw   torque [N.m]
+        T_cmd  : total thrust [N]
+        tau_x  : roll  torque [N.m] (difference between left and right motors)
+        tau_y  : pitch torque [N.m] (difference between front and rear motors)
+        tau_z  : yaw   torque [N.m]
 
         Returns
         -------
@@ -700,7 +700,7 @@ class ControlAllocator:
                         [0, 0, 1 / self.L, 0],
                         [0, 0, 0, 1 / gamma]]
             )
-        F = A1 @ A2 @ np.array([T_cmd, tau_phi, tau_theta, tau_psi])
+        F = A1 @ A2 @ np.array([T_cmd, tau_x, tau_y, tau_z])
 
         w1 = np.sqrt(np.clip(F[0] / self.kT, self.sq_min, self.sq_max))
         w2 = np.sqrt(np.clip(F[1] / self.kT, self.sq_min, self.sq_max))
@@ -720,7 +720,7 @@ def run_fig8_pid(config):
     Run the cascade PID simulation.
 
     Rotor speeds are stored alongside the other control inputs (``F``,
-    ``tau_phi``, ``tau_theta``, ``tau_psi``) via ``quad.storeparams``, so any
+    ``tau_x``, ``tau_y``, ``tau_z``) via ``quad.storeparams``, so any
     caller that wants them can retrieve the full history the same way it
     retrieves state — e.g. ``quad.data('w1')`` — rather than through a
     special-case second return value. This keeps the interface identical
@@ -739,11 +739,11 @@ def run_fig8_pid(config):
         setattr(quad, k, v)
 
     # Control inputs stored alongside state
-    quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
+    quad.T = quad.m * quad.g  # thrust [N]  — initialized to hover
 
-    quad.tau_phi = 0.0  # roll  torque [N.m]
-    quad.tau_theta = 0.0  # pitch torque [N.m]
-    quad.tau_psi = 0.0  # yaw   torque [N.m]
+    quad.tau_x = 0.0  # roll  torque [N.m]
+    quad.tau_y = 0.0  # pitch torque [N.m]
+    quad.tau_z = 0.0  # yaw   torque [N.m]
 
     # Trajectory parameters
     A, B, omega, z_ref = (
@@ -781,7 +781,7 @@ def run_fig8_pid(config):
         # ── Store state and control inputs (incl. rotor speeds) ──
         quad.w1, quad.w2, quad.w3, quad.w4 = rotor_speeds
         quad.store(t)
-        quad.storeparams(["F", "tau_phi", "tau_theta", "tau_psi",
+        quad.storeparams(["T", "tau_x", "tau_y", "tau_z",
                           "w1", "w2", "w3", "w4"], t=t)
 
         # ── Ground-contact guard ──
@@ -801,7 +801,7 @@ def run_fig8_pid(config):
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
                 xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer
             )
-            quad.F = T_cmd
+            quad.T = T_cmd
             outer_time = 0.0
 
         # ── Middle loop — Attitude  (100 Hz) ──
@@ -811,13 +811,13 @@ def run_fig8_pid(config):
             middle_time = 0.0
 
         # ── Inner loop — Rate  (200 Hz, every step) ──
-        quad.tau_phi, quad.tau_theta, quad.tau_psi = inner_ctrl.compute(
+        quad.tau_x, quad.tau_y, quad.tau_z = inner_ctrl.compute(
             p_d, q_d, r_d, quad, dt
         )
 
         # ── Control allocation — torques to rotor speeds ──
         rotor_speeds = np.array(
-            allocator.allocate(quad.F, quad.tau_phi, quad.tau_theta, quad.tau_psi)
+            allocator.allocate(quad.T, quad.tau_x, quad.tau_y, quad.tau_z)
         )
 
         sol = solve_ivp(dynamics, [t, t + dt], quad.X, args=(quad, rotor_speeds))
