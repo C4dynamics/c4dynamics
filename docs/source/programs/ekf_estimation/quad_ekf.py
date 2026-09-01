@@ -55,6 +55,11 @@ Contents
     run_fig8_ekf          single closed-loop estimation-control simulation
     compute_metrics       RMSE (true vs estimated) + filter-consistency (NEES)
     plot_estimation       true-vs-estimated visualisation with +-2 sigma bands
+                           (per-channel rows, optional trailing NEES panel)
+    plot_nees             standalone NEES-vs-time filter-consistency plot
+    plot_error_bands      estimation error (true-est) vs the +-2 sigma envelope
+    plot_trajectory_3d    single edge-on 3D flight path (x-z profile of the
+                           figure-8), reference/true/estimated
     plot_dashboard        2x3 results dashboard (reference/true/estimated),
                            mirroring quad_pid.plot_results
 """
@@ -964,19 +969,27 @@ def compute_metrics(truth, est, diag, t0=8.0, t1=82.0, verbose=True):
     return {'rmse': rmse, 'nees_mean': nees_mean}
 
 
-def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi'), t0=0.0, t1=100.0):
-    """True-vs-estimated trajectories with +-2 sigma covariance bands + NEES.
+def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi'),
+                    t0=0.0, t1=100.0, show_nees=True):
+    """True-vs-estimated trajectories with +-2 sigma covariance bands.
+
+    One row per entry in ``states`` (true vs. estimated, shaded with the
+    filter's own +-2 sigma band), optionally followed by a NEES row.
 
     ``t0``/``t1`` window the time axis (seconds) shown in every panel,
     matching :func:`compute_metrics`'s default cruise-phase window.
+    ``show_nees=False`` drops the trailing NEES panel — useful when the
+    per-channel plots sit above their own explanatory text and the filter
+    consistency is discussed separately (see :func:`plot_nees`).
     """
     import matplotlib.pyplot as plt
 
     idx = {n: i for i, n in enumerate(STATE_NAMES)}
-    nrows = len(states) + 1
-    fig, axes = plt.subplots(nrows, 1, figsize=(9, 2.4 * nrows))
+    nrows = len(states) + (1 if show_nees else 0)
+    fig, axes = plt.subplots(nrows, 1, figsize=(9, 2.4 * nrows), squeeze=False)
+    axes = axes[:, 0]
 
-    for ax, n in zip(axes[:-1], states):
+    for ax, n in zip(axes[:len(states)], states):
         t, xt = truth.data(n)
         _, xe = est.data(n)
         sig = np.sqrt(np.asarray(est.data(f'P{idx[n]}{idx[n]}')[1]))
@@ -994,17 +1007,122 @@ def plot_estimation(truth, est, diag, states=('x', 'z', 'phi', 'psi'), t0=0.0, t
         c4d.plotdefaults(ax, f'{n}', 'time [s]', f'{n} {unit}', fontsize=10)
         ax.legend(loc='upper right', fontsize=8)
 
-    ax = axes[-1]
-    t_nees = np.asarray(diag['t'])
-    mask = (t_nees >= t0) & (t_nees <= t1)
-    ax.plot(t_nees[mask], np.asarray(diag['nees'])[mask], 'C0-', lw=0.8)
-    ax.axhline(12, color='k', ls=':', lw=1, label='ideal (n=12)')
-    c4d.plotdefaults(ax, 'Filter consistency (NEES)', 'time [s]', 'NEES', fontsize=10)
-    ax.legend(loc='upper right', fontsize=8)
-    ax.set_ylim(0, 40)
+    if show_nees:
+        ax = axes[-1]
+        t_nees = np.asarray(diag['t'])
+        mask = (t_nees >= t0) & (t_nees <= t1)
+        ax.plot(t_nees[mask], np.asarray(diag['nees'])[mask], 'C0-', lw=0.8)
+        ax.axhline(12, color='k', ls=':', lw=1, label='ideal (n=12)')
+        c4d.plotdefaults(ax, 'Filter consistency (NEES)', 'time [s]', 'NEES', fontsize=10)
+        ax.legend(loc='upper right', fontsize=8)
+        ax.set_ylim(0, 40)
 
     fig.tight_layout()
     return fig
+
+
+def plot_nees(diag, t0=0.0, t1=100.0, n_states=12):
+    """Standalone NEES-vs-time consistency plot.
+
+    NEES (normalised estimation error squared) should sit near ``n_states``
+    (12 here) if the reported covariance is statistically honest; well above
+    means over-confident, well below means conservative.
+    """
+    import matplotlib.pyplot as plt
+
+    t = np.asarray(diag['t'])
+    mask = (t >= t0) & (t <= t1)
+    fig, ax = plt.subplots(figsize=(9, 3.0))
+    ax.plot(t[mask], np.asarray(diag['nees'])[mask], 'C0-', lw=0.8)
+    ax.axhline(n_states, color='k', ls=':', lw=1, label=f'ideal (n={n_states})')
+    c4d.plotdefaults(ax, 'Filter consistency (NEES)', 'time [s]', 'NEES', fontsize=10)
+    ax.legend(loc='upper right', fontsize=8)
+    ax.set_ylim(0, 40)
+    fig.tight_layout()
+    return fig
+
+
+def plot_error_bands(truth, est, diag, states=('x', 'vx', 'phi', 'psi'),
+                     t0=0.0, t1=100.0):
+    """Estimation error ``true - est`` against the filter's own +-2 sigma band.
+
+    One row per state, error curve centred on zero with the shaded +-2 sigma
+    envelope. A consistent filter keeps the error inside the band roughly 95%
+    of the time — neither escaping it (over-confident) nor hugging zero far
+    inside it (conservative).
+    """
+    import matplotlib.pyplot as plt
+
+    idx = {n: i for i, n in enumerate(STATE_NAMES)}
+    fig, axes = plt.subplots(len(states), 1, figsize=(9, 2.2 * len(states)),
+                             squeeze=False)
+    axes = axes[:, 0]
+
+    for ax, n in zip(axes, states):
+        t, xt = truth.data(n)
+        _, xe = est.data(n)
+        sig = np.sqrt(np.asarray(est.data(f'P{idx[n]}{idx[n]}')[1]))
+        t = np.asarray(t)
+        mask = (t >= t0) & (t <= t1)
+        t = t[mask]
+        scale = c4d.r2d if n in ('phi', 'theta', 'psi', 'p', 'q', 'r') else 1.0
+        err = (np.asarray(xt)[mask] - np.asarray(xe)[mask]) * scale
+        sig = sig[mask] * scale
+        ax.fill_between(t, -2*sig, 2*sig, color='C1', alpha=0.2, label=r'$\pm 2\sigma$')
+        ax.plot(t, err, 'k-', lw=1.0, label='true - est')
+        ax.axhline(0, color='0.6', lw=0.8)
+        unit = '[deg]' if scale != 1.0 else '[m]'
+        c4d.plotdefaults(ax, f'{n} error', 'time [s]', f'{n} err {unit}', fontsize=10)
+        ax.legend(loc='upper right', fontsize=8)
+
+    fig.tight_layout()
+    return fig
+
+
+def plot_trajectory_3d(truth, est, config, t0=0.0, t1=100.0,
+                       elev=15, azim=-90, z_span=10.0):
+    """Single 3D flight path — reference vs. true vs. estimated — viewed
+    nearly edge-on against the x-z plane.
+
+    This is the top-left panel of :func:`plot_dashboard` on its own, re-aimed.
+    The default view (``azim=-90``) looks along the inertial y axis, so yaw /
+    y-depth collapses and the figure-8 reads as its x-z profile; the small
+    ``elev`` ("pitch") keeps just enough perspective to still see the loop's
+    y extent. The z axis is fixed to ``z_ref +- z_span/2`` (0..10 m by
+    default) so ordinary centimetre-level altitude error isn't visually
+    blown up by an autoscaled axis.
+    """
+    import matplotlib.pyplot as plt
+    from c4dynamics.controllers.quad_pid import position_reference
+
+    A, B, omega, z_ref = (config['trajectory']['A'], config['trajectory']['B'],
+                          config['trajectory']['omega'], config['trajectory']['z_ref'])
+    t_sim = config['sim']['tf']
+
+    t, x_true = truth.data('x'); _, y_true = truth.data('y'); _, z_true = truth.data('z')
+    _, x_est  = est.data('x');   _, y_est  = est.data('y');   _, z_est  = est.data('z')
+    t = np.asarray(t)
+    mask = (t >= t0) & (t <= t1)
+    x_true, y_true, z_true = (np.asarray(a)[mask] for a in (x_true, y_true, z_true))
+    x_est,  y_est,  z_est  = (np.asarray(a)[mask] for a in (x_est, y_est, z_est))
+
+    ref = np.array([position_reference(ti, A, B, omega, z_ref, t_sim=t_sim)
+                    for ti in t[mask]])
+    x_ref, y_ref, z_ref_hist = ref[:, 0], ref[:, 1], ref[:, 2]
+
+    fig = plt.figure(figsize=(9, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(x_ref,  y_ref,  z_ref_hist, 'r--', lw=1.5, label='reference')
+    ax.plot(x_true, y_true, z_true,     'b-',  lw=1.5, label='true')
+    ax.plot(x_est,  y_est,  z_est,      'C1:', lw=1.8, label='estimated')
+    ax.set_xlabel('X (m)'); ax.set_ylabel('Y (m)'); ax.set_zlabel('Z (m)')
+    ax.set_zlim(z_ref - z_span / 2, z_ref + z_span / 2)
+    ax.view_init(elev=elev, azim=azim)
+    ax.set_title('Flight path:  reference vs. true vs. estimated')
+    ax.legend(fontsize=9)
+    fig.tight_layout()
+    return fig
+
 
 def plot_trajectory(truth, est, config, t0=0.0, t1=100.0):
     """Figure-8 path: reference vs. true vs. estimated (top-down x-y view).
