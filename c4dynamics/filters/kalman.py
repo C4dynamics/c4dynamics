@@ -46,6 +46,13 @@ class kalman(c4d.state):
         Process noise covariance matrix. Defaults to None.
     R : numpy.ndarray, optional
         Measurement noise covariance matrix. Defaults to None.
+    P_jitter : float, optional
+        If provided, `P` is symmetrized and floored by `P_jitter` times
+        the identity after every `predict`/`update` that modifies it
+        (skipped in `steadystate` mode, where `P` never changes). This
+        guards against floating-point roundoff eroding `P`'s symmetry or
+        positive-definiteness over many cycles; it is not a substitute for
+        a correct process/measurement model. Defaults to `None` (off).
 
     Notes
     =====
@@ -215,7 +222,6 @@ class kalman(c4d.state):
 
     _Kinf = None
     _nonlinearF = False
-    _nonlinearH = False
 
     def __init__(
         self,
@@ -227,6 +233,7 @@ class kalman(c4d.state):
         P0: Optional[np.ndarray] = None,
         Q: Optional[np.ndarray] = None,
         R: Optional[np.ndarray] = None,
+        P_jitter: Optional[float] = None,
     ):
         #
         # P0 is mandatory and it is either the initial state covariance matrix itself or
@@ -314,6 +321,7 @@ class kalman(c4d.state):
                     # square matrix
                     self.P = P0
 
+        self._P_jitter = P_jitter
         self._Pdata = []
 
     def predict(self, u: Optional[np.ndarray] = None, Q: Optional[np.ndarray] = None):
@@ -431,6 +439,8 @@ class kalman(c4d.state):
                 )
 
             self.P = self.F @ self.P @ self.F.T + self.Q
+            if self._P_jitter is not None:
+                self._stabilize_P()
 
         if not self._nonlinearF:
             self.X = self.F @ self.X
@@ -452,27 +462,72 @@ class kalman(c4d.state):
                     )
                 self.X += self.G @ u.ravel()
 
-    def update(self, z: np.ndarray, R: Optional[np.ndarray] = None):
+    def _stabilize_P(self):
+        """
+        Symmetrize `P` and add a small positive-definite floor to its
+        diagonal (``P <- 0.5*(P + P.T) + P_jitter * I``).
+
+        Defensive covariance hygiene: floating-point roundoff accumulated
+        over many `predict`/`update` cycles can erode `P`'s symmetry and
+        positive-definiteness enough to break a downstream inversion or
+        `solve()`. This does not correct modeling errors (e.g. an
+        unmodeled nonlinearity or a stale linearization) -- it only keeps
+        `P` numerically well-formed. Called automatically, only when
+        `P_jitter` was set at construction (see `__init__`).
+        """
+        self.P = 0.5 * (self.P + self.P.T)
+        self.P += self._P_jitter * np.eye(self.P.shape[0])
+
+    def update(
+        self,
+        z: Optional[np.ndarray] = None,
+        R: Optional[np.ndarray] = None,
+        hx: Optional[np.ndarray] = None,
+        innov: Optional[np.ndarray] = None,
+        gate: Optional[float] = None,
+    ):
         """
         Updates (corrects) the state estimate based on the given measurements.
 
         Parameters
         ----------
-        z : numpy.ndarray
-            Measurement vector.
+        z : numpy.ndarray, optional
+            Measurement vector. Required unless `innov` is provided directly.
         R : numpy.ndarray, optional
             Measurement noise covariance matrix. Defaults to None.
+        hx : numpy.ndarray, optional
+            Predicted measurement, i.e. h(x), used to form the innovation
+            as ``z - hx``. Defaults to the linear prediction ``H @ X``.
+            Useful for a nonlinear measurement function whose output does
+            not equal ``H @ X`` (as in :class:`ekf <c4dynamics.filters.ekf.ekf>`).
+            Ignored if `innov` is provided directly.
+        innov : numpy.ndarray, optional
+            The innovation (measurement residual) itself, overriding the
+            default ``z - hx``. Use this when the residual is not a plain
+            subtraction, for example a circular (angle-wrapped) measurement.
+            `z` is not required when `innov` is given.
+        gate : float, optional
+            Chi-squared gating threshold on the normalized innovation
+            squared (NIS = ``innov.T @ inv(S) @ innov``, with
+            ``S = H @ P @ H.T + R``). If the NIS exceeds `gate`, the update
+            is rejected: `X` and `P` are left unchanged and `update`
+            returns `None`. Defaults to `None` (no gating).
 
         Returns
         -------
-        K : numpy.ndarray
-            Kalman gain.
+        K : numpy.ndarray or None
+            Kalman gain, or `None` if the update was rejected by `gate`,
+            or if ``S = H @ P @ H.T + R`` is numerically singular (in
+            which case `X` and `P` are likewise left unchanged, exactly
+            as for a gate rejection).
 
 
         Raises
         ------
         ValueError
-            If the number of elements in `z` does not match
+            If neither `z` nor `innov` is provided.
+        ValueError
+            If the number of elements in `z` (or `innov`) does not match
             the number of rows in the measurement matrix H.
         ValueError
             If `R` is missing (neither provided
@@ -549,14 +604,24 @@ class kalman(c4d.state):
         # this H must be linear, but like F may it be linearized once about an equilibrium point for
         # the entire process (regular kalman) or at each
         # iteration about the current state (ekf).
-        # TODO add Mahalanobis optional test
-        z = np.atleast_2d(z).ravel()
-        if len(z) != self.H.shape[0]:
-            raise ValueError(
-                f"""The number of elements in the input z must equal """
-                f"""the number of rows of the measurement matrix H, """
-                f"""{len(z.ravel())} != {self.H.shape[0]}"""
-            )
+        if innov is None:
+            if z is None:
+                raise ValueError("""Either z or innov must be provided.""")
+            z = np.atleast_2d(z).ravel()
+            if len(z) != self.H.shape[0]:
+                raise ValueError(
+                    f"""The number of elements in the input z must equal """
+                    f"""the number of rows of the measurement matrix H, """
+                    f"""{len(z.ravel())} != {self.H.shape[0]}"""
+                )
+        else:
+            innov = np.atleast_1d(innov).astype(float)
+            if len(innov) != self.H.shape[0]:
+                raise ValueError(
+                    f"""The number of elements in innov must equal """
+                    f"""the number of rows of the measurement matrix H, """
+                    f"""{len(innov)} != {self.H.shape[0]}"""
+                )
 
         if self._Kinf is None:
             if R is not None:
@@ -567,16 +632,48 @@ class kalman(c4d.state):
                     """or in every call to update() """
                 )
 
-            K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.R)
-            self.P = self.P - K @ self.H @ self.P
+            S = self.H @ self.P @ self.H.T + self.R
+            try:
+                # A singular S means P (and/or R) has already diverged
+                # beyond recovery -- e.g. an unbounded covariance from a
+                # long run of gated-out updates overflowing to inf/nan.
+                # Reject the update exactly like a failed gate (X and P
+                # untouched) instead of letting an uncaught LinAlgError
+                # crash the caller; this mirrors the try/except already
+                # used below for the gate's own np.linalg.solve(S, ...).
+                K = self.P @ self.H.T @ np.linalg.inv(S)
+            except np.linalg.LinAlgError:
+                return None
         else:
             K = self._Kinf
+            S = None  # computed lazily below, only if a gate is requested
 
-        if not self._nonlinearH:
-            hx = self.H @ self.X
+        # this H can be expressed as either linear or nonlinear function of x
+        # (hx), and the residual itself may need to be formed in a
+        # non-subtractive way (innov), e.g. for a circular measurement.
+        if innov is None:
+            if hx is None:
+                hx = self.H @ self.X
+            innov = z - hx
 
-        # this H can be expressed as either linear or nonlinear function of x.
-        self.X += K @ (z - hx)  # type: ignore # nx1 = nxm @ (mx1 - mxn @ nx1)
+        if gate is not None:
+            # Chi-squared test (NIS) on the innovation; reject the update
+            # without touching X or P if it exceeds the gate.
+            if S is None:
+                S = self.H @ self.P @ self.H.T + self.R
+            try:
+                nis = float(innov @ np.linalg.solve(S, innov))
+            except np.linalg.LinAlgError:
+                return None
+            if nis > gate:
+                return None
+
+        if self._Kinf is None:
+            self.P = self.P - K @ self.H @ self.P
+            if self._P_jitter is not None:
+                self._stabilize_P()
+
+        self.X += K @ innov  # type: ignore # nx1 = nxm @ (mx1 - mxn @ nx1)
         return K
 
     def store(self, t: int = -1):

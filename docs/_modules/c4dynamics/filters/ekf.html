@@ -63,7 +63,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 02, 2026"/>
   </head>
   
   
@@ -207,14 +207,17 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
+
+
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../../../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
-<li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/learning_controller/learning_controller.html">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
 
 
@@ -286,6 +289,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/sensors.navigation.gps.html">GPS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/gps/c4dynamics.sensors.navigation.gps.measure.html">c4dynamics.sensors.navigation.gps.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/sensors.navigation.imu.html">IMU</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/imu/c4dynamics.sensors.navigation.imu.measure.html">c4dynamics.sensors.navigation.imu.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/sensors.navigation.magnetometer.html">Magnetometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html">c4dynamics.sensors.navigation.magnetometer.measure</a></li>
 </ul>
 </details></li>
 </ul>
@@ -500,6 +515,9 @@ document.write(`
 <span class="sd">        Process noise covariance matrix.</span>
 <span class="sd">    R : np.ndarray, optional</span>
 <span class="sd">        Measurement noise covariance matrix.</span>
+<span class="sd">    P_jitter : float, optional</span>
+<span class="sd">        Opt-in covariance stabilization; see</span>
+<span class="sd">        :class:`kalman &lt;c4dynamics.filters.kalman.kalman&gt;`.</span>
 
 
 <span class="sd">    Example</span>
@@ -522,6 +540,7 @@ document.write(`
         <span class="n">G</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">Q</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">R</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">P_jitter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1"># F and H are necessary also for ekf because they are required to the ricatti.</span>
         <span class="c1"># yes but the can be delivered at each call in the immediate linearized form.</span>
@@ -532,7 +551,7 @@ document.write(`
         <span class="k">if</span> <span class="n">H</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">P0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="n">G</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">P0</span><span class="o">=</span><span class="n">P0</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="n">G</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span> <span class="n">P_jitter</span><span class="o">=</span><span class="n">P_jitter</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ekf</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="ekf.predict">
@@ -667,10 +686,12 @@ document.write(`
 <a class="viewcode-back" href="../../../api/generated/ekf/c4dynamics.filters.ekf.ekf.update.html#c4dynamics.filters.ekf.ekf.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
+        <span class="n">z</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">H</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">innov</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">R</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates the state estimate based on the latest measurement, using an</span>
@@ -678,17 +699,28 @@ document.write(`
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z : np.ndarray</span>
+<span class="sd">        z : np.ndarray, optional</span>
 <span class="sd">            Measurement vector, representing observed values from the system.</span>
+<span class="sd">            Required unless `innov` is provided directly.</span>
 <span class="sd">        H : np.ndarray, optional</span>
 <span class="sd">            Measurement Jacobian matrix. If provided, it overrides the</span>
 <span class="sd">            previously set `H` matrix for this update step.</span>
 <span class="sd">        hx : np.ndarray, optional</span>
-<span class="sd">            Nonlinear measurement function output. If provided, it is used</span>
-<span class="sd">            as the current estimate of the state based on measurement data.</span>
+<span class="sd">            Nonlinear measurement function output, h(x). If provided, it is</span>
+<span class="sd">            used in place of the linear ``H @ X`` to form the innovation</span>
+<span class="sd">            ``z - hx``. Ignored if `innov` is provided directly.</span>
+<span class="sd">        innov : np.ndarray, optional</span>
+<span class="sd">            The innovation itself, overriding ``z - hx``. Use this for a</span>
+<span class="sd">            residual that isn&#39;t a plain subtraction, e.g. an angle-wrapped</span>
+<span class="sd">            measurement. `z` is not required when `innov` is given.</span>
 <span class="sd">        R : np.ndarray, optional</span>
 <span class="sd">            Measurement noise covariance matrix, representing the uncertainty</span>
 <span class="sd">            in the measurements.</span>
+<span class="sd">        gate : float, optional</span>
+<span class="sd">            Chi-squared NIS gating threshold; see</span>
+<span class="sd">            :meth:`kalman.update &lt;c4dynamics.filters.kalman.kalman.update&gt;`.</span>
+<span class="sd">            If the innovation fails the gate, the update is rejected and</span>
+<span class="sd">            `update` returns `None`.</span>
 
 
 <span class="sd">        Examples</span>
@@ -746,16 +778,10 @@ document.write(`
 <span class="sd">          [[0]]</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">hx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">hx</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_nonlinearH</span> <span class="o">=</span> <span class="kc">True</span>
-
         <span class="k">if</span> <span class="n">H</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
 
-        <span class="n">K</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nonlinearH</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="n">K</span></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">R</span><span class="o">=</span><span class="n">R</span><span class="p">,</span> <span class="n">hx</span><span class="o">=</span><span class="n">hx</span><span class="p">,</span> <span class="n">innov</span><span class="o">=</span><span class="n">innov</span><span class="p">,</span> <span class="n">gate</span><span class="o">=</span><span class="n">gate</span><span class="p">)</span></div>
 </div>
 
 
@@ -812,7 +838,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Jul 22, 2026.
+  Last updated on Sep 02, 2026.
   <br/>
 </p>
   </div>

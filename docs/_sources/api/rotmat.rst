@@ -2,7 +2,12 @@ Rotational Matrix Operations
 ============================
 
 
-.. automodule:: c4dynamics.rotmat 
+.. automodule:: c4dynamics.rotmat
+
+.. seealso::
+
+   For the background theory behind rotation matrices and frame transformations,
+   see the :doc:`Rigid Body Transformations </concepts/transformations>` concept page.
 
 
    **Functions**

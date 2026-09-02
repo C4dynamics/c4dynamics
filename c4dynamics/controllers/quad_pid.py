@@ -1,24 +1,58 @@
 """
-quad_pid_utils.py
-=================
-Supporting module for the Quadcopter Cascade PID notebook.
+
+Cascade-PID quadcopter controller
+==================================
+
+`c4dynamics.controllers.quad_pid` provides a 12-state rigid-body quadcopter
+dynamics model and a three-loop cascade PID flight controller (position ->
+attitude -> body rate), plus the control allocator that converts commanded
+thrust and torques into rotor speeds.
+
+This module is shared by more than one example (a plain cascade-PID
+figure-8 flight, and an EKF state-estimation closed loop that flies the same
+vehicle from noisy GPS/IMU measurements rather than truth).
+
+.. list-table::
+  :header-rows: 0
+
+  * - :func:`dynamics <c4dynamics.controllers.quad_pid.dynamics>`
+    - 12-state rigid-body derivatives
+  * - :func:`InitializeControllers <c4dynamics.controllers.quad_pid.InitializeControllers>`
+    - instantiate the 3 PID loops + allocator
+  * - :class:`OuterPositionPID <c4dynamics.controllers.quad_pid.OuterPositionPID>`
+    - position loop  (50 Hz)
+  * - :class:`MiddleAttitudePID <c4dynamics.controllers.quad_pid.MiddleAttitudePID>`
+    - attitude loop (100 Hz)
+  * - :class:`InnerRatePID <c4dynamics.controllers.quad_pid.InnerRatePID>`
+    - rate loop    (200 Hz)
+  * - :class:`ControlAllocator <c4dynamics.controllers.quad_pid.ControlAllocator>`
+    - torques -> rotor speeds
 
 
-The notebook contains the main loop, parameters, and results.
-This file contains ONLY the implementation classes and helpers.
+Frame and motor convention
+---------------------------
+Body frame (right handed): x forward, y right, z down (FRD).
+Inertial frame (ENU): x east, y north, z up. Rotation: 3-2-1 (yaw-pitch-roll).
+Motor layout: X configuration (w1 front CCW, w2 rear CCW, w3 left CW, w4 right
+CW) — see :func:`dynamics` for the full torque mapping.
 
-Contents:
-  - dynamics()                            : state derivatives
-  - position_reference()                  : 3-phase trajectory
-  - velocity_reference()                  : feedforward velocity
-  - OuterPositionPID                      : position loop  (50 Hz)
-  - MiddleAttitudePID                     : attitude loop (100 Hz)
-  - InnerRatePID                          : rate loop    (200 Hz)
-  - ControlAllocator                      : torques -> rotor speeds
-  - plot_results()                        : time histories + 3D
-  - compute_metrics()                     : RMSE over figure-8 phase
+
+See Also
+========
+.filters.ekf
+.sensors.navigation
+
+
+Examples
+========
+The figure-8 example (``examples/cascade_pid``) drives this module with
+truth feedback; the EKF example (``examples/ekf``) drives the *same*
+:func:`dynamics`, :func:`InitializeControllers` and PID classes with an
+estimated state reconstructed from
+:mod:`c4dynamics.sensors.navigation` measurements.
 """
 
+import warnings
 import numpy as np
 import c4dynamics as c4d
 from matplotlib import pyplot as plt
@@ -38,6 +72,13 @@ def dynamics(t, y, quad, rotor_speeds):
 
     Accepts and returns arrays compatible with c4d.rigidbody.X:
         X = [x, y, z, vx, vy, vz, phi, theta, psi, p, q, r]
+
+    Where:
+
+    - :math:`x, y, z` are the inertial position coordinates
+    - :math:`v_x, v_y, v_z` are the inertial velocity coordinates
+    - :math:`\\varphi, \\theta, \\psi` are the Euler angles (roll, pitch, yaw)
+    - :math:`p, q, r` are the body rates about the roll, pitch, yaw axes
 
 
     Frame and motor convention:
@@ -64,7 +105,7 @@ def dynamics(t, y, quad, rotor_speeds):
     Torque mapping:
     roll (phi):       L * (-F1 + F2 + F3 - F4)
     pitch (theta):    L * (F1 - F2 + F3 - F4)
-    yaw (psi):        kM / kT * (F1 + F2 - F3 - F4)
+    yaw (psi):        kQ / kT * (F1 + F2 - F3 - F4)
 
     Parameters
     ----------
@@ -82,8 +123,8 @@ def dynamics(t, y, quad, rotor_speeds):
     m   = quad.m    # mass [kg]
     g   = quad.g    # gravity [m/s^2]
     L   = quad.l    # arm length [m]
-    kT  = quad.kT   # thrust coefficient
-    kM  = quad.kQ   # torque coefficient
+    kT  = quad.kT   # thrust coefficient [N/(rad/s)^2]
+    kQ  = quad.kQ   # torque coefficient [N.m/(rad/s)^2]
     IR  = quad.IR   # rotor inertia [kg.m^2]
     Ixx = quad.Ixx  # roll inertia [kg.m^2]
     Iyy = quad.Iyy  # pitch inertia [kg.m^2]
@@ -93,7 +134,7 @@ def dynamics(t, y, quad, rotor_speeds):
     Az  = quad.Az   # drag coefficient (z)
     Ar  = quad.Ar   # angular drag coefficient
 
-    gamma = kM / kT
+    gamma = kQ / kT
 
     F1 = kT * w1**2
     F2 = kT * w2**2
@@ -160,6 +201,60 @@ def dynamics(t, y, quad, rotor_speeds):
 
 
 # ============================================================
+#  GROUND-CONTACT GUARD  (shared by every simulation loop below)
+# ============================================================
+
+# Altitude [m] above which the vehicle counts as "airborne". This exists
+# solely to distinguish "still at rest on the ground at t=0" (z=0, must
+# not be flagged) from having genuinely left it -- it is NOT a tolerance
+# for "how big a dip counts as a real crash". There is no ground-collision
+# model here, so any dip back to z<=0 after clearing this, however brief
+# or small, is a real ground strike: a real vehicle doesn't un-crash and
+# resume climbing the way this sim's unconstrained physics would let it.
+# Keep this small.
+GROUND_TAKEOFF_EPS = 0.05
+
+
+def ground_contact(z, took_off):
+    """
+    Ground-contact guard shared by every quadcopter simulation loop
+    (the plain cascade-PID example and the EKF closed-loop example alike).
+
+    There is no ground-collision model in :func:`dynamics` -- z is free to
+    go negative and the physics keeps integrating as if nothing happened.
+    This guard exists purely to catch that and let the caller stop the
+    simulation (with a warning) rather than silently continue on an
+    unphysical, below-ground trajectory.
+
+    `took_off` latches true once the vehicle climbs above
+    `GROUND_TAKEOFF_EPS`; a ground hit is only reported once it has
+    latched, so the initial at-rest-on-the-ground state is never flagged.
+    A hit is then reported the moment `z` comes back down to zero or below
+    -- whether that's a genuine mid-flight crash or (harmlessly) the very
+    end of a normal scripted landing, in which case the simulation was
+    about to end anyway.
+
+    Parameters
+    ----------
+    z : float
+        Current true altitude [m] (inertial ENU convention, ground = 0).
+    took_off : bool
+        Whether the vehicle has, at any earlier point this run, climbed
+        above `GROUND_TAKEOFF_EPS`.
+
+    Returns
+    -------
+    took_off : bool
+        Updated latch -- pass this back in on the next call.
+    hit_ground : bool
+        True if the vehicle is airborne-latched and `z <= 0` right now.
+    """
+    took_off = took_off or (z > GROUND_TAKEOFF_EPS)
+    hit_ground = took_off and (z <= 0.0)
+    return took_off, hit_ground
+
+
+# ============================================================
 #  REFERENCE TRAJECTORY
 # ============================================================
 
@@ -219,6 +314,36 @@ def velocity_reference(t, A, B, omega, t_takeoff=8.0, t_land=8.0, t_sim=90.0):
 # ============================================================
 #  OUTER POSITION PID  (50 Hz)
 # ============================================================
+
+
+def InitializeControllers(controller, quad):
+    """
+    Instantiate the three cascade PID loops and the control allocator.
+
+    Kept as a standalone function (rather than inlined into run_fig8_pid)
+    so it can be imported directly, e.g. `from quad_pid_utils import
+    InitializeControllers` in ekf.py.
+
+    Parameters
+    ----------
+    controller : dict — controller gains/limits (config['controller'])
+    quad       : c4d.rigidbody — provides mass/inertia/geometry for the
+                 controllers and allocator
+
+    Returns
+    -------
+    outer_ctrl, mid_ctrl, inner_ctrl, allocator
+    """
+
+    outer_ctrl = OuterPositionPID(controller, quad.m, quad.g, quad.kT)
+    mid_ctrl   = MiddleAttitudePID(controller)
+    inner_ctrl = InnerRatePID(controller,
+                            quad.Ixx, quad.Iyy, quad.Izz,
+                            quad.l,   quad.kT)
+    allocator  = ControlAllocator(quad.kT, quad.kQ, quad.l,
+                                controller['omega_max'])
+
+    return outer_ctrl, mid_ctrl, inner_ctrl, allocator
 
 
 class OuterPositionPID:
@@ -479,7 +604,7 @@ class InnerRatePID:
 
         Returns
         -------
-        tau_phi, tau_theta, tau_psi : torque commands [N.m]
+        tau_x, tau_y, tau_z : torque commands [N.m]
         """
         ep = p_d - quad.p
         eq = q_d - quad.q
@@ -496,32 +621,32 @@ class InnerRatePID:
         dq = self.N_rate * (eq - self.eq_prev) / d
         dr = self.N_rate * (er - self.er_prev) / d
 
-        tau_phi_raw = self.Ixx * (
+        tau_x_raw = self.Ixx * (
             self.KP_p * ep + self.KI_p * self.int_p + self.KD_p * dp
         )
-        tau_theta_raw = self.Iyy * (
+        tau_y_raw = self.Iyy * (
             self.KP_q * eq + self.KI_q * self.int_q + self.KD_q * dq
         )
-        tau_psi_raw = self.Izz * (
+        tau_z_raw = self.Izz * (
             self.KP_r * er + self.KI_r * self.int_r + self.KD_r * dr
         )
 
-        tau_phi = np.clip(tau_phi_raw, -self.M_max, self.M_max)
-        tau_theta = np.clip(tau_theta_raw, -self.M_max, self.M_max)
-        tau_psi = np.clip(tau_psi_raw, -self.M_max, self.M_max)
+        tau_x = np.clip(tau_x_raw, -self.M_max, self.M_max)
+        tau_y = np.clip(tau_y_raw, -self.M_max, self.M_max)
+        tau_z = np.clip(tau_z_raw, -self.M_max, self.M_max)
 
         # Back-calculation anti-windup
         AW = 0.1
-        self.int_p += AW * (tau_phi - tau_phi_raw) / (self.Ixx * self.KI_p + 1e-9)
-        self.int_q += AW * (tau_theta - tau_theta_raw) / (self.Iyy * self.KI_q + 1e-9)
-        self.int_r += AW * (tau_psi - tau_psi_raw) / (self.Izz * self.KI_r + 1e-9)
+        self.int_p += AW * (tau_x - tau_x_raw) / (self.Ixx * self.KI_p + 1e-9)
+        self.int_q += AW * (tau_y - tau_y_raw) / (self.Iyy * self.KI_q + 1e-9)
+        self.int_r += AW * (tau_z - tau_z_raw) / (self.Izz * self.KI_r + 1e-9)
 
         self.ep_prev = ep
         self.eq_prev = eq
         self.er_prev = er
 
         # torques in body axes
-        return tau_phi, tau_theta, tau_psi
+        return tau_x, tau_y, tau_z
 
 
 # ============================================================
@@ -549,14 +674,14 @@ class ControlAllocator:
         self.sq_min = 0.0
         self.sq_max = omega_max**2
 
-    def allocate(self, T_cmd, tau_phi, tau_theta, tau_psi):
+    def allocate(self, T_cmd, tau_x, tau_y, tau_z):
         """
         Parameters
         ----------
-        T_cmd     : total thrust [N]
-        tau_phi   : roll  torque [N.m] (difference between left and right motors)
-        tau_theta : pitch torque [N.m] (difference between front and rear motors)
-        tau_psi   : yaw   torque [N.m]
+        T_cmd  : total thrust [N]
+        tau_x  : roll  torque [N.m] (difference between left and right motors)
+        tau_y  : pitch torque [N.m] (difference between front and rear motors)
+        tau_z  : yaw   torque [N.m]
 
         Returns
         -------
@@ -575,7 +700,7 @@ class ControlAllocator:
                         [0, 0, 1 / self.L, 0],
                         [0, 0, 0, 1 / gamma]]
             )
-        F = A1 @ A2 @ np.array([T_cmd, tau_phi, tau_theta, tau_psi])
+        F = A1 @ A2 @ np.array([T_cmd, tau_x, tau_y, tau_z])
 
         w1 = np.sqrt(np.clip(F[0] / self.kT, self.sq_min, self.sq_max))
         w2 = np.sqrt(np.clip(F[1] / self.kT, self.sq_min, self.sq_max))
@@ -591,6 +716,21 @@ class ControlAllocator:
 
 
 def run_fig8_pid(config):
+    """
+    Run the cascade PID simulation.
+
+    Rotor speeds are stored alongside the other control inputs (``F``,
+    ``tau_x``, ``tau_y``, ``tau_z``) via ``quad.storeparams``, so any
+    caller that wants them can retrieve the full history the same way it
+    retrieves state — e.g. ``quad.data('w1')`` — rather than through a
+    special-case second return value. This keeps the interface identical
+    for every caller (the plain cascade-PID example and any estimator
+    built on the same plant).
+
+    Returns
+    -------
+    quad : c4d.rigidbody — full state + control-input history via quad.data()
+    """
 
     # Initialize the rigidbody — quadcopter starts at rest on the ground
     quad = c4d.rigidbody()
@@ -599,11 +739,11 @@ def run_fig8_pid(config):
         setattr(quad, k, v)
 
     # Control inputs stored alongside state
-    quad.F = quad.m * quad.g  # thrust [N]  — initialized to hover
+    quad.T = quad.m * quad.g  # thrust [N]  — initialized to hover
 
-    quad.tau_phi = 0.0  # roll  torque [N.m]
-    quad.tau_theta = 0.0  # pitch torque [N.m]
-    quad.tau_psi = 0.0  # yaw   torque [N.m]
+    quad.tau_x = 0.0  # roll  torque [N.m]
+    quad.tau_y = 0.0  # pitch torque [N.m]
+    quad.tau_z = 0.0  # yaw   torque [N.m]
 
     # Trajectory parameters
     A, B, omega, z_ref = (
@@ -613,19 +753,9 @@ def run_fig8_pid(config):
         config["trajectory"]["z_ref"],
     )
 
-    # Instantiate controllers
-    outer_ctrl = OuterPositionPID(
-        config["controller"], quad.m, quad.g, quad.kT
-    )
-    mid_ctrl   = MiddleAttitudePID(
-        config["controller"]
-    )
-    inner_ctrl = InnerRatePID(
-        config["controller"], quad.Ixx, quad.Iyy, quad.Izz, quad.l, quad.kT
-    )
-    allocator = ControlAllocator(
-        quad.kT, quad.kQ, quad.l, config["controller"]["omega_max"]
-    )
+    # Initialize controllers
+    outer_ctrl, mid_ctrl, inner_ctrl, allocator = InitializeControllers(
+        config["controller"], quad)
 
     # Loop rate counters
     Ts_outer = 1.0 / 50.0  # 0.020 s
@@ -639,6 +769,7 @@ def run_fig8_pid(config):
     p_d = q_d = r_d = 0.0
     T_cmd = quad.m * quad.g  # start at hover thrust
     rotor_speeds = np.array([np.sqrt(T_cmd / (4 * quad.kT))] * 4)
+    took_off = False
 
     print(f"Simulation start  |  tf = {tf} s  |  dt = {dt} s")
 
@@ -647,9 +778,18 @@ def run_fig8_pid(config):
         # if t % 10 < dt / 2:
         #     print(f"Simulation run  |  t = {t} s")
 
-        # ── Store state and control inputs ──
+        # ── Store state and control inputs (incl. rotor speeds) ──
+        quad.w1, quad.w2, quad.w3, quad.w4 = rotor_speeds
         quad.store(t)
-        quad.storeparams(["F", "tau_phi", "tau_theta", "tau_psi"], t=t)
+        quad.storeparams(["T", "tau_x", "tau_y", "tau_z",
+                          "w1", "w2", "w3", "w4"], t=t)
+
+        # ── Ground-contact guard ──
+        took_off, hit_ground = ground_contact(quad.z, took_off)
+        if hit_ground:
+            warnings.warn(f'Quadcopter hit the ground at t={t:.3f} s '
+                           f'(z={quad.z:.4f} m); stopping simulation.', c4d.c4warn)
+            break
 
         # ── Reference at current time ──
         xd, yd, zd = position_reference(t, A, B, omega, z_ref, t_sim=tf)
@@ -661,7 +801,7 @@ def run_fig8_pid(config):
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
                 xd, yd, zd, vxd_ff, vyd_ff, psi_d, quad, Ts_outer
             )
-            quad.F = T_cmd
+            quad.T = T_cmd
             outer_time = 0.0
 
         # ── Middle loop — Attitude  (100 Hz) ──
@@ -671,13 +811,13 @@ def run_fig8_pid(config):
             middle_time = 0.0
 
         # ── Inner loop — Rate  (200 Hz, every step) ──
-        quad.tau_phi, quad.tau_theta, quad.tau_psi = inner_ctrl.compute(
+        quad.tau_x, quad.tau_y, quad.tau_z = inner_ctrl.compute(
             p_d, q_d, r_d, quad, dt
         )
 
         # ── Control allocation — torques to rotor speeds ──
         rotor_speeds = np.array(
-            allocator.allocate(quad.F, quad.tau_phi, quad.tau_theta, quad.tau_psi)
+            allocator.allocate(quad.T, quad.tau_x, quad.tau_y, quad.tau_z)
         )
 
         sol = solve_ivp(dynamics, [t, t + dt], quad.X, args=(quad, rotor_speeds))

@@ -40,6 +40,9 @@ class ekf(kalman):
         Process noise covariance matrix.
     R : np.ndarray, optional
         Measurement noise covariance matrix.
+    P_jitter : float, optional
+        Opt-in covariance stabilization; see
+        :class:`kalman <c4dynamics.filters.kalman.kalman>`.
 
 
     Example
@@ -62,6 +65,7 @@ class ekf(kalman):
         G: Optional[np.ndarray] = None,
         Q: Optional[np.ndarray] = None,
         R: Optional[np.ndarray] = None,
+        P_jitter: Optional[float] = None,
     ):
         # F and H are necessary also for ekf because they are required to the ricatti.
         # yes but the can be delivered at each call in the immediate linearized form.
@@ -72,7 +76,7 @@ class ekf(kalman):
         if H is None:
             H = np.zeros(P0.shape[0])
 
-        super().__init__(X, F, H, P0=P0, G=G, Q=Q, R=R)
+        super().__init__(X, F, H, P0=P0, G=G, Q=Q, R=R, P_jitter=P_jitter)
         self._ekf = True
 
     def predict(
@@ -202,10 +206,12 @@ class ekf(kalman):
 
     def update(
         self,
-        z: np.ndarray,  # type: ignore
+        z: Optional[np.ndarray] = None,
         H: Optional[np.ndarray] = None,
         hx: Optional[np.ndarray] = None,
+        innov: Optional[np.ndarray] = None,
         R: Optional[np.ndarray] = None,
+        gate: Optional[float] = None,
     ):
         """
         Updates the state estimate based on the latest measurement, using an
@@ -213,17 +219,28 @@ class ekf(kalman):
 
         Parameters
         ----------
-        z : np.ndarray
+        z : np.ndarray, optional
             Measurement vector, representing observed values from the system.
+            Required unless `innov` is provided directly.
         H : np.ndarray, optional
             Measurement Jacobian matrix. If provided, it overrides the
             previously set `H` matrix for this update step.
         hx : np.ndarray, optional
-            Nonlinear measurement function output. If provided, it is used
-            as the current estimate of the state based on measurement data.
+            Nonlinear measurement function output, h(x). If provided, it is
+            used in place of the linear ``H @ X`` to form the innovation
+            ``z - hx``. Ignored if `innov` is provided directly.
+        innov : np.ndarray, optional
+            The innovation itself, overriding ``z - hx``. Use this for a
+            residual that isn't a plain subtraction, e.g. an angle-wrapped
+            measurement. `z` is not required when `innov` is given.
         R : np.ndarray, optional
             Measurement noise covariance matrix, representing the uncertainty
             in the measurements.
+        gate : float, optional
+            Chi-squared NIS gating threshold; see
+            :meth:`kalman.update <c4dynamics.filters.kalman.kalman.update>`.
+            If the innovation fails the gate, the update is rejected and
+            `update` returns `None`.
 
 
         Examples
@@ -281,16 +298,10 @@ class ekf(kalman):
           [[0]]
 
         """
-        if hx is not None:
-            self.X = hx
-            self._nonlinearH = True
-
         if H is not None:
             self.H = np.atleast_2d(H)
 
-        K = super().update(z=z, R=R)
-        self._nonlinearH = False
-        return K
+        return super().update(z=z, R=R, hx=hx, innov=innov, gate=gate)
 
 
 if __name__ == "__main__":

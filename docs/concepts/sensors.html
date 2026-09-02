@@ -68,7 +68,7 @@
     <link rel="prev" title="Rigid Body Transformations" href="transformations.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 02, 2026"/>
   </head>
   
   
@@ -210,14 +210,17 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
+
+
 <li class="toctree-l1"><a class="reference internal" href="../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../programs/mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
-<li class="toctree-l1"><a class="reference internal" href="../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../programs/learning_controller/learning_controller.html">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
 
 
@@ -289,6 +292,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/sensors.navigation.gps.html">GPS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/generated/gps/c4dynamics.sensors.navigation.gps.measure.html">c4dynamics.sensors.navigation.gps.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/sensors.navigation.imu.html">IMU</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/generated/imu/c4dynamics.sensors.navigation.imu.measure.html">c4dynamics.sensors.navigation.imu.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/sensors.navigation.magnetometer.html">Magnetometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html">c4dynamics.sensors.navigation.magnetometer.measure</a></li>
 </ul>
 </details></li>
 </ul>
@@ -504,6 +519,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#navigation-sensors">Navigation Sensors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov3-class">YOLOv3 Class</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeker-class">Seeker Class</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#radar-class">Radar Class</a></li>
@@ -528,7 +544,94 @@ This gives simulated agents the “eyes and ears” they need to perceive and in
 <p>This module is designed to be flexible and extensible,
 allowing you to integrate multiple sensor types into your
 simulations while maintaining consistent interfaces for data acquisition and processing.</p>
-<p>This section includes three main components:</p>
+<p>This section covers the following components:</p>
+<section id="navigation-sensors">
+<h2>Navigation Sensors<a class="headerlink" href="#navigation-sensors" title="Link to this heading">#</a></h2>
+<p>Generic navigation-sensor models —
+<a class="reference internal" href="../api/sensors.navigation.gps.html#c4dynamics.sensors.navigation.gps" title="c4dynamics.sensors.navigation.gps"><code class="xref py py-class docutils literal notranslate"><span class="pre">gps</span></code></a>,
+<a class="reference internal" href="../api/sensors.navigation.imu.html#c4dynamics.sensors.navigation.imu" title="c4dynamics.sensors.navigation.imu"><code class="xref py py-class docutils literal notranslate"><span class="pre">imu</span></code></a>, and
+<a class="reference internal" href="../api/sensors.navigation.magnetometer.html#c4dynamics.sensors.navigation.magnetometer" title="c4dynamics.sensors.navigation.magnetometer"><code class="xref py py-class docutils literal notranslate"><span class="pre">magnetometer</span></code></a> —
+that map a <em>true</em> state vector to a noisy, biased <em>measurement</em>, following the
+same pattern as the seeker and radar models above.</p>
+<p>Unlike the seeker and radar (which operate on a <a class="reference internal" href="../api/states.lib.rigidbody.html#c4dynamics.states.lib.rigidbody.rigidbody" title="c4dynamics.states.lib.rigidbody.rigidbody"><code class="xref py py-class docutils literal notranslate"><span class="pre">rigidbody</span></code></a> origin and a target), the navigation
+sensors are written against the plain 12-state vector</p>
+<div class="math notranslate nohighlight">
+\[X = [x, y, z, v_x, v_y, v_z, \varphi, \theta, \psi, p, q, r]^T\]</div>
+<p>(the same ordering used by <cite>rigidbody</cite> and by
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">c4dynamics.controllers.quad_pid</span></code>), so they drop directly into an
+EKF/UKF <code class="docutils literal notranslate"><span class="pre">predict</span></code>/<code class="docutils literal notranslate"><span class="pre">update</span></code> loop without an intermediate adapter. The
+<a class="reference internal" href="../api/sensors.navigation.imu.html#c4dynamics.sensors.navigation.imu" title="c4dynamics.sensors.navigation.imu"><code class="xref py py-class docutils literal notranslate"><span class="pre">imu</span></code></a> measures rates and inertial
+acceleration — both derivatives of the state — so it takes the truth
+<cite>rigidbody</cite> object itself rather than a bare vector, and keeps its own
+previous-sample history internally between calls.</p>
+<p><strong>Error model</strong></p>
+<p>Every navigation sensor shares the same two-term error model:</p>
+<ul class="simple">
+<li><p><strong>Bias</strong> — a constant offset, fixed at construction and unchanged between
+samples.</p></li>
+<li><p><strong>Noise</strong> — a zero-mean Gaussian sample, redrawn independently at every call
+to <code class="docutils literal notranslate"><span class="pre">measure</span></code>.</p></li>
+</ul>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">isideal</span> <span class="pre">=</span> <span class="pre">True</span></code> mutes both, so <code class="docutils literal notranslate"><span class="pre">measure</span></code> returns the noise-free,
+bias-free truth.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 28.3%" />
+<col style="width: 37.0%" />
+<col style="width: 10.9%" />
+<col style="width: 23.9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Sensor</p></th>
+<th class="head"><p>Measures</p></th>
+<th class="head"><p>Dim</p></th>
+<th class="head"><p>Default noise (<span class="math notranslate nohighlight">\(1\sigma\)</span>)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GPS</p></td>
+<td><p>inertial position <span class="math notranslate nohighlight">\(x, y, z\)</span></p></td>
+<td><p>3</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.5\ m\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>IMU — gyroscope</p></td>
+<td><p>body rates <span class="math notranslate nohighlight">\(p, q, r\)</span></p></td>
+<td><p>3</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.01\ rad/s\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>IMU — accelerometer</p></td>
+<td><p>body-frame specific force <span class="math notranslate nohighlight">\(a_x, a_y, a_z\)</span></p></td>
+<td><p>3</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.05\ m/s^2\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Magnetometer</p></td>
+<td><p>heading (yaw) <span class="math notranslate nohighlight">\(\psi\)</span></p></td>
+<td><p>1</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.05\ rad\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Measurement equations</strong></p>
+<p>The GPS and gyroscope read states directly, and the magnetometer reads the yaw
+state alone:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}h_{gps}(X) = [x, y, z]^T\\h_{gyro}(X) = [p, q, r]^T\\h_{mag}(X) = \psi\end{aligned}\end{align} \]</div>
+<p>The accelerometer is non-linear — it senses the gravity reaction plus the
+vehicle’s own coordinate acceleration, projected into the body frame:</p>
+<div class="math notranslate nohighlight">
+\[h_{acc}(X) = [BI] \cdot \big(\dot{v} + [0,\ 0,\ g]^T\big)\]</div>
+<p>where <span class="math notranslate nohighlight">\([BI]\)</span> is the body-from-inertial DCM formed by the Euler angles and
+<span class="math notranslate nohighlight">\(\dot{v}\)</span> is the inertial-velocity derivative (approximated by the
+<a class="reference internal" href="../api/sensors.navigation.imu.html#c4dynamics.sensors.navigation.imu" title="c4dynamics.sensors.navigation.imu"><code class="xref py py-class docutils literal notranslate"><span class="pre">imu</span></code></a> as a finite difference against
+the previous sample).</p>
+<p>The heading is returned without wrapping to <span class="math notranslate nohighlight">\([-\pi, \pi]\)</span>; a filter that
+consumes it is responsible for wrapping its own innovation. For a worked
+estimation-control pipeline built on all three models, see the
+<a class="reference internal" href="../programs/ekf_estimation/quad_ekf.html"><span class="doc">Quadcopter EKF</span></a> example.</p>
+<p>Whether you are simulating an autonomous vehicle, a missile guidance loop, or a robotic system,
+the Sensors module gives your models the “eyes and ears” they need to interact with the dynamic world.</p>
+</section>
 <section id="yolov3-class">
 <h2>YOLOv3 Class<a class="headerlink" href="#yolov3-class" title="Link to this heading">#</a></h2>
 <p>A real-time object detection interface based on the YOLOv3 architecture.
@@ -640,8 +743,6 @@ default error parameters:</p>
 </tbody>
 </table>
 </div>
-<p>Whether you are simulating an autonomous vehicle, a missile guidance loop, or a robotic system,
-the Sensors module gives your models the “eyes and ears” they need to interact with the dynamic world.</p>
 </section>
 <section id="see-also">
 <h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
@@ -656,6 +757,15 @@ with 80 pre-trained COCO classes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="../api/sensors.radar.html#c4dynamics.sensors.radar.radar" title="c4dynamics.sensors.radar.radar"><code class="xref py py-class docutils literal notranslate"><span class="pre">radar</span></code></a></p></td>
 <td><p>Range-direction detector.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/sensors.navigation.gps.html#c4dynamics.sensors.navigation.gps" title="c4dynamics.sensors.navigation.gps"><code class="xref py py-class docutils literal notranslate"><span class="pre">gps</span></code></a></p></td>
+<td><p>Inertial position receiver.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../api/sensors.navigation.imu.html#c4dynamics.sensors.navigation.imu" title="c4dynamics.sensors.navigation.imu"><code class="xref py py-class docutils literal notranslate"><span class="pre">imu</span></code></a></p></td>
+<td><p>Gyroscope + accelerometer.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../api/sensors.navigation.magnetometer.html#c4dynamics.sensors.navigation.magnetometer" title="c4dynamics.sensors.navigation.magnetometer"><code class="xref py py-class docutils literal notranslate"><span class="pre">magnetometer</span></code></a></p></td>
+<td><p>Heading (yaw) sensor.</p></td>
 </tr>
 </tbody>
 </table>
@@ -708,6 +818,7 @@ with 80 pre-trained COCO classes.</p></td>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#navigation-sensors">Navigation Sensors</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#yolov3-class">YOLOv3 Class</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeker-class">Seeker Class</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#radar-class">Radar Class</a></li>
@@ -745,7 +856,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Jul 22, 2026.
+  Last updated on Sep 02, 2026.
   <br/>
 </p>
   </div>

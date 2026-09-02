@@ -66,7 +66,7 @@
     <link rel="prev" title="c4dynamics.filters.kalman.kalman.store" href="generated/kalman/c4dynamics.filters.kalman.kalman.store.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 02, 2026"/>
   </head>
   
   
@@ -208,14 +208,17 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
+
+
 <li class="toctree-l1"><a class="reference internal" href="../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../programs/mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
-<li class="toctree-l1"><a class="reference internal" href="../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../programs/learning_controller/learning_controller.html">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
 
 
@@ -287,6 +290,18 @@
 <li class="toctree-l3"><a class="reference internal" href="generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="sensors.navigation.gps.html">GPS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/gps/c4dynamics.sensors.navigation.gps.measure.html">c4dynamics.sensors.navigation.gps.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="sensors.navigation.imu.html">IMU</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/imu/c4dynamics.sensors.navigation.imu.measure.html">c4dynamics.sensors.navigation.imu.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="sensors.navigation.magnetometer.html">Magnetometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html">c4dynamics.sensors.navigation.magnetometer.measure</a></li>
 </ul>
 </details></li>
 </ul>
@@ -518,7 +533,7 @@ document.write(`
 <h1>Extended Kalman Filter<a class="headerlink" href="#extended-kalman-filter" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="c4dynamics.filters.ekf.ekf">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c4dynamics.filters.ekf.</span></span><span class="sig-name descname"><span class="pre">ekf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">F</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/c4dynamics/filters/ekf.html#ekf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.filters.ekf.ekf" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c4dynamics.filters.ekf.</span></span><span class="sig-name descname"><span class="pre">ekf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">F</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P_jitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/c4dynamics/filters/ekf.html#ekf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.filters.ekf.ekf" title="Link to this definition">#</a></dt>
 <dd><p>Extended Kalman Filter class for handling nonlinear dynamics by
 incorporating functions for nonlinear state transitions and measurements.</p>
 <p>This subclass extends the base
@@ -541,6 +556,8 @@ provided.</p></li>
 <li><p><strong>G</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Control input matrix, mapping control inputs to the state.</p></li>
 <li><p><strong>Q</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Process noise covariance matrix.</p></li>
 <li><p><strong>R</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Measurement noise covariance matrix.</p></li>
+<li><p><strong>P_jitter</strong> (<em>float</em><em>, </em><em>optional</em>) – Opt-in covariance stabilization; see
+<a class="reference internal" href="filters.kalman.html#c4dynamics.filters.kalman.kalman" title="c4dynamics.filters.kalman.kalman"><code class="xref py py-class docutils literal notranslate"><span class="pre">kalman</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -557,7 +574,7 @@ inspiration for using <cite>ekf</cite>.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/ekf/c4dynamics.filters.ekf.ekf.predict.html#c4dynamics.filters.ekf.ekf.predict" title="c4dynamics.filters.ekf.ekf.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ekf.predict</span></code></a>([F, fx, dt, u, Q])</p></td>
 <td><p>Predicts the next state of the system based on the current state and an optional nonlinear state transition function.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/ekf/c4dynamics.filters.ekf.ekf.update.html#c4dynamics.filters.ekf.ekf.update" title="c4dynamics.filters.ekf.ekf.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ekf.update</span></code></a>(z[, H, hx, R])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/ekf/c4dynamics.filters.ekf.ekf.update.html#c4dynamics.filters.ekf.ekf.update" title="c4dynamics.filters.ekf.ekf.update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ekf.update</span></code></a>([z, H, hx, innov, R, gate])</p></td>
 <td><p>Updates the state estimate based on the latest measurement, using an optional nonlinear measurement function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/ekf/c4dynamics.filters.ekf.ekf.store.html#c4dynamics.filters.ekf.ekf.store" title="c4dynamics.filters.ekf.ekf.store"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ekf.store</span></code></a>([t])</p></td>
@@ -649,7 +666,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Jul 22, 2026.
+  Last updated on Sep 02, 2026.
   <br/>
 </p>
   </div>
