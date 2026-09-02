@@ -15,4 +15,6 @@ Sensors
 
   Seeker <sensors.seeker>
   Radar <sensors.radar>
+  GPS <sensors.navigation.gps>
+  IMU <sensors.navigation.imu>
 

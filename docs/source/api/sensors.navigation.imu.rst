@@ -1,16 +1,16 @@
-GPS
+IMU
 ===
 .. currentmodule:: c4dynamics.sensors.navigation
 
 
-.. autoclass:: gps
+.. autoclass:: imu
 
 
    **Methods**
 
    .. autosummary::
-      :toctree: generated/gps
+      :toctree: generated/imu
 
-      gps.measure
+      imu.measure
 
 
