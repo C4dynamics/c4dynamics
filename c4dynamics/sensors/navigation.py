@@ -576,6 +576,8 @@ class imu(c4d.state):
 
         >>> fig = c4d.sensors.imu.demo(show = True)
 
+    .. figure:: /_examples/navigation/imu_demo.png
+
     The same demonstration can be run without displaying the figure by using
     ``show = False``.
     """
@@ -797,7 +799,191 @@ class imu(c4d.state):
 
 
 class magnetometer:
-    """Magnetometer — measures heading (yaw) ``psi`` (50 Hz)."""
+    """
+    Magnetometer — heading (yaw) sensor.
+
+    The :class:`magnetometer` class models a magnetometer that measures the
+    heading (yaw angle) :math:`\\psi` of a vehicle.  The measurement is
+    affected by a constant bias and sample-to-sample white Gaussian noise.
+
+
+    Parameters
+    ==========
+    noise_std : float, optional
+        Standard deviation of the heading measurement noise, [rad].
+        Defaults to ``0.05``.
+    bias : float, optional
+        Constant heading bias, [rad].  Defaults to ``0``.
+    isideal : bool, optional
+        If ``True``, overrides ``noise_std`` and ``bias`` to zero, producing
+        an ideal (noise-free, bias-free) magnetometer. Defaults to ``False``.
+
+
+    See Also
+    ========
+    .ekf
+    .gps
+    .imu
+
+
+    **Functionality**
+
+    At each sample the magnetometer returns a heading measurement based on the
+    true state of the vehicle.  Given the 12-state vector
+
+    .. math::
+
+        X = [x, y, z, v_x, v_y, v_z, \\varphi, \\theta, \\psi, p, q, r]^T
+
+    the ideal measurement is the yaw angle alone
+
+    .. math::
+
+        z_{ideal} = \\psi
+
+    and the simulated measurement is
+
+    .. math::
+
+        z = \\psi + b + n
+
+    where :math:`b` is the constant bias and :math:`n` is a zero-mean Gaussian
+    random variable with standard deviation ``noise_std``.
+
+    The heading is returned as given, without wrapping to
+    :math:`[-\\pi, \\pi]`; a filter that consumes the measurement is
+    responsible for wrapping its innovation (see :class:`ekf`).  In a typical
+    setup the magnetometer is sampled at a lower rate than the IMU, e.g.
+    :math:`50\\,Hz`.
+
+
+    **Errors Model**
+
+    The magnetometer measurement is subject to two error sources: bias and
+    noise.
+
+    - ``Bias``:
+      a constant offset in the measured heading.  It is set when the
+      magnetometer is constructed through the ``bias`` parameter and remains
+      unchanged between measurements.  When ``bias`` is not provided, the bias
+      is ``0``.
+    - ``Noise``:
+      a random variation in the heading measurement.  At every call to
+      :meth:`measure`, an independent normally distributed sample with mean
+      zero and standard deviation ``noise_std`` is added.
+
+    The errors model can be disabled by setting ``noise_std = 0`` and
+    ``bias = 0``, or by passing ``isideal = True`` at construction, which
+    mutes both regardless of the ``noise_std`` / ``bias`` arguments.  Unlike
+    the :class:`seeker` model, the magnetometer does not generate a random
+    bias during construction and does not include a scale-factor error; the
+    supplied ``bias`` is deterministic for a given instance.
+
+
+    **Construction**
+
+    A magnetometer instance is created by making a direct call to the
+    constructor:
+
+        >>> mag_sensor = c4d.sensors.magnetometer()
+
+    The measurement noise and constant bias can be specified when creating the
+    sensor.
+
+
+    Examples
+    ========
+
+    Import required packages:
+
+    .. code::
+
+        >>> import c4dynamics as c4d
+        >>> import numpy as np
+
+
+    **True heading**
+
+    For the examples below, build a 12-state vector and set its yaw entry
+    (index 8) to the true heading:
+
+    .. code::
+
+        >>> x_true = np.zeros(12)
+        >>> x_true[8] = 0.5   # true heading [rad]
+
+
+    **Ideal magnetometer**
+
+    An ideal magnetometer can be created by muting the errors model:
+
+    .. code::
+
+        >>> mag_ideal = c4d.sensors.magnetometer(isideal=True)
+        >>> mag_ideal.measure(x_true)   # doctest: +NUMPY_FORMAT
+        [0.5]
+
+    The measured heading is then identical to the true heading.
+
+
+    **Non-ideal magnetometer**
+
+    A non-ideal magnetometer introduces a constant heading bias and white
+    measurement noise.  Set the random seed to make the example reproducible:
+
+    .. code::
+
+        >>> np.random.seed(42)
+        >>> mag_sensor = c4d.sensors.magnetometer(noise_std=0.05, bias=0.02)
+        >>> mag_sensor.measure(x_true)   # doctest: +NUMPY_FORMAT
+        [0.545]
+
+
+    **Bias**
+
+    The bias is constant across all measurements.  A magnetometer with a
+    ``0.1`` rad heading bias can be created as follows:
+
+    .. code::
+
+        >>> mag_bias = c4d.sensors.magnetometer(noise_std=0, bias=0.1)
+        >>> mag_bias.measure(x_true) - x_true[8]   # doctest: +NUMPY_FORMAT
+        [0.1]
+
+    The difference between the measurement and the true heading is the
+    specified bias.
+
+
+    **Measurement noise**
+
+    With zero bias, repeated measurements of the same state demonstrate the
+    random noise generated at every call to :meth:`measure`:
+
+    .. code::
+
+        >>> np.random.seed(1)
+        >>> mag_noise = c4d.sensors.magnetometer(noise_std=0.05, bias=0)
+        >>> for _ in range(3): # doctest: +IGNORE_OUTPUT
+        ...     print(mag_noise.measure(x_true))
+        [0.581]
+        [0.469]
+        [0.474]
+
+
+    **Demo**
+
+    The built-in :meth:`demo` method provides a compact demonstration of the
+    magnetometer errors model and plots the true and measured heading:
+
+    .. code::
+
+        >>> fig = c4d.sensors.magnetometer.demo(show=True)
+
+    .. figure:: /_examples/navigation/magnetometer_demo.png
+
+    The same demonstration can be run without displaying the figure by using
+    ``show=False``.
+    """
 
     def __init__(self, noise_std=0.05, bias=0.0, isideal=False):
         self.noise_std = noise_std
@@ -807,6 +993,47 @@ class magnetometer:
             self.bias = 0.0
 
     def measure(self, x_true):
+        """
+        Measure vehicle heading.
+
+        The method extracts the yaw entry of ``x_true`` (index 8) and adds the
+        magnetometer bias and a zero-mean Gaussian noise sample.
+
+        Parameters
+        ----------
+        x_true : array_like
+            True state vector; only the yaw entry ``x_true[8]`` is used, [rad].
+
+        Returns
+        -------
+        numpy.ndarray
+            Measured heading as a length-1 array ``[psi]``, [rad].
+
+
+        **Errors Model**
+
+        .. math::
+
+            z = \\psi + b + std \\cdot N(0, 1)
+
+        The bias :math:`b` is constant for the magnetometer instance, while the
+        noise is regenerated at every call.
+
+        Examples
+        --------
+
+        .. code::
+
+            >>> import c4dynamics as c4d
+            >>> import numpy as np
+            >>> np.random.seed(42)
+            >>> mag_sensor = c4d.sensors.magnetometer(noise_std=0, bias=0.1)
+            >>> x = np.zeros(12)
+            >>> x[8] = 0.5
+            >>> mag_sensor.measure(x)   # doctest: +NUMPY_FORMAT
+            [0.6]
+
+        """
         return x_true[8:9] + self.bias + np.random.randn(1) * self.noise_std
 
     @staticmethod

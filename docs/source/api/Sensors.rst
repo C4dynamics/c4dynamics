@@ -17,4 +17,5 @@ Sensors
   Radar <sensors.radar>
   GPS <sensors.navigation.gps>
   IMU <sensors.navigation.imu>
+  Magnetometer <sensors.navigation.magnetometer>
 
