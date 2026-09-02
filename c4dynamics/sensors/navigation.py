@@ -306,7 +306,7 @@ class gps:
             >>> gps_sensor = c4d.sensors.gps(noise_std=0, bias=[1, -2, 0.5])
             >>> x = np.zeros(12)
             >>> x[0:3] = [10, 20, 30]
-            >>> gps_sensor.measure(x)
+            >>> gps_sensor.measure(x) # doctest: +NUMPY_FORMAT
             array([11.  18.  30.5])
 
         """
