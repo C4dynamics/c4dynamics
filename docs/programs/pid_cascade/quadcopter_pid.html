@@ -65,11 +65,11 @@
     <link rel="icon" href="../../_static/c4dlogo.svg"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Neural Learning Control for Online Uncertain Dynamics Estimation" href="../learning_controller/learning_controller.html" />
-    <link rel="prev" title="Vehicle Steering - Model Predictive Control" href="../mpc_steering/mpc_steering.html" />
+    <link rel="next" title="Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking" href="../ekf_estimation/quad_ekf.html" />
+    <link rel="prev" title="Interactive Guide to State Space and State Objects Modeling" href="../../tutorials/introduction_guide.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 02, 2026"/>
   </head>
   
   
@@ -211,14 +211,17 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
+
+
 <li class="toctree-l1"><a class="reference internal" href="../pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../learning_controller/learning_controller.html">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
 
 
@@ -290,6 +293,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.navigation.gps.html">GPS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/gps/c4dynamics.sensors.navigation.gps.measure.html">c4dynamics.sensors.navigation.gps.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.navigation.imu.html">IMU</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/imu/c4dynamics.sensors.navigation.imu.measure.html">c4dynamics.sensors.navigation.imu.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/sensors.navigation.magnetometer.html">Magnetometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html">c4dynamics.sensors.navigation.magnetometer.measure</a></li>
 </ul>
 </details></li>
 </ul>
@@ -513,9 +528,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Variables">State Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Controls">Controls</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Measurements">Measurements</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamics">Dynamics</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Config">Config</a></li>
 </ul>
@@ -589,27 +602,24 @@ document.write(`
 <li><p>After running the example, change the quadcopter and the <em>figure-8</em> configurations to support your own system.</p></li>
 </ul>
 <div class="line-block">
-<div class="line"><strong>To keep the notebook focused on tuning and results, the implementation details are collected in a supporting utility file,</strong> <a class="reference external" href="https://raw.githubusercontent.com/C4dynamics/C4dynamics/main/docs/source/programs/pid_cascade/quad_pid_utils.py">quad_pid_utils.py</a><strong>.</strong></div>
-<div class="line">Please refer to this file for the implementations of the quadcopter dynamics, the cascade PID’s, the mixer (control allocator), and the reference trajectories.</div>
+<div class="line"><strong>To keep the notebook focused on tuning and results, the implementation details live in</strong> <code class="docutils literal notranslate"><span class="pre">`c4dynamics.controllers.quad_pid</span></code> &lt;<a class="github reference external" href="https://github.com/c4dynamics/c4dynamics/blob/main/c4dynamics/controllers/quad_pid.py">c4dynamics/c4dynamics</a>&gt;`__<strong>, part of the ``c4dynamics`` package itself.</strong></div>
+<div class="line">Please refer to this module for the implementations of the quadcopter dynamics, the cascade PID’s, the mixer (control allocator), and the reference trajectories.</div>
 </div>
 </section>
 <section id="1.-Setup">
 <h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Link to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="k">if</span> <span class="s1">&#39;google.colab&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
     <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>c4dynamics
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">urllib</span><span class="w"> </span><span class="kn">import</span> <span class="n">request</span>
-<span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/pid_cascade/quad_pid_utils.py&#39;</span><span class="p">,</span> <span class="s1">&#39;quad_pid_utils.py&#39;</span><span class="p">)</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">quad_pid_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">run_fig8_pid</span><span class="p">,</span>
-                             <span class="n">plot_results</span><span class="p">,</span>
-                             <span class="n">compute_metrics</span>
-                             <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics.controllers.quad_pid</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">run_fig8_pid</span><span class="p">,</span>
+                                              <span class="n">plot_results</span><span class="p">,</span>
+                                              <span class="n">compute_metrics</span>
+                                              <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -621,28 +631,32 @@ document.write(`
 <h3>State Variables<a class="headerlink" href="#State-Variables" title="Link to this heading">#</a></h3>
 <p>The quadcopter is a 12-state rigid body object with position, velocity, Euler angles, and body angular rates:</p>
 <div class="math notranslate nohighlight">
-\[\mathbf{X} = [x,\ y,\ z,\ v_x,\ v_y,\ v_z,\ \varphi,\ \theta,\ \psi,\ p,\ q,\ r]^T\]</div>
+\[\mathbf{x} =
+\begin{bmatrix}
+x &amp; y &amp; z &amp;
+v_x &amp; v_y &amp; v_z &amp;
+\varphi &amp; \theta &amp; \psi &amp;
+p &amp; q &amp; r
+\end{bmatrix}^T\]</div>
 <p>Where:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(x, y, z\)</span>: position of the quadcopter in the inertial frame [m]</p></li>
 <li><p><span class="math notranslate nohighlight">\(v_x, v_y, v_z\)</span>: linear velocity components in the inertial frame [m/s]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\varphi\)</span> (phi): roll angle — rotation about the body X-axis [rad]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\theta\)</span> (theta): pitch angle — rotation about the body Y-axis [rad]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\psi\)</span> (psi): yaw angle — rotation about the body Z-axis [rad]</p></li>
-<li><p><span class="math notranslate nohighlight">\(p, q, r\)</span>: angular rate components about the body X, Y, Z axes respectively [rad/s]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\varphi, \theta, \psi\)</span> are three Euler angles representing roll, pitch, and yaw respectively [<span class="math notranslate nohighlight">\(rad\)</span>]</p></li>
+<li><p><span class="math notranslate nohighlight">\(p, q, r\)</span>: angular rate components about the body x, y, z axes respectively [rad/s]</p></li>
 </ul>
 </section>
 <section id="Controls">
 <h3>Controls<a class="headerlink" href="#Controls" title="Link to this heading">#</a></h3>
 <p>The four control inputs are:</p>
 <div class="math notranslate nohighlight">
-\[\mathbf{U} = [F,\ \tau_\varphi,\ \tau_\theta,\ \tau_\psi]^T\]</div>
+\[\mathbf{U} = [T,\ \tau_x,\ \tau_y,\ \tau_z]^T\]</div>
 <p>Where:</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(F\)</span>: total thrust force produced by all four rotors combined [N]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_\varphi\)</span>: roll torque — differential thrust between left and right motors [N·m]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_\theta\)</span>: pitch torque — differential thrust between front and rear motors [N·m]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_\psi\)</span>: yaw torque — differential drag torque from counter-rotating motor pairs [N·m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span>: total thrust force produced by all four rotors combined [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_x\)</span>: roll torque — differential thrust between left and right motors [N·m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_y\)</span>: pitch torque — differential thrust between front and rear motors [N·m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_z\)</span>: yaw torque — differential drag torque from counter-rotating motor pairs [N·m]</p></li>
 </ul>
 </section>
 <section id="Measurements">
@@ -651,9 +665,8 @@ document.write(`
 <hr class="docutils" />
 <p>The quadcopter starts on the ground stationary level. A <code class="docutils literal notranslate"><span class="pre">quad</span></code> <a class="reference external" href="https://c4dynamics.github.io/c4dynamics/api/states.lib.rigidbody.html">object</a> initializes the state, stores every sample during the simulation, and provides history retrieval for plotting and metrics via <code class="docutils literal notranslate"><span class="pre">quad.data()</span></code>.</p>
 </section>
-</section>
 <section id="Reference-Frame">
-<h2>Reference Frame<a class="headerlink" href="#Reference-Frame" title="Link to this heading">#</a></h2>
+<h3>Reference Frame<a class="headerlink" href="#Reference-Frame" title="Link to this heading">#</a></h3>
 <div class="line-block">
 <div class="line">In this work we adopt the <em>FRD</em> (front-right-down) for the body referece frame and <em>ENU</em> (east-north-up) for the inertial frame (see figure 1).</div>
 <div class="line">In this body frame convention, the thurst acts along the negative body z-axis (<span class="math notranslate nohighlight">\(-z_b\)</span>).</div>
@@ -666,22 +679,23 @@ document.write(`
 <div class="line">Yaw torque arises from the reaction torques of the rotors, with clockwise propeller causes a counter-clockwise moment on the quadcopter.</div>
 </div>
 <div style="text-align: center;"><p><img alt="alt text" src="../../_images/quad_frame.png" /></p>
-<figcaption><p>Figure 1: Reference systems. Inertial system: ENU (east, north, up). Body frame: (forward, right, down). Positive rotation about an axis is given by curling the right-hand fingers. Propellers rotation: 1: CCW (counter=clockwise) , 2: CCW, 3: CW, 4: CW.</p>
-</figcaption></div><section id="Dynamics">
+<figcaption><p>Figure 1: Reference systems. Inertial system: ENU (east, north, up). Body frame: (forward, right, down). Positive rotation about an axis is given by curling the right-hand fingers. Propellers rotation: 1: CCW (counter-clockwise) , 2: CCW, 3: CW, 4: CW.</p>
+</figcaption></div></section>
+<section id="Dynamics">
 <h3>Dynamics<a class="headerlink" href="#Dynamics" title="Link to this heading">#</a></h3>
 <p>The quadcopter is modeled by the full nonlinear Newton-Euler equations.</p>
 <p><strong>Translational dynamics</strong> (inertial frame):</p>
 <div class="math notranslate nohighlight">
-\[m \ddot{\mathbf{r}} = \mathbf{F}_{thrust} + \mathbf{F}_{drag} + \mathbf{F}_{gravity}\]</div>
+\[m \ddot{\mathbf{r}} = T + \mathbf{F}_{drag} + \mathbf{F}_{gravity}\]</div>
 <p>Where:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(m\)</span>: total mass of the quadcopter [kg]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\ddot{\mathbf{r}}\)</span>: linear acceleration vector in the inertial frame [m/s²]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\mathbf{F}_{thrust}\)</span>: total rotor thrust force, projected from body frame to inertial frame [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span>: total rotor thrust force, projected from body frame to inertial frame [N]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathbf{F}_{drag}\)</span>: aerodynamic drag force, proportional to velocity [N]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathbf{F}_{gravity}\)</span>: gravitational force acting downward on the quadcopter [N]</p></li>
 </ul>
-<p>The thrust <span class="math notranslate nohighlight">\(F\)</span> acts along <span class="math notranslate nohighlight">\(-Z_b\)</span> and is projected to the inertial frame via the ZYX rotation matrix.</p>
+<p>The thrust <span class="math notranslate nohighlight">\(T\)</span> acts along <span class="math notranslate nohighlight">\(-Z_b\)</span> and is projected to the inertial frame via the <span class="math notranslate nohighlight">\(ZYX\)</span> rotation matrix.</p>
 <p><strong>Rotational dynamics</strong> (Euler’s equations in body frame):</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{I}\dot{\boldsymbol{\omega}} + \boldsymbol{\omega} \times \mathbf{I}\boldsymbol{\omega} = \boldsymbol{\tau}\]</div>
@@ -691,7 +705,7 @@ document.write(`
 <li><p><span class="math notranslate nohighlight">\(\dot{\boldsymbol{\omega}}\)</span>: angular acceleration vector in the body frame [rad/s²]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{\omega} = [p, q, r]^T\)</span>: angular velocity vector in the body frame [rad/s]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\boldsymbol{\omega} \times \mathbf{I}\boldsymbol{\omega}\)</span>: gyroscopic (Coriolis) term arising from the rotating body frame — couples the three rotation axes</p></li>
-<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\tau} = [\tau_\varphi,\ \tau_\theta,\ \tau_\psi]^T\)</span>: torque vector produced by differential rotor thrust [N·m]. A gyroscopic coupling term from rotor angular momentum is also included.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\boldsymbol{\tau} = [\tau_x,\ \tau_y,\ \tau_z]^T\)</span>: torque vector produced by differential rotor thrust [N·m]. A gyroscopic coupling term from rotor angular momentum is also included.</p></li>
 </ul>
 <div class="line-block">
 <div class="line">The <code class="docutils literal notranslate"><span class="pre">dynamics(t,</span> <span class="pre">y,</span> <span class="pre">quad,</span> <span class="pre">rotor_speeds)</span></code> function computes the 12 state derivatives.</div>
@@ -701,8 +715,9 @@ document.write(`
 </section>
 <section id="Config">
 <h3>Config<a class="headerlink" href="#Config" title="Link to this heading">#</a></h3>
+<p>The config lives in <code class="docutils literal notranslate"><span class="pre">c4dynamics/models/quad.py</span></code>. It’s rewritten here for convenience, for anyone who wants to experiment with or edit the params.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quadcopter</span> <span class="o">=</span> <span class="p">{</span>
@@ -710,7 +725,7 @@ document.write(`
     <span class="s1">&#39;g&#39;</span>  <span class="p">:</span> <span class="mf">9.81</span><span class="p">,</span>       <span class="c1"># gravity [m/s^2]</span>
     <span class="s1">&#39;l&#39;</span>  <span class="p">:</span> <span class="mf">0.225</span><span class="p">,</span>      <span class="c1"># arm length — center to motor [m]</span>
     <span class="s1">&#39;kT&#39;</span> <span class="p">:</span> <span class="mf">2.98e-6</span><span class="p">,</span>    <span class="c1"># thrust coefficient  [N/(rad/s)^2]</span>
-    <span class="s1">&#39;kQ&#39;</span> <span class="p">:</span> <span class="mf">0.0382</span><span class="p">,</span>     <span class="c1"># torque coefficient  [N.m/(rad/s)^2]</span>
+    <span class="s1">&#39;kQ&#39;</span> <span class="p">:</span> <span class="mf">0.0382</span> <span class="o">*</span> <span class="mf">2.98e-6</span><span class="p">,</span>  <span class="c1"># torque coefficient [N.m/(rad/s)^2] = gamma * kT, gamma = kQ/kT ~ 3.8 cm yaw-reaction lever</span>
     <span class="s1">&#39;Ixx&#39;</span><span class="p">:</span> <span class="mf">4.856e-3</span><span class="p">,</span>   <span class="c1"># roll  inertia [kg.m^2]</span>
     <span class="s1">&#39;Iyy&#39;</span><span class="p">:</span> <span class="mf">4.856e-3</span><span class="p">,</span>   <span class="c1"># pitch inertia [kg.m^2]</span>
     <span class="s1">&#39;Izz&#39;</span><span class="p">:</span> <span class="mf">8.801e-3</span><span class="p">,</span>   <span class="c1"># yaw   inertia [kg.m^2]</span>
@@ -738,8 +753,8 @@ document.write(`
 <p>Where:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(x_{ref}, y_{ref}, z_{ref}\)</span>: desired position the quadcopter must track [m]</p></li>
-<li><p><span class="math notranslate nohighlight">\(A\)</span>: trajectory amplitude in the X direction [m]</p></li>
-<li><p><span class="math notranslate nohighlight">\(B\)</span>: trajectory amplitude in the Y direction [m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(A\)</span>: trajectory amplitude in the x direction [m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(B\)</span>: trajectory amplitude in the y direction [m]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\omega\)</span>: angular frequency of the trajectory [rad/s]; period <span class="math notranslate nohighlight">\(= 2\pi/\omega\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\tau = t - t_{takeoff}\)</span>: time elapsed since the <em>figure-8</em> phase started [s]</p></li>
 <li><p><span class="math notranslate nohighlight">\(t_{takeoff}\)</span>: time at which the <em>figure-8</em> phase begins [s]</p></li>
@@ -757,10 +772,10 @@ document.write(`
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">A</span></code></p></td>
-<td><p>Half-width of the <em>figure-8</em> in the X direction [m]. Larger values mean a wider trajectory.</p></td>
+<td><p>Half-width of the <em>figure-8</em> in the <span class="math notranslate nohighlight">\(x\)</span> direction [m]. Larger values mean a wider trajectory.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
-<td><p>Half-width in the Y direction [m]. Controls the “height” of each lobe of the <em>figure-8</em>.</p></td>
+<td><p>Half-width in the <span class="math notranslate nohighlight">\(y\)</span> direction [m]. Controls the “height” of each lobe of the <em>figure-8</em>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">omega</span></code></p></td>
 <td><p>Angular frequency [rad/s]. Controls how fast the quadcopter flies the path. Period = <span class="math notranslate nohighlight">\(2\pi/\omega\)</span>.</p></td>
@@ -784,15 +799,15 @@ document.write(`
 <tbody>
 <tr class="row-even"><td><p><strong>Takeoff</strong></p></td>
 <td><p>0 — 8s</p></td>
-<td><p>Z rises from 0 to <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> on a smooth S-curve</p></td>
+<td><p><span class="math notranslate nohighlight">\(z\)</span> rises from 0 to <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> on a smooth S-curve</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>Figure-8</strong></p></td>
 <td><p>8s — (end-8s)</p></td>
-<td><p>X/Y track the Lissajous at constant altitude</p></td>
+<td><p><span class="math notranslate nohighlight">\(x/y\)</span> track the Lissajous at constant altitude</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>Landing</strong></p></td>
 <td><p>last 8s</p></td>
-<td><p>X/Y return to origin, Z descends to 0</p></td>
+<td><p><span class="math notranslate nohighlight">\(x/y\)</span> return to origin, <span class="math notranslate nohighlight">\(z\)</span> descends to 0</p></td>
 </tr>
 </tbody>
 </table>
@@ -804,14 +819,14 @@ document.write(`
 <section id="id1">
 <h3>Config<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trajectory</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;A&#39;</span>    <span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>    <span class="c1"># figure-8 X amplitude [m]</span>
-    <span class="s1">&#39;B&#39;</span>    <span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>    <span class="c1"># figure-8 Y amplitude [m]</span>
+    <span class="s1">&#39;A&#39;</span>    <span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>    <span class="c1"># figure-8 x amplitude [m]</span>
+    <span class="s1">&#39;B&#39;</span>    <span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>    <span class="c1"># figure-8 y amplitude [m]</span>
     <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>    <span class="c1"># angular frequency [rad/s]  (period ~ 62.8 s)</span>
-    <span class="s1">&#39;z_ref&#39;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>    <span class="c1"># hover altitude [m]</span>
+    <span class="s1">&#39;z_ref&#39;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>    <span class="c1"># hover altitude [m]</span>
     <span class="s1">&#39;t_end&#39;</span><span class="p">:</span> <span class="mf">90.0</span><span class="p">,</span>   <span class="c1"># total simulation time [s]</span>
 <span class="p">}</span>
 </pre></div>
@@ -837,7 +852,7 @@ document.write(`
 <tr class="row-even"><td><p><strong>Outer</strong> — Position</p></td>
 <td><p>50 Hz</p></td>
 <td><p>Position error <span class="math notranslate nohighlight">\((x, y, z)\)</span></p></td>
-<td><p>Desired angles <span class="math notranslate nohighlight">\(\varphi_d, \theta_d\)</span> + thrust <span class="math notranslate nohighlight">\(F\)</span></p></td>
+<td><p>Desired angles <span class="math notranslate nohighlight">\(\varphi_d, \theta_d\)</span> + thrust <span class="math notranslate nohighlight">\(T\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>Middle</strong> — Attitude</p></td>
 <td><p>100 Hz</p></td>
@@ -847,7 +862,7 @@ document.write(`
 <tr class="row-even"><td><p><strong>Inner</strong> — Rate</p></td>
 <td><p>200 Hz</p></td>
 <td><p>Rate error <span class="math notranslate nohighlight">\((p, q, r)\)</span></p></td>
-<td><p>Torques <span class="math notranslate nohighlight">\((\tau_\varphi, \tau_\theta, \tau_\psi)\)</span></p></td>
+<td><p>Torques <span class="math notranslate nohighlight">\((\tau_x, \tau_y, \tau_z)\)</span></p></td>
 </tr>
 </tbody>
 </table>
@@ -873,16 +888,16 @@ document.write(`
 </section>
 <section id="Control-Allocation">
 <h3>Control Allocation<a class="headerlink" href="#Control-Allocation" title="Link to this heading">#</a></h3>
-<p>The motor layout is (x) configuration.</p>
-<p>The four control inputs <span class="math notranslate nohighlight">\([F, \tau_\varphi, \tau_\theta, \tau_\psi]\)</span> are mapped to individual rotor speeds by inverting the thrust-torque mixing matrix:</p>
+<p>The motor layout is (<span class="math notranslate nohighlight">\(X\)</span>) configuration.</p>
+<p>The four control inputs <span class="math notranslate nohighlight">\([T, \tau_x, \tau_y, \tau_z]\)</span> are mapped to individual rotor speeds by inverting the thrust-torque mixing matrix:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\begin{bmatrix} \Omega_1^2 \\ \Omega_2^2 \\ \Omega_3^2 \\ \Omega_4^2 \end{bmatrix} = \mathbf{\Gamma}^{-1} \begin{bmatrix} F \\ \tau_\varphi \\ \tau_\theta \\ \tau_\psi \end{bmatrix}\end{split}\]</div>
+\[\begin{split}\begin{bmatrix} \Omega_1^2 \\ \Omega_2^2 \\ \Omega_3^2 \\ \Omega_4^2 \end{bmatrix} = \mathbf{\Gamma}^{-1} \begin{bmatrix} T \\ \tau_x \\ \tau_y \\ \tau_z \end{bmatrix}\end{split}\]</div>
 <p>Where:</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\Omega_1, \Omega_2, \Omega_3, \Omega_4\)</span>: individual rotor angular speeds [rad/s]</p></li>
 <li><p><span class="math notranslate nohighlight">\(\mathbf{\Gamma}^{-1}\)</span>: inverse of the thrust-torque mixing matrix — maps desired thrust and torques to individual rotor speeds</p></li>
-<li><p><span class="math notranslate nohighlight">\(F\)</span>: total desired thrust [N]</p></li>
-<li><p><span class="math notranslate nohighlight">\(\tau_\varphi, \tau_\theta, \tau_\psi\)</span>: desired roll, pitch, and yaw torques [N·m]</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span>: total desired thrust [N]</p></li>
+<li><p><span class="math notranslate nohighlight">\(\tau_x, \tau_y, \tau_z\)</span>: desired roll, pitch, and yaw torques [N·m]</p></li>
 </ul>
 <p>The normalized (geometric factors are handled separately) mixer matrix <span class="math notranslate nohighlight">\(\mathbf{\Gamma}^{-1}\)</span> for an x configuration with prepellents 1, 2 <em>CCW</em> and 3, 4 <em>CW</em> is given by:</p>
 <div class="math notranslate nohighlight">
@@ -900,8 +915,9 @@ document.write(`
 </section>
 <section id="id2">
 <h3>Config<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p>The config lives in <code class="docutils literal notranslate"><span class="pre">c4dynamics/controllers/controller_config.py</span></code>. It’s rewritten here for convenience, for anyone who wants to experiment with or edit the params.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">controller</span> <span class="o">=</span> <span class="p">{</span>
@@ -955,7 +971,7 @@ document.write(`
 <section id="id3">
 <h3>Config<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span> <span class="o">=</span> <span class="p">{</span>
@@ -969,7 +985,7 @@ document.write(`
 <section id="Main-Loop">
 <h3>Main Loop<a class="headerlink" href="#Main-Loop" title="Link to this heading">#</a></h3>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># plug all the config files for the simulation entry:</span>
@@ -986,11 +1002,11 @@ document.write(`
 <section id="Run-Simulation">
 <h3>Run Simulation<a class="headerlink" href="#Run-Simulation" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">quad</span> <span class="o">=</span> <span class="n">run_fig8_pid</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</pre></div>
+<br/></pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -999,6 +1015,10 @@ document.write(`
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Simulation start  |  tf = 90.0 s  |  dt = 0.005 s
+
+<span class="ansi-yellow-intense-fg">Quadcopter hit the ground at t=89.455 s (z=-0.0009 m); stopping simulation.
+</span>To suppress c4dynamics&#39; warnings, run: import warnings,import c4dynamics as c4d, warnings.simplefilter(&#39;ignore&#39;, c4d.c4warn)
+ (File: C:\Users\zivme\Dropbox\c4dynamics\c4dynamics\controllers\quad_pid.py, Line: 790)
 Simulation complete.
 </pre></div></div>
 </div>
@@ -1011,8 +1031,8 @@ Simulation complete.
 <h3>What to Expect<a class="headerlink" href="#What-to-Expect" title="Link to this heading">#</a></h3>
 <p>A well-tuned cascade <em>PID</em> on this trajectory should show:</p>
 <ul class="simple">
-<li><p><strong>Position</strong> — X and Y closely follow the sinusoidal references. Small amplitude and phase lag are normal.</p></li>
-<li><p><strong>Altitude</strong> — Z rises sharply during takeoff, holds <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> with very small deviation, and descends smoothly.</p></li>
+<li><p><strong>Position</strong> — <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> closely follow the sinusoidal references. Small amplitude and phase lag are normal.</p></li>
+<li><p><strong>Altitude</strong> — <span class="math notranslate nohighlight">\(z\)</span> rises sharply during takeoff, holds <code class="docutils literal notranslate"><span class="pre">z_ref</span></code> with very small deviation, and descends smoothly.</p></li>
 <li><p><strong>Euler angles</strong> — roll and pitch stay within <span class="math notranslate nohighlight">\(±15°\)</span>. Yaw remains near zero.</p></li>
 <li><p><strong>3D trajectory</strong> — a clean takeoff lobe, the <em>figure-8</em> loops, and a straight descent to origin.</p></li>
 </ul>
@@ -1021,7 +1041,7 @@ Simulation complete.
 <section id="Trajectories-and-Angles">
 <h3>Trajectories and Angles<a class="headerlink" href="#Trajectories-and-Angles" title="Link to this heading">#</a></h3>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plot_results</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;trajectory&#39;</span><span class="p">])</span>
@@ -1039,7 +1059,7 @@ Simulation complete.
 <section id="Tracking-Metrics">
 <h3>Tracking Metrics<a class="headerlink" href="#Tracking-Metrics" title="Link to this heading">#</a></h3>
 <div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code> computes <em>RMSE</em> for <span class="math notranslate nohighlight">\(X, Y, Z\)</span> tracking over the <em>figure-8</em> phase only.</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">compute_metrics()</span></code> computes <em>RMSE</em> for <span class="math notranslate nohighlight">\(x, y, z\)</span> tracking over the <em>figure-8</em> phase only.</div>
 <div class="line">Normalized <em>RMSE</em> expresses tracking error as a percentage of trajectory amplitude.</div>
 </div>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1062,7 +1082,7 @@ Simulation complete.
 </table>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">quad</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">)</span>
@@ -1070,8 +1090,8 @@ Simulation complete.
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">45</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;   TRACKING PERFORMANCE METRICS&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">45</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE x : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_x&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_x&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% of X amplitude)&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE y : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_y&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_y&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% of Y amplitude)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE x : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_x&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_x&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% of x amplitude)&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE y : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_y&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_y&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">% of y amplitude)&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  RMSE z : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;rmse_z&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="s1"> m  (</span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;norm_z&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">% of altitude)&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  Max altitude deviation : </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;max_z_dev&quot;</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> cm&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">45</span><span class="p">)</span>
@@ -1086,10 +1106,10 @@ Simulation complete.
 =============================================
    TRACKING PERFORMANCE METRICS
 =============================================
-  RMSE x : 0.1992 m  (5.0% of X amplitude)
-  RMSE y : 0.3831 m  (19.2% of Y amplitude)
-  RMSE z : 0.002137 m  (0.142% of altitude)
-  Max altitude deviation : 2.53 cm
+  RMSE x : 0.1991 m  (5.0% of x amplitude)
+  RMSE y : 0.3830 m  (19.2% of y amplitude)
+  RMSE z : 0.007003 m  (0.140% of altitude)
+  Max altitude deviation : 8.42 cm
 =============================================
 </pre></div></div>
 </div>
@@ -1109,20 +1129,20 @@ Simulation complete.
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../mpc_steering/mpc_steering.html"
+       href="../../tutorials/introduction_guide.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Vehicle Steering - Model Predictive Control</p>
+        <p class="prev-next-title">Interactive Guide to State Space and State Objects Modeling</p>
       </div>
     </a>
     <a class="right-next"
-       href="../learning_controller/learning_controller.html"
+       href="../ekf_estimation/quad_ekf.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Neural Learning Control for Online Uncertain Dynamics Estimation</p>
+        <p class="prev-next-title">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1150,9 +1170,7 @@ Simulation complete.
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#State-Variables">State Variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Controls">Controls</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Measurements">Measurements</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Reference-Frame">Reference Frame</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Dynamics">Dynamics</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Config">Config</a></li>
 </ul>
@@ -1215,7 +1233,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Jul 22, 2026.
+  Last updated on Sep 02, 2026.
   <br/>
 </p>
   </div>

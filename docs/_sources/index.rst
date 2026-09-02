@@ -237,11 +237,12 @@ The documentation is organized as follows:
   :caption: Use Cases
   :hidden:
 
+  programs/pid_cascade/quadcopter_pid.ipynb
+  programs/ekf_estimation/quad_ekf.ipynb
   programs/pn_guidance/dof6sim.ipynb
   programs/ballistic_ekf/ballistic_coefficient.ipynb
-  programs/car_tracker/car_tracker.ipynb
   programs/mpc_steering/mpc_steering.ipynb
-  programs/pid_cascade/quadcopter_pid.ipynb
+  programs/car_tracker/car_tracker.ipynb
   programs/learning_controller/learning_controller.ipynb
 
 

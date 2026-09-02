@@ -66,7 +66,7 @@
     <link rel="prev" title="c4dynamics.filters.kalman.kalman.predict" href="c4dynamics.filters.kalman.kalman.predict.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 02, 2026"/>
   </head>
   
   
@@ -208,14 +208,17 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
+
+
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../../../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
-<li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/learning_controller/learning_controller.html">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
 
 
@@ -287,6 +290,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../sensors.navigation.gps.html">GPS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../gps/c4dynamics.sensors.navigation.gps.measure.html">c4dynamics.sensors.navigation.gps.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../sensors.navigation.imu.html">IMU</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../imu/c4dynamics.sensors.navigation.imu.measure.html">c4dynamics.sensors.navigation.imu.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../sensors.navigation.magnetometer.html">Magnetometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html">c4dynamics.sensors.navigation.magnetometer.measure</a></li>
 </ul>
 </details></li>
 </ul>
@@ -518,21 +533,39 @@ document.write(`
 <h1>c4dynamics.filters.kalman.kalman.update<a class="headerlink" href="#c4dynamics-filters-kalman-kalman-update" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="c4dynamics.filters.kalman.kalman.update">
-<span class="sig-prename descclassname"><span class="pre">kalman.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/c4dynamics/filters/kalman.html#kalman.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.filters.kalman.kalman.update" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">kalman.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">innov</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/c4dynamics/filters/kalman.html#kalman.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.filters.kalman.kalman.update" title="Link to this definition">#</a></dt>
 <dd><p>Updates (corrects) the state estimate based on the given measurements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>numpy.ndarray</em>) – Measurement vector.</p></li>
+<li><p><strong>z</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Measurement vector. Required unless <cite>innov</cite> is provided directly.</p></li>
 <li><p><strong>R</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Measurement noise covariance matrix. Defaults to None.</p></li>
+<li><p><strong>hx</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Predicted measurement, i.e. h(x), used to form the innovation
+as <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">-</span> <span class="pre">hx</span></code>. Defaults to the linear prediction <code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">X</span></code>.
+Useful for a nonlinear measurement function whose output does
+not equal <code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">X</span></code> (as in <a class="reference internal" href="../../filters.ekf.html#c4dynamics.filters.ekf.ekf" title="c4dynamics.filters.ekf.ekf"><code class="xref py py-class docutils literal notranslate"><span class="pre">ekf</span></code></a>).
+Ignored if <cite>innov</cite> is provided directly.</p></li>
+<li><p><strong>innov</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – The innovation (measurement residual) itself, overriding the
+default <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">-</span> <span class="pre">hx</span></code>. Use this when the residual is not a plain
+subtraction, for example a circular (angle-wrapped) measurement.
+<cite>z</cite> is not required when <cite>innov</cite> is given.</p></li>
+<li><p><strong>gate</strong> (<em>float</em><em>, </em><em>optional</em>) – Chi-squared gating threshold on the normalized innovation
+squared (NIS = <code class="docutils literal notranslate"><span class="pre">innov.T</span> <span class="pre">&#64;</span> <span class="pre">inv(S)</span> <span class="pre">&#64;</span> <span class="pre">innov</span></code>, with
+<code class="docutils literal notranslate"><span class="pre">S</span> <span class="pre">=</span> <span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">P</span> <span class="pre">&#64;</span> <span class="pre">H.T</span> <span class="pre">+</span> <span class="pre">R</span></code>). If the NIS exceeds <cite>gate</cite>, the update
+is rejected: <cite>X</cite> and <cite>P</cite> are left unchanged and <cite>update</cite>
+returns <cite>None</cite>. Defaults to <cite>None</cite> (no gating).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>K</strong> (<em>numpy.ndarray</em>) – Kalman gain.</p>
+<dd class="field-even"><p><strong>K</strong> (<em>numpy.ndarray or None</em>) – Kalman gain, or <cite>None</cite> if the update was rejected by <cite>gate</cite>,
+or if <code class="docutils literal notranslate"><span class="pre">S</span> <span class="pre">=</span> <span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">P</span> <span class="pre">&#64;</span> <span class="pre">H.T</span> <span class="pre">+</span> <span class="pre">R</span></code> is numerically singular (in
+which case <cite>X</cite> and <cite>P</cite> are likewise left unchanged, exactly
+as for a gate rejection).</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ValueError</strong> – If the number of elements in <cite>z</cite> does not match
+<li><p><strong>ValueError</strong> – If neither <cite>z</cite> nor <cite>innov</cite> is provided.</p></li>
+<li><p><strong>ValueError</strong> – If the number of elements in <cite>z</cite> (or <cite>innov</cite>) does not match
     the number of rows in the measurement matrix H.</p></li>
 <li><p><strong>ValueError</strong> – If <cite>R</cite> is missing (neither provided
     during construction
@@ -673,7 +706,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Jul 22, 2026.
+  Last updated on Sep 02, 2026.
   <br/>
 </p>
   </div>

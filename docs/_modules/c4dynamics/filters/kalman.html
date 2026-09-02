@@ -63,7 +63,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Jul 22, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 02, 2026"/>
   </head>
   
   
@@ -207,14 +207,17 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Use Cases</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
+
+
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
 
 
-<li class="toctree-l1"><a class="reference internal" href="../../../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/mpc_steering/mpc_steering.html">Vehicle Steering - Model Predictive Control</a></li>
 
-<li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../programs/car_tracker/car_tracker.html">Car Tracker – YOLO Detector and Kalman Filter</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/learning_controller/learning_controller.html">Neural Learning Control for Online Uncertain Dynamics Estimation</a></li>
 
 
@@ -286,6 +289,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../api/generated/radar/c4dynamics.sensors.radar.radar.bias.html">c4dynamics.sensors.radar.radar.bias</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api/generated/radar/c4dynamics.sensors.radar.radar.scale_factor.html">c4dynamics.sensors.radar.radar.scale_factor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../api/generated/radar/c4dynamics.sensors.radar.radar.measure.html">c4dynamics.sensors.radar.radar.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/sensors.navigation.gps.html">GPS</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/gps/c4dynamics.sensors.navigation.gps.measure.html">c4dynamics.sensors.navigation.gps.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/sensors.navigation.imu.html">IMU</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/imu/c4dynamics.sensors.navigation.imu.measure.html">c4dynamics.sensors.navigation.imu.measure</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/sensors.navigation.magnetometer.html">Magnetometer</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html">c4dynamics.sensors.navigation.magnetometer.measure</a></li>
 </ul>
 </details></li>
 </ul>
@@ -506,6 +521,13 @@ document.write(`
 <span class="sd">        Process noise covariance matrix. Defaults to None.</span>
 <span class="sd">    R : numpy.ndarray, optional</span>
 <span class="sd">        Measurement noise covariance matrix. Defaults to None.</span>
+<span class="sd">    P_jitter : float, optional</span>
+<span class="sd">        If provided, `P` is symmetrized and floored by `P_jitter` times</span>
+<span class="sd">        the identity after every `predict`/`update` that modifies it</span>
+<span class="sd">        (skipped in `steadystate` mode, where `P` never changes). This</span>
+<span class="sd">        guards against floating-point roundoff eroding `P`&#39;s symmetry or</span>
+<span class="sd">        positive-definiteness over many cycles; it is not a substitute for</span>
+<span class="sd">        a correct process/measurement model. Defaults to `None` (off).</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    =====</span>
@@ -675,7 +697,6 @@ document.write(`
 
     <span class="n">_Kinf</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">_nonlinearF</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">_nonlinearH</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -687,6 +708,7 @@ document.write(`
         <span class="n">P0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">Q</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">R</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">P_jitter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1">#</span>
         <span class="c1"># P0 is mandatory and it is either the initial state covariance matrix itself or</span>
@@ -774,6 +796,7 @@ document.write(`
                     <span class="c1"># square matrix</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P0</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_P_jitter</span> <span class="o">=</span> <span class="n">P_jitter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Pdata</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="kalman.predict">
@@ -893,6 +916,8 @@ document.write(`
                 <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P_jitter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stabilize_P</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nonlinearF</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
@@ -915,29 +940,74 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">@</span> <span class="n">u</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_stabilize_P</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Symmetrize `P` and add a small positive-definite floor to its</span>
+<span class="sd">        diagonal (``P &lt;- 0.5*(P + P.T) + P_jitter * I``).</span>
+
+<span class="sd">        Defensive covariance hygiene: floating-point roundoff accumulated</span>
+<span class="sd">        over many `predict`/`update` cycles can erode `P`&#39;s symmetry and</span>
+<span class="sd">        positive-definiteness enough to break a downstream inversion or</span>
+<span class="sd">        `solve()`. This does not correct modeling errors (e.g. an</span>
+<span class="sd">        unmodeled nonlinearity or a stale linearization) -- it only keeps</span>
+<span class="sd">        `P` numerically well-formed. Called automatically, only when</span>
+<span class="sd">        `P_jitter` was set at construction (see `__init__`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P_jitter</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
 <div class="viewcode-block" id="kalman.update">
 <a class="viewcode-back" href="../../../api/generated/kalman/c4dynamics.filters.kalman.kalman.update.html#c4dynamics.filters.kalman.kalman.update">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">R</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">z</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">R</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">innov</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates (corrects) the state estimate based on the given measurements.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z : numpy.ndarray</span>
-<span class="sd">            Measurement vector.</span>
+<span class="sd">        z : numpy.ndarray, optional</span>
+<span class="sd">            Measurement vector. Required unless `innov` is provided directly.</span>
 <span class="sd">        R : numpy.ndarray, optional</span>
 <span class="sd">            Measurement noise covariance matrix. Defaults to None.</span>
+<span class="sd">        hx : numpy.ndarray, optional</span>
+<span class="sd">            Predicted measurement, i.e. h(x), used to form the innovation</span>
+<span class="sd">            as ``z - hx``. Defaults to the linear prediction ``H @ X``.</span>
+<span class="sd">            Useful for a nonlinear measurement function whose output does</span>
+<span class="sd">            not equal ``H @ X`` (as in :class:`ekf &lt;c4dynamics.filters.ekf.ekf&gt;`).</span>
+<span class="sd">            Ignored if `innov` is provided directly.</span>
+<span class="sd">        innov : numpy.ndarray, optional</span>
+<span class="sd">            The innovation (measurement residual) itself, overriding the</span>
+<span class="sd">            default ``z - hx``. Use this when the residual is not a plain</span>
+<span class="sd">            subtraction, for example a circular (angle-wrapped) measurement.</span>
+<span class="sd">            `z` is not required when `innov` is given.</span>
+<span class="sd">        gate : float, optional</span>
+<span class="sd">            Chi-squared gating threshold on the normalized innovation</span>
+<span class="sd">            squared (NIS = ``innov.T @ inv(S) @ innov``, with</span>
+<span class="sd">            ``S = H @ P @ H.T + R``). If the NIS exceeds `gate`, the update</span>
+<span class="sd">            is rejected: `X` and `P` are left unchanged and `update`</span>
+<span class="sd">            returns `None`. Defaults to `None` (no gating).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        K : numpy.ndarray</span>
-<span class="sd">            Kalman gain.</span>
+<span class="sd">        K : numpy.ndarray or None</span>
+<span class="sd">            Kalman gain, or `None` if the update was rejected by `gate`,</span>
+<span class="sd">            or if ``S = H @ P @ H.T + R`` is numerically singular (in</span>
+<span class="sd">            which case `X` and `P` are likewise left unchanged, exactly</span>
+<span class="sd">            as for a gate rejection).</span>
 
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the number of elements in `z` does not match</span>
+<span class="sd">            If neither `z` nor `innov` is provided.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the number of elements in `z` (or `innov`) does not match</span>
 <span class="sd">            the number of rows in the measurement matrix H.</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If `R` is missing (neither provided</span>
@@ -1014,14 +1084,24 @@ document.write(`
         <span class="c1"># this H must be linear, but like F may it be linearized once about an equilibrium point for</span>
         <span class="c1"># the entire process (regular kalman) or at each</span>
         <span class="c1"># iteration about the current state (ekf).</span>
-        <span class="c1"># TODO add Mahalanobis optional test</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;The number of elements in the input z must equal &quot;&quot;&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;the number of rows of the measurement matrix H, &quot;&quot;&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">innov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Either z or innov must be provided.&quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;The number of elements in the input z must equal &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;the number of rows of the measurement matrix H, &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">innov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">innov</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">innov</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;The number of elements in innov must equal &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;the number of rows of the measurement matrix H, &quot;&quot;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">innov</span><span class="p">)</span><span class="si">}</span><span class="s2"> != </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Kinf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">R</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1032,16 +1112,48 @@ document.write(`
 <span class="w">                    </span><span class="sd">&quot;&quot;&quot;or in every call to update() &quot;&quot;&quot;</span>
                 <span class="p">)</span>
 
-            <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">-</span> <span class="n">K</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># A singular S means P (and/or R) has already diverged</span>
+                <span class="c1"># beyond recovery -- e.g. an unbounded covariance from a</span>
+                <span class="c1"># long run of gated-out updates overflowing to inf/nan.</span>
+                <span class="c1"># Reject the update exactly like a failed gate (X and P</span>
+                <span class="c1"># untouched) instead of letting an uncaught LinAlgError</span>
+                <span class="c1"># crash the caller; this mirrors the try/except already</span>
+                <span class="c1"># used below for the gate&#39;s own np.linalg.solve(S, ...).</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Kinf</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># computed lazily below, only if a gate is requested</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nonlinearH</span><span class="p">:</span>
-            <span class="n">hx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
+        <span class="c1"># this H can be expressed as either linear or nonlinear function of x</span>
+        <span class="c1"># (hx), and the residual itself may need to be formed in a</span>
+        <span class="c1"># non-subtractive way (innov), e.g. for a circular measurement.</span>
+        <span class="k">if</span> <span class="n">innov</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">hx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span>
+            <span class="n">innov</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">hx</span>
 
-        <span class="c1"># this H can be expressed as either linear or nonlinear function of x.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">+=</span> <span class="n">K</span> <span class="o">@</span> <span class="p">(</span><span class="n">z</span> <span class="o">-</span> <span class="n">hx</span><span class="p">)</span>  <span class="c1"># type: ignore # nx1 = nxm @ (mx1 - mxn @ nx1)</span>
+        <span class="k">if</span> <span class="n">gate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Chi-squared test (NIS) on the innovation; reject the update</span>
+            <span class="c1"># without touching X or P if it exceeds the gate.</span>
+            <span class="k">if</span> <span class="n">S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">nis</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">innov</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">innov</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">nis</span> <span class="o">&gt;</span> <span class="n">gate</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Kinf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">-</span> <span class="n">K</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P_jitter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stabilize_P</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">+=</span> <span class="n">K</span> <span class="o">@</span> <span class="n">innov</span>  <span class="c1"># type: ignore # nx1 = nxm @ (mx1 - mxn @ nx1)</span>
         <span class="k">return</span> <span class="n">K</span></div>
 
 
@@ -1248,7 +1360,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Jul 22, 2026.
+  Last updated on Sep 02, 2026.
   <br/>
 </p>
   </div>
