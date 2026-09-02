@@ -909,7 +909,7 @@ def plot_gps_dropout(sweep, show=True):
     """
     Two panels: (left) position error vs. time-since-dropout-start, one curve
     per IMU rate, shaded by trial std; (right) RMS position error during the
-    dropout vs.
+    dropout vs. IMU rate.
     """
     import matplotlib.pyplot as plt
 
@@ -960,11 +960,15 @@ def compute_metrics(truth, est, diag, t0=8.0, t1=82.0, verbose=True):
         rmse[n] = float(np.sqrt(np.mean((xt[mask] - xe[mask])**2)))
     nees_mean = float(np.nanmean(diag['nees'][mask]))
     if verbose:
-        print(f"{'state':<8}{'RMSE':>12}")
-        print('-' * 20)
+        units = {'x': 'm', 'y': 'm', 'z': 'm',
+                 'vx': 'm/s', 'vy': 'm/s', 'vz': 'm/s',
+                 'phi': 'rad', 'theta': 'rad', 'psi': 'rad',
+                 'p': 'rad/s', 'q': 'rad/s', 'r': 'rad/s'}
+        print(f"{'state':<8}{'RMSE':>12}   unit")
+        print('-' * 27)
         for n in STATE_NAMES:
-            print(f"{n:<8}{rmse[n]:>12.4f}")
-        print('-' * 20)
+            print(f"{n:<8}{rmse[n]:>12.4f}   {units[n]}")
+        print('-' * 27)
         print(f"{'NEES':<8}{nees_mean:>12.2f}   (ideal ~ 12)")
     return {'rmse': rmse, 'nees_mean': nees_mean}
 
@@ -1080,23 +1084,27 @@ def plot_error_bands(truth, est, diag, states=('x', 'vx', 'phi', 'psi'),
 
 
 def plot_trajectory_3d(truth, est, config, t0=0.0, t1=100.0,
-                       elev=15, azim=-90, z_span=10.0):
+                       elev=20, azim=-90, z_top=8.0, z_span=10.0):
     """Single 3D flight path — reference vs. true vs. estimated — viewed
     nearly edge-on against the x-z plane.
 
     This is the top-left panel of :func:`plot_dashboard` on its own, re-aimed.
     The default view (``azim=-90``) looks along the inertial y axis, so yaw /
-    y-depth collapses and the figure-8 reads as its x-z profile; the small
-    ``elev`` ("pitch") keeps just enough perspective to still see the loop's
-    y extent. The z axis is fixed to ``z_ref +- z_span/2`` (0..10 m by
-    default) so ordinary centimetre-level altitude error isn't visually
-    blown up by an autoscaled axis.
+    y-depth collapses and the figure-8 reads mainly as its x-z profile; the
+    ``elev`` ("pitch") tilts the view about x just enough to still see the
+    loop's y depth. The z axis is capped at ``0..z_top`` (0..8 m by default)
+    so ordinary centimeter-level altitude error isn't visually blown up by an
+    autoscaled axis.
+
+    The figure is 9 in wide (matching the per-channel panels) and the 3D box
+    is zoomed to fill the whole frame — no title bar, no outer margins, legend
+    and axis labels sit inside.
     """
     import matplotlib.pyplot as plt
     from c4dynamics.controllers.quad_pid import position_reference
 
     A, B, omega, z_ref = (config['trajectory']['A'], config['trajectory']['B'],
-                          config['trajectory']['omega'], config['trajectory']['z_ref'])
+                            config['trajectory']['omega'], config['trajectory']['z_ref'])
     t_sim = config['sim']['tf']
 
     t, x_true = truth.data('x'); _, y_true = truth.data('y'); _, z_true = truth.data('z')
@@ -1112,15 +1120,24 @@ def plot_trajectory_3d(truth, est, config, t0=0.0, t1=100.0,
 
     fig = plt.figure(figsize=(9, 6))
     ax = fig.add_subplot(111, projection='3d')
+
     ax.plot(x_ref,  y_ref,  z_ref_hist, 'r--', lw=1.5, label='reference')
     ax.plot(x_true, y_true, z_true,     'b-',  lw=1.5, label='true')
     ax.plot(x_est,  y_est,  z_est,      'C1:', lw=1.8, label='estimated')
-    ax.set_xlabel('X (m)'); ax.set_ylabel('Y (m)'); ax.set_zlabel('Z (m)')
-    ax.set_zlim(z_ref - z_span / 2, z_ref + z_span / 2)
+    # Labels/ticks pulled in tight against the box so they stay inside the frame.
+    ax.set_xlabel('X[m]')
+    ax.set_zlabel('Z[m]')
+    ax.set_zlim(0.0, z_top)
+
     ax.view_init(elev=elev, azim=azim)
     ax.set_title('Flight path:  reference vs. true vs. estimated')
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=9,
+        loc='lower center',
+        bbox_to_anchor=(0.5, 0.02),
+        ncol=4)
     fig.tight_layout()
+    ax.set_box_aspect([3, 1.5, 1.5])
+
     return fig
 
 
