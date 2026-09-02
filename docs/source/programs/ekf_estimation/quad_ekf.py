@@ -228,7 +228,7 @@ H_MAG = np.zeros((1, 12));  H_MAG[0, 8] = 1.0                                   
 
 
 def accel_h(x, quad=None, rotor_speeds=None):
-    """Accelerometer model: body-frame specific force.
+    """ Accelerometer model: body-frame specific force.
 
     Full model: ``f_body = BI @ (a_inertial + [0,0,g])``, where
     ``a_inertial = dynamics(x)[3:6]`` is the actual (gravity-inclusive)
@@ -236,8 +236,8 @@ def accel_h(x, quad=None, rotor_speeds=None):
     body-from-inertial matrix — i.e. this predicts exactly what
     ``imu.measure`` simulates on its accelerometer channel (gravity reaction
     + the vehicle's own drag/thrust-induced acceleration).
-    That match is what
-    lets the accelerometer update carry real information about velocity
+
+    That match is what lets the accelerometer update carry real information about velocity
     instead of being mostly-discarded, R_acc-inflated noise.
 
     Backward-compatible fallback: if ``quad``/``rotor_speeds`` are omitted,
@@ -256,13 +256,13 @@ def accel_h(x, quad=None, rotor_speeds=None):
 
 
 def accel_H(x, quad=None, rotor_speeds=None):
-    """Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12).
+    """ Jacobian ``dh/dx`` of :func:`accel_h` at the current estimate (2 x 12).
 
     Numeric (central differences) when ``quad``/``rotor_speeds`` are given,
-    since the full model routes through dynamics() (DCM/
-    body-frame-drag) and isn't practical to hand-differentiate reliably —
-    same rationale as jacobian_F's Block 2/3. Falls back to the closed-form
-    gravity-only Jacobian otherwise.
+    since the full model routes through dynamics()
+    (DCM/body-frame-drag) and isn't practical to hand-differentiate reliably.
+
+    Falls back to the closed-form gravity-only Jacobian otherwise.
     """
     phi, theta = x[6], x[7]
     if quad is None or rotor_speeds is None:
