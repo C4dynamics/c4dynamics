@@ -153,3 +153,4 @@ c4dynamics/controllers/quad_pid.py
 .gitignore
 docs/source/programs/ekf_estimation/Book1.xlsx
 docs/source/programs/ekf_estimation/~$Book1.xlsx
+docs/source/programs/ekf_estimation/quad_ekf_2.ipynb
