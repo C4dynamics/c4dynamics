@@ -16,7 +16,6 @@ All notable changes to this project will be documented in this file.
 - EKF use case: `ekf_estimation` example program - extended Kalman filter
   state estimation for a quadcopter tracking a figure-8 trajectory,
   including GPS-dropout experiments and an architecture diagram.
-- mountain_car.py: predefined environment for the RL mountain car problem.
 
 ### Changed
 - kalman/ekf: opt-in `P_jitter` covariance stabilization (symmetrize and
@@ -32,7 +31,7 @@ All notable changes to this project will be documented in this file.
 ## [2.3.7] - 2026-07-22
 ### Added
 - an envirorments file for abstracted plant models in learning controller.
-  includes a predefined helicopter class for the learning controller example. 
+  includes a predefined helicopter class for the learning controller example.
 
 
 ## [2.3.6] - 2026-03-03
