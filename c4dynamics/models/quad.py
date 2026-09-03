@@ -21,7 +21,7 @@ independent copy of the same numbers.
 
 For a physically-grounded alternative sourced from a real airframe (PX4's
 default ``iris.sdf``), see the exploratory
-``docs/source/programs/ekf_estimation/iris_quadcopter.py`` -- not yet
+:mod:`c4dynamics.utils.use_cases.iris_quadcopter` -- not yet
 wired into this module, since it uses a more general per-rotor-position
 geometry rather than this model's single scalar arm length.
 """

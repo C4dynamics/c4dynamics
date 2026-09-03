@@ -670,22 +670,19 @@ document.write(`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">urllib</span><span class="w"> </span><span class="kn">import</span>  <span class="n">request</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <br/></pre></div>
 </div>
 </div>
 <div class="line-block">
 <div class="line">__</div>
-<div class="line">Load the controller, engine, and aerodynamics models, developed specifically for this example. These modules can be downloaded <a class="reference external" href="https://raw.githubusercontent.com/C4dynamics/C4dynamics/main/docs/source/programs/pn_guidance/dof6_modules.py">here</a>.</div>
-<div class="line">Download the file and place it in the same directory as this notebook or in any folder included in your Python path. You can use the following snippet to download the file based on your operation system:</div>
+<div class="line">Load the controller, engine, and aerodynamics models, developed specifically for this example. They ship with c4dynamics under <a class="reference external" href="https://github.com/c4dynamics/c4dynamics/blob/main/c4dynamics/utils/use_cases/dof6_modules.py">c4dynamics.utils.use_cases.dof6_modules</a> - import them directly:</div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/pn_guidance/dof6_modules.py&#39;</span><span class="p">,</span> <span class="s1">&#39;dof6_modules.py&#39;</span><span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dof6_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">control_system</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">aerodynamics</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics.utils.use_cases.dof6_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">control_system</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">aerodynamics</span>
 </pre></div>
 </div>
 </div>

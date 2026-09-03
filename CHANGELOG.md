@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Changed
+- use-case example modules now ship with the package under
+  `c4dynamics.utils.use_cases` (`quad_ekf`, `ekf_config`, `iris_quadcopter`,
+  `dof6_modules`). The `quad_ekf` and `dof6sim` notebooks import them
+  directly instead of downloading the file from GitHub at runtime.
 
 
 ## [2.4.0] - 2026-09-03

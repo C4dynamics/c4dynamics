@@ -9,7 +9,7 @@ figure-8 using an estimated state reconstructed from noisy GPS and IMU
 measurements rather than from perfect truth.
 
 It is organised exactly like ``c4dynamics.controllers.quad_pid`` — a single reusable module
-that the notebook (``ekf.ipynb``) drives through a configuration dictionary and
+that the notebook (``quad_ekf.ipynb``) drives through a configuration dictionary and
 a single call to :func:`run_fig8_ekf`.
 
 Design
@@ -51,7 +51,7 @@ Contents
     gps, imu, magnetometer simulated sensors (truth -> measurement)
     ekf_quad              the quadrotor EKF (subclass of c4d.filters.ekf)
     default_ekf_config    reference EKF noise / initialization block
-                           (imported from the sibling ekf_config.py)
+                           (imported from the sibling ekf_config module)
     run_fig8_ekf          single closed-loop estimation-control simulation
     compute_metrics       RMSE (true vs estimated) + filter-consistency (NEES)
     plot_estimation       true-vs-estimated visualisation with +-2 sigma bands
@@ -76,7 +76,7 @@ from c4dynamics.controllers.quad_pid import (dynamics, position_reference,
                                              ground_contact)
 from c4dynamics.sensors.navigation import gps, imu, magnetometer
 from c4dynamics import g_ms2 as g
-from docs.source.programs.ekf_estimation.ekf_config import default_ekf_config
+from c4dynamics.utils.use_cases.ekf_config import default_ekf_config
 EPS = 1e-6
 
 # State-variable names, in the canonical c4dynamics rigidbody order.
@@ -497,7 +497,7 @@ class ekf_quad(c4d.filters.ekf):
 # ============================================================================
 #
 # default_ekf_config() (used below as the ekf_cfg fallback) lives in the
-# sibling ekf_config.py, imported at the top of this module.
+# sibling ekf_config module, imported at the top of this module.
 
 def run_fig8_ekf(
         config, ekf_cfg=None, imu_rate_hz=None, jacobian_stride=1,
@@ -1126,6 +1126,7 @@ def plot_trajectory_3d(truth, est, config, t0=0.0, t1=100.0,
     ax.plot(x_est,  y_est,  z_est,      'C1:', lw=1.8, label='estimated')
     # Labels/ticks pulled in tight against the box so they stay inside the frame.
     ax.set_xlabel('X[m]')
+    ax.set_ylabel('Y[m]')
     ax.set_zlabel('Z[m]')
     ax.set_zlim(0.0, z_top)
 
@@ -1136,7 +1137,7 @@ def plot_trajectory_3d(truth, est, config, t0=0.0, t1=100.0,
         bbox_to_anchor=(0.5, 0.02),
         ncol=4)
     fig.tight_layout()
-    ax.set_box_aspect([3, 1.5, 1.5])
+    ax.set_box_aspect([10, 7, 5])
 
     return fig
 

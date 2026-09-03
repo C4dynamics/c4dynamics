@@ -63,6 +63,10 @@ for dirpath, _, filenames in os.walk(packagefol):
             continue
         if file_name == "printpts.py":
             continue
+        if dirpath.replace("\\", "/").endswith("utils/use_cases"):
+            # supporting modules for the documentation use-case examples --
+            # exercised by their notebooks, not by doctests.
+            continue
         if not file_name.endswith(".py"):
             continue
         if skip_datasets and file_name == "_manager.py":

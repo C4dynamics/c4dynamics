@@ -276,6 +276,22 @@ Real implementations of **guidance, estimation, and control algorithms**
 
     <div class="sim-grid">
 
+    <a href="../programs/pid_cascade/quadcopter_pid.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/fig8_quad.png" class="sim-img">
+        <div class="sim-text">
+            <h3>Cascade PID</h3>
+            <p>Quadcopter figure-8 trajectory tracking</p>
+        </div>
+    </a>
+
+    <a href="../programs/ekf_estimation/quad_ekf.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/quad_ekf_flightpath.png" class="sim-img">
+        <div class="sim-text">
+            <h3>EKF State Estimation</h3>
+            <p>Quadcopter GPS/IMU/MAG sensor fusion</p>
+        </div>
+    </a>
+
     <a href="../programs/pn_guidance/dof6sim.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/missdistance.png" class="sim-img">
         <div class="sim-text">
@@ -292,14 +308,6 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/car_tracker/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_static/drifting_car_snapshot.png" class="sim-img">
-        <div class="sim-text">
-            <h3>YOLO Detector & Kalman Filter</h3>
-            <p>Car tracker</p>
-        </div>
-    </a>
-
     <a href="../programs/mpc_steering/mpc_steering.html" target="_blank" rel="noopener" class="sim-card">
         <img src="../_static/mpc_diagram_thumbnail.png" class="sim-img">
         <div class="sim-text">
@@ -308,11 +316,11 @@ Real implementations of **guidance, estimation, and control algorithms**
         </div>
     </a>
 
-    <a href="../programs/pid_cascade/quadcopter_pid.html" target="_blank" rel="noopener" class="sim-card">
-        <img src="../_static/fig8_quad.png" class="sim-img">
+    <a href="../programs/car_tracker/car_tracker.html" target="_blank" rel="noopener" class="sim-card">
+        <img src="../_static/drifting_car_snapshot.png" class="sim-img">
         <div class="sim-text">
-            <h3>Cascade PID</h3>
-            <p>Quadcopter figure-8 trajectory tracking</p>
+            <h3>YOLO Detector & Kalman Filter</h3>
+            <p>Car tracker</p>
         </div>
     </a>
 
