@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/_icon/c4dlogotext.svg">
+  <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_icon/c4dlogotext.svg">
 </div>
 
 
@@ -74,7 +74,7 @@ Across:
 ---
 
 <div align="center">
-  <img src="https://github.com/c4dynamics/c4dynamics/blob/main/docs/source/_static/the_switch.png">
+  <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/the_switch.png">
 </div>
 
 
@@ -94,13 +94,13 @@ Across:
 | | | |
 |:-:|:-:|:-:|
 | [**Cascade PID**](https://c4dynamics.github.io/c4dynamics/programs/pid_cascade/quadcopter_pid.html) | [**EKF State Estimation**](https://c4dynamics.github.io/c4dynamics/programs/ekf_estimation/quad_ekf.html) | [**6-DOF Simulation**](https://c4dynamics.github.io/c4dynamics/programs/pn_guidance/dof6sim.html) |
-| <img src="docs/source/_static/fig8_quad.png" width="100"> | <img src="docs/source/_static/quad_ekf_flightpath.png" width="100"> | <img src="docs/source/_static/missdistance.png" width="100"> |
+| <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/fig8_quad.png" width="100"> | <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/quad_ekf_flightpath.png" width="100"> | <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/missdistance.png" width="100"> |
 | Quadcopter figure-8 tracking | Quadcopter GPS/IMU/MAG sensor fusion | Proportional navigation guidance |
 | [**Extended Kalman Filter**](https://c4dynamics.github.io/c4dynamics/programs/ballistic_ekf/ballistic_coefficient.html) | [**Model Predictive Control**](https://c4dynamics.github.io/c4dynamics/programs/mpc_steering/mpc_steering.html) | [**YOLO + Kalman Filter**](https://c4dynamics.github.io/c4dynamics/programs/car_tracker/car_tracker.html) |
-| <img src="docs/source/_static/ballistic_trajectory.png" width="100"> | <img src="docs/source/_static/mpc_diagram_thumbnail.png" width="100"> | <img src="docs/source/_static/drifting_car_snapshot.png" width="100"> |
+| <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/ballistic_trajectory.png" width="100"> | <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/mpc_diagram_thumbnail.png" width="100"> | <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/drifting_car_snapshot.png" width="100"> |
 | Ballistic coefficient estimation | Vehicle steering | Vehicle tracking |
 | [**Neural Network based Controller**](https://c4dynamics.github.io/c4dynamics/programs/learning_controller/learning_controller.html) | | |
-| <img src="docs/source/_static/helicopter.png" width="100"> | | |
+| <img src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/_static/helicopter.png" width="100"> | | |
 | Helicopter Learning Controller | | |
 
 
