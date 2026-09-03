@@ -2,7 +2,16 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+
+## [2.4.1] - 2026-09-03
 ### Changed
+- Python compatibility: removed the `<3.13` upper cap on `requires-python`.
+  c4dynamics now supports Python 3.13 (and any later 3.x), which restores
+  installation on Google Colab. CI now also runs the test suite on 3.13.
+- vision dependency: pin `opencv-python<5`. OpenCV 5 removed the Darknet
+  importer that the `yolov3` detector relies on; the cap keeps YOLOv3
+  working on every supported Python version.
 - use-case example modules now ship with the package under
   `c4dynamics.utils.use_cases` (`quad_ekf`, `ekf_config`, `iris_quadcopter`,
   `dof6_modules`). The `quad_ekf` and `dof6sim` notebooks import them

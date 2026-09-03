@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "c4dynamics"
-version = "2.4.0"
+version = "2.4.1"
 description = "Python framework for state-space modeling and algorithm development"
 authors = [{name = "Ziv Meri", email="zivmeri@gmail.com"}]
 readme = "README.md"
-requires-python = ">=3.8, <3.13"
+requires-python = ">=3.8"
 license = "MIT"
 
 dependencies = [
@@ -31,6 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
 ]
 
@@ -47,7 +48,7 @@ include = ["c4dynamics*"]
 vision = [
     "imageio>=2.37.0",
     "natsort>=8.3.1",
-    "opencv-python>=4.11.0.86",
+    "opencv-python>=4.11.0.86,<5",
 ]
 
 dev = [

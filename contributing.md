@@ -6,7 +6,7 @@ Thank you for contributing. This guide explains environment requirements, reposi
 
 ## Supported Environment
 
-* **Python:** 3.8 ≤ Python < 3.13
+* **Python:** Python ≥ 3.8
 * **OS:** Linux, macOS, Windows
 * **GPU:** Not required
 

@@ -17,7 +17,7 @@ setup()
 # # import c4dynamics
 
 # # VERSION = c4dynamics.__version__
-# VERSION = "2.4.0"  # change also in __init__.py and pyproject.toml
+# VERSION = "2.4.1"  # change also in __init__.py and pyproject.toml
 # print(VERSION)
 # # print("did u remember to upgrade the version number??")
 
@@ -46,20 +46,20 @@ setup()
 #         "vision": [
 #             "imageio>=2.37.0",
 #             "natsort>=8.3.1",
-#             "opencv-python>=4.11.0.86",
+#             "opencv-python>=4.11.0.86,<5",
 #         ],
 #         "dev": [
 #             "coverage>=7.0.0",
 #             "imageio>=2.37.0",
 #             "natsort>=8.3.1",
-#             "opencv-python>=4.11.0.86",
+#             "opencv-python>=4.11.0.86,<5",
 #             "nbsphinx>=0.9.3",
 #             "Sphinx>=8.1.3",
 #             "sphinx-book-theme>=1.1.4",
 #             "sphinx_design>=0.6.1",
 #         ],
 #     },
-#     python_requires=">=3.8,<3.13",  # update also in run-tests.yml, readme.md,
+#     python_requires=">=3.8",  # update also in run-tests.yml, readme.md,
 #     # pyproject.yaml, setup_guide.ipynb
 # )
 

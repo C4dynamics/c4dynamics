@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        python-version: ["3.9", "3.10", "3.11", "3.12"] # update also in setup.py, pyprogect.yaml, readme.md, c4dynamics_setup.ipynb
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"] # update also in setup.py, pyprogect.yaml, readme.md, c4dynamics_setup.ipynb
 
     steps:
       - name: Checkout repository
@@ -33,7 +33,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-vision.txt
-          pip install open3d
+          # open3d is optional (only used by rigidbody.animate) and lags new
+          # Python releases; don't fail the run when no wheel is available.
+          pip install open3d || echo "open3d unavailable for Python ${{ matrix.python-version }}; animate tests will be skipped"
 
       - name: List installed packages
         run: pip list

@@ -199,7 +199,7 @@ s.store(t=1)
 
 
 ## Requirements
-- 3.8 <= Python < 3.13
+- Python >= 3.8
 - Required packages are listed in [requirements.txt](requirements.txt)
 
 
