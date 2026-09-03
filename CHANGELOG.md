@@ -2,8 +2,31 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+
+## [2.4.0] - 2026-09-03
 ### Added
-- mountain_car.py: predefined environment for the RL mountain car problem
+- navigation sensors: new `c4dynamics.sensors.navigation` module with `gps`,
+  `imu`, and `magnetometer` models, each carrying its device error model
+  (noise, bias, scale factor) plus `measure()` and `demo()` methods.
+  `gps` gains an `isideal` flag to zero out noise/bias.
+- quadcopter model and controller: new `c4dynamics.models` module with a
+  predefined `quad` (Iris) plant, and new `c4dynamics.controllers` module
+  with a cascade-PID quadcopter controller and its config.
+- EKF use case: `ekf_estimation` example program - extended Kalman filter
+  state estimation for a quadcopter tracking a figure-8 trajectory,
+  including GPS-dropout experiments and an architecture diagram.
+- mountain_car.py: predefined environment for the RL mountain car problem.
+
+### Changed
+- kalman/ekf: opt-in `P_jitter` covariance stabilization (symmetrize and
+  floor `P` after each predict/update).
+- kalman/ekf `update()`: optional chi-squared NIS `gate` to reject
+  outlier measurements, plus `innov`/`hx` arguments for non-subtractive
+  or nonlinear residuals. `update()` now returns `None` when the update
+  is gated out or `S` is numerically singular, instead of raising.
+- expanded navigation sensors documentation (concepts, API reference, and
+  runnable examples under `examples/sensors`).
 
 
 ## [2.3.7] - 2026-07-22

@@ -17,7 +17,7 @@ setup()
 # # import c4dynamics
 
 # # VERSION = c4dynamics.__version__
-# VERSION = "2.3.4"  # change also in __init__.py and pyproject.toml
+# VERSION = "2.4.0"  # change also in __init__.py and pyproject.toml
 # print(VERSION)
 # # print("did u remember to upgrade the version number??")
 
