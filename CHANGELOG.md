@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 
+## [2.4.2] - 2026-09-03
+### Fixed
+- README images now render on PyPI (and any non-GitHub host): the example
+  gallery thumbnails were referenced by repo-relative paths, and the logo
+  and "the switch" figure by GitHub `/blob/` URLs (which serve an HTML
+  page, not the image). All are now absolute `raw.githubusercontent.com`
+  URLs.
+- notebook figures now render on Google Colab: the `quad_ekf` and
+  `setup_guide` notebooks embedded a screenshot as a cell attachment
+  (`attachment:image.png`), which Colab does not support. Each is now a
+  committed PNG referenced by raw URL.
+
+
 ## [2.4.1] - 2026-09-03
 ### Changed
 - Python compatibility: removed the `<3.13` upper cap on `requires-python`.
