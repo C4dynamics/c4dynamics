@@ -477,7 +477,7 @@ document.write(`
 <span class="sd">=============================================</span>
 
 <span class="sd">`c4dynamics.sensors.navigation` provides generic navigation-sensor models</span>
-<span class="sd">(GPS position, IMU gyroscope + accelerometer, magnetometer heading) that map</span>
+<span class="sd">(GPS position, IMU gyroscope + accelerometer, 3-axis magnetometer) that map</span>
 <span class="sd">a *true* state vector to a noisy, biased *measurement* — the pattern used</span>
 <span class="sd">throughout :mod:`c4dynamics.sensors` (compare :class:`radar</span>
 <span class="sd">&lt;c4dynamics.sensors.radar.radar&gt;`, :class:`seeker</span>
@@ -504,7 +504,7 @@ document.write(`
 <span class="sd">  * - :class:`imu &lt;c4dynamics.sensors.navigation.imu&gt;`</span>
 <span class="sd">    - Gyroscope + accelerometer</span>
 <span class="sd">  * - :class:`magnetometer &lt;c4dynamics.sensors.navigation.magnetometer&gt;`</span>
-<span class="sd">    - Heading (yaw) sensor</span>
+<span class="sd">    - 3-axis geomagnetic field sensor</span>
 
 
 <span class="sd">See Also</span>
@@ -1287,23 +1287,44 @@ document.write(`
 <a class="viewcode-back" href="../../../api/sensors.navigation.magnetometer.html#c4dynamics.sensors.navigation.magnetometer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">magnetometer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Magnetometer — heading (yaw) sensor.</span>
+<span class="sd">    Magnetometer — 3-axis geomagnetic field sensor.</span>
 
-<span class="sd">    The :class:`magnetometer` class models a magnetometer that measures the</span>
-<span class="sd">    heading (yaw angle) :math:`\\psi` of a vehicle.  The measurement is</span>
-<span class="sd">    affected by a constant bias and sample-to-sample white Gaussian noise.</span>
+<span class="sd">    The :class:`magnetometer` class models a strapdown 3-axis magnetometer.</span>
+<span class="sd">    It measures the local geomagnetic field vector expressed in the vehicle</span>
+<span class="sd">    **body frame**: a fixed reference field in the navigation frame, rotated</span>
+<span class="sd">    into the body frame by the true attitude, then corrupted by soft-iron and</span>
+<span class="sd">    hard-iron distortion and sample-to-sample white Gaussian noise.</span>
 
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ==========</span>
-<span class="sd">    noise_std : float, optional</span>
-<span class="sd">        Standard deviation of the heading measurement noise, [rad].</span>
-<span class="sd">        Defaults to ``0.05``.</span>
-<span class="sd">    bias : float, optional</span>
-<span class="sd">        Constant heading bias, [rad].  Defaults to ``0``.</span>
+<span class="sd">    noise_std : float or array_like, optional</span>
+<span class="sd">        Standard deviation of the field measurement noise, per body axis, in</span>
+<span class="sd">        the same units as ``field_intensity`` (dimensionless when the field</span>
+<span class="sd">        is left normalized).  A scalar is broadcast to all three axes.</span>
+<span class="sd">        Defaults to ``0.02``.</span>
+<span class="sd">    hard_iron : array_like, optional</span>
+<span class="sd">        Constant additive bias ``[bx, by, bz]`` (hard-iron offset), in the</span>
+<span class="sd">        same units as ``field_intensity``.  Defaults to ``[0, 0, 0]``.</span>
+<span class="sd">    soft_iron : array_like, optional</span>
+<span class="sd">        ``3 x 3`` soft-iron distortion matrix applied to the body-frame field</span>
+<span class="sd">        before the hard-iron offset and the noise.  Defaults to the identity.</span>
+<span class="sd">    field_intensity : float, optional</span>
+<span class="sd">        Total intensity :math:`F` of the reference geomagnetic field.</span>
+<span class="sd">        Defaults to ``1.0`` (the field is returned normalized).  Set a real</span>
+<span class="sd">        value (e.g. ``50e-6`` T or ``50`` for µT) to work in physical units —</span>
+<span class="sd">        ``noise_std`` and ``hard_iron`` then carry the same unit.</span>
+<span class="sd">    inclination : float, optional</span>
+<span class="sd">        Inclination (dip) angle :math:`I` of the reference field, [rad],</span>
+<span class="sd">        positive pointing down.  Defaults to ``np.pi / 3`` (:math:`60^\\circ`,</span>
+<span class="sd">        a typical mid-latitude value).</span>
+<span class="sd">    declination : float, optional</span>
+<span class="sd">        Declination angle :math:`D` of the reference field, [rad], positive</span>
+<span class="sd">        east of north.  Defaults to ``0``.</span>
 <span class="sd">    isideal : bool, optional</span>
-<span class="sd">        If ``True``, overrides ``noise_std`` and ``bias`` to zero, producing</span>
-<span class="sd">        an ideal (noise-free, bias-free) magnetometer. Defaults to ``False``.</span>
+<span class="sd">        If ``True``, overrides ``noise_std`` / ``hard_iron`` / ``soft_iron``</span>
+<span class="sd">        to produce an ideal (noise-free, distortion-free) magnetometer.  The</span>
+<span class="sd">        reference field itself is unaffected.  Defaults to ``False``.</span>
 
 
 <span class="sd">    See Also</span>
@@ -1315,56 +1336,67 @@ document.write(`
 
 <span class="sd">    **Functionality**</span>
 
-<span class="sd">    At each sample the magnetometer returns a heading measurement based on the</span>
-<span class="sd">    true state of the vehicle.  Given the 12-state vector</span>
+<span class="sd">    The reference field is built from its total intensity, inclination and</span>
+<span class="sd">    declination and held fixed in the navigation frame associated with the</span>
+<span class="sd">    state&#39;s 3-2-1 Euler angles (``x`` forward/north, ``y`` right/east, ``z``</span>
+<span class="sd">    down):</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        m_{ref} = F \\cdot</span>
+<span class="sd">            [\\cos I \\cos D,\\ \\cos I \\sin D,\\ \\sin I]^T</span>
+
+<span class="sd">    At each sample, given the 12-state vector</span>
 
 <span class="sd">    .. math::</span>
 
 <span class="sd">        X = [x, y, z, v_x, v_y, v_z, \\varphi, \\theta, \\psi, p, q, r]^T</span>
 
-<span class="sd">    the ideal measurement is the yaw angle alone</span>
+<span class="sd">    the reference field is rotated into the body frame by the true attitude</span>
+<span class="sd">    and distorted:</span>
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        z_{ideal} = \\psi</span>
+<span class="sd">        m_{body} = [BI](\\varphi, \\theta, \\psi) \\cdot m_{ref}</span>
 
-<span class="sd">    and the simulated measurement is</span>
+<span class="sd">        z = S_i \\cdot m_{body} + b_i + n</span>
 
-<span class="sd">    .. math::</span>
+<span class="sd">    where :math:`[BI]` is the body-from-inertial 3-2-1 DCM</span>
+<span class="sd">    (:func:`dcm321 &lt;c4dynamics.rotmat.rotmat.dcm321&gt;`), :math:`S_i` is the</span>
+<span class="sd">    soft-iron matrix, :math:`b_i` is the hard-iron offset, and :math:`n` is a</span>
+<span class="sd">    zero-mean Gaussian vector with per-axis standard deviation ``noise_std``.</span>
 
-<span class="sd">        z = \\psi + b + n</span>
-
-<span class="sd">    where :math:`b` is the constant bias and :math:`n` is a zero-mean Gaussian</span>
-<span class="sd">    random variable with standard deviation ``noise_std``.</span>
-
-<span class="sd">    The heading is returned as given, without wrapping to</span>
-<span class="sd">    :math:`[-\\pi, \\pi]`; a filter that consumes the measurement is</span>
-<span class="sd">    responsible for wrapping its innovation (see :class:`ekf`).  In a typical</span>
-<span class="sd">    setup the magnetometer is sampled at a lower rate than the IMU, e.g.</span>
-<span class="sd">    :math:`50\\,Hz`.</span>
+<span class="sd">    ``measure`` returns the full 3-axis body-frame field vector.  A consumer</span>
+<span class="sd">    that needs a heading derives it from the horizontal components after</span>
+<span class="sd">    de-rotating roll and pitch (tilt compensation); a filter that consumes</span>
+<span class="sd">    the vector directly (see :class:`ekf`) needs no yaw-wrapping, because the</span>
+<span class="sd">    measurement is linear in the rotated field rather than in the angle</span>
+<span class="sd">    itself.  In a typical setup the magnetometer is sampled at a lower rate</span>
+<span class="sd">    than the IMU, e.g. :math:`50\\,Hz`.</span>
 
 
 <span class="sd">    **Errors Model**</span>
 
-<span class="sd">    The magnetometer measurement is subject to two error sources: bias and</span>
-<span class="sd">    noise.</span>
+<span class="sd">    The magnetometer measurement is subject to three error sources:</span>
 
-<span class="sd">    - ``Bias``:</span>
-<span class="sd">      a constant offset in the measured heading.  It is set when the</span>
-<span class="sd">      magnetometer is constructed through the ``bias`` parameter and remains</span>
-<span class="sd">      unchanged between measurements.  When ``bias`` is not provided, the bias</span>
-<span class="sd">      is ``0``.</span>
+<span class="sd">    - ``Hard iron``:</span>
+<span class="sd">      a constant additive offset ``[bx, by, bz]`` (magnetized material fixed</span>
+<span class="sd">      to the body).  Set through the ``hard_iron`` parameter and unchanged</span>
+<span class="sd">      between measurements.  Defaults to ``[0, 0, 0]``.</span>
+<span class="sd">    - ``Soft iron``:</span>
+<span class="sd">      a constant ``3 x 3`` linear distortion :math:`S_i` (nearby ferrous</span>
+<span class="sd">      material that reshapes the field).  Set through the ``soft_iron``</span>
+<span class="sd">      parameter.  Defaults to the identity.</span>
 <span class="sd">    - ``Noise``:</span>
-<span class="sd">      a random variation in the heading measurement.  At every call to</span>
-<span class="sd">      :meth:`measure`, an independent normally distributed sample with mean</span>
-<span class="sd">      zero and standard deviation ``noise_std`` is added.</span>
+<span class="sd">      a zero-mean Gaussian sample, drawn independently per axis at every call</span>
+<span class="sd">      to :meth:`measure`, with standard deviation ``noise_std``.</span>
 
-<span class="sd">    The errors model can be disabled by setting ``noise_std = 0`` and</span>
-<span class="sd">    ``bias = 0``, or by passing ``isideal = True`` at construction, which</span>
-<span class="sd">    mutes both regardless of the ``noise_std`` / ``bias`` arguments.  Unlike</span>
-<span class="sd">    the :class:`seeker` model, the magnetometer does not generate a random</span>
-<span class="sd">    bias during construction and does not include a scale-factor error; the</span>
-<span class="sd">    supplied ``bias`` is deterministic for a given instance.</span>
+<span class="sd">    The errors model can be disabled by passing ``isideal = True`` at</span>
+<span class="sd">    construction, which forces ``noise_std = 0``, ``hard_iron = [0, 0, 0]``</span>
+<span class="sd">    and ``soft_iron = I`` regardless of the arguments.  Unlike the</span>
+<span class="sd">    :class:`seeker` model, the magnetometer does not generate a random bias</span>
+<span class="sd">    during construction; the supplied distortion is deterministic for a given</span>
+<span class="sd">    instance.</span>
 
 
 <span class="sd">    **Construction**</span>
@@ -1374,8 +1406,8 @@ document.write(`
 
 <span class="sd">        &gt;&gt;&gt; mag_sensor = c4d.sensors.magnetometer()</span>
 
-<span class="sd">    The measurement noise and constant bias can be specified when creating the</span>
-<span class="sd">    sensor.</span>
+<span class="sd">    The noise, the hard-iron / soft-iron distortion and the reference-field</span>
+<span class="sd">    geometry can all be specified when creating the sensor.</span>
 
 
 <span class="sd">    Examples</span>
@@ -1389,10 +1421,10 @@ document.write(`
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 
 
-<span class="sd">    **True heading**</span>
+<span class="sd">    **True attitude**</span>
 
-<span class="sd">    For the examples below, build a 12-state vector and set its yaw entry</span>
-<span class="sd">    (index 8) to the true heading:</span>
+<span class="sd">    For the examples below, build a 12-state vector and set its attitude</span>
+<span class="sd">    entries (indices 6, 7, 8 = roll, pitch, yaw):</span>
 
 <span class="sd">    .. code::</span>
 
@@ -1402,65 +1434,90 @@ document.write(`
 
 <span class="sd">    **Ideal magnetometer**</span>
 
-<span class="sd">    An ideal magnetometer can be created by muting the errors model:</span>
+<span class="sd">    An ideal magnetometer can be created by muting the errors model.  Level</span>
+<span class="sd">    and heading north, it reads the reference field directly — horizontal</span>
+<span class="sd">    component forward, vertical component (the dip) down:</span>
 
 <span class="sd">    .. code::</span>
 
 <span class="sd">        &gt;&gt;&gt; mag_ideal = c4d.sensors.magnetometer(isideal=True)</span>
-<span class="sd">        &gt;&gt;&gt; mag_ideal.measure(x_true)   # doctest: +NUMPY_FORMAT</span>
-<span class="sd">        [0.5]</span>
+<span class="sd">        &gt;&gt;&gt; mag_ideal.measure(np.zeros(12))   # doctest: +NUMPY_FORMAT</span>
+<span class="sd">        [0.5  0.  0.866]</span>
 
-<span class="sd">    The measured heading is then identical to the true heading.</span>
+<span class="sd">    Rotating to a heading of ``0.5`` rad swings the horizontal field into the</span>
+<span class="sd">    body ``y`` axis while its magnitude and the vertical component are</span>
+<span class="sd">    preserved:</span>
+
+<span class="sd">    .. code::</span>
+
+<span class="sd">        &gt;&gt;&gt; mag_ideal.measure(x_true)   # doctest: +NUMPY_FORMAT</span>
+<span class="sd">        [0.439  -0.24  0.866]</span>
 
 
 <span class="sd">    **Non-ideal magnetometer**</span>
 
-<span class="sd">    A non-ideal magnetometer introduces a constant heading bias and white</span>
-<span class="sd">    measurement noise.  Set the random seed to make the example reproducible:</span>
+<span class="sd">    A non-ideal magnetometer adds white measurement noise (and, optionally,</span>
+<span class="sd">    hard-iron / soft-iron distortion).  Set the random seed to make the</span>
+<span class="sd">    example reproducible:</span>
 
 <span class="sd">    .. code::</span>
 
 <span class="sd">        &gt;&gt;&gt; np.random.seed(42)</span>
-<span class="sd">        &gt;&gt;&gt; mag_sensor = c4d.sensors.magnetometer(noise_std=0.05, bias=0.02)</span>
+<span class="sd">        &gt;&gt;&gt; mag_sensor = c4d.sensors.magnetometer(noise_std=0.02)</span>
 <span class="sd">        &gt;&gt;&gt; mag_sensor.measure(x_true)   # doctest: +NUMPY_FORMAT</span>
-<span class="sd">        [0.545]</span>
+<span class="sd">        [0.449  -0.242  0.879]</span>
 
 
-<span class="sd">    **Bias**</span>
+<span class="sd">    **Hard iron**</span>
 
-<span class="sd">    The bias is constant across all measurements.  A magnetometer with a</span>
-<span class="sd">    ``0.1`` rad heading bias can be created as follows:</span>
+<span class="sd">    The hard-iron offset is constant across all measurements.  A magnetometer</span>
+<span class="sd">    with a ``[0.1, 0, 0]`` offset can be created as follows:</span>
 
 <span class="sd">    .. code::</span>
 
-<span class="sd">        &gt;&gt;&gt; mag_bias = c4d.sensors.magnetometer(noise_std=0, bias=0.1)</span>
-<span class="sd">        &gt;&gt;&gt; mag_bias.measure(x_true) - x_true[8]   # doctest: +NUMPY_FORMAT</span>
-<span class="sd">        [0.1]</span>
+<span class="sd">        &gt;&gt;&gt; mag_hi = c4d.sensors.magnetometer(noise_std=0, hard_iron=[0.1, 0, 0])</span>
+<span class="sd">        &gt;&gt;&gt; mag_ref = c4d.sensors.magnetometer(isideal=True)</span>
+<span class="sd">        &gt;&gt;&gt; mag_hi.measure(x_true) - mag_ref.measure(x_true)   # doctest: +NUMPY_FORMAT</span>
+<span class="sd">        [0.1  0.  0.]</span>
 
-<span class="sd">    The difference between the measurement and the true heading is the</span>
-<span class="sd">    specified bias.</span>
+<span class="sd">    The difference between the measurement and the ideal field is the</span>
+<span class="sd">    specified offset.</span>
+
+
+<span class="sd">    **Soft iron**</span>
+
+<span class="sd">    The soft-iron matrix scales / mixes the body-frame field.  A diagonal</span>
+<span class="sd">    ``soft_iron`` with a ``1.2`` gain on the body ``x`` axis:</span>
+
+<span class="sd">    .. code::</span>
+
+<span class="sd">        &gt;&gt;&gt; mag_si = c4d.sensors.magnetometer(</span>
+<span class="sd">        ...     noise_std=0, soft_iron=np.diag([1.2, 1.0, 1.0]))</span>
+<span class="sd">        &gt;&gt;&gt; mag_si.measure(np.zeros(12))   # doctest: +NUMPY_FORMAT</span>
+<span class="sd">        [0.6  0.  0.866]</span>
 
 
 <span class="sd">    **Measurement noise**</span>
 
-<span class="sd">    With zero bias, repeated measurements of the same state demonstrate the</span>
-<span class="sd">    random noise generated at every call to :meth:`measure`:</span>
+<span class="sd">    With no distortion, repeated measurements of the same state demonstrate</span>
+<span class="sd">    the random per-axis noise generated at every call to :meth:`measure`:</span>
 
 <span class="sd">    .. code::</span>
 
 <span class="sd">        &gt;&gt;&gt; np.random.seed(1)</span>
-<span class="sd">        &gt;&gt;&gt; mag_noise = c4d.sensors.magnetometer(noise_std=0.05, bias=0)</span>
+<span class="sd">        &gt;&gt;&gt; mag_noise = c4d.sensors.magnetometer(noise_std=0.02)</span>
 <span class="sd">        &gt;&gt;&gt; for _ in range(3): # doctest: +IGNORE_OUTPUT</span>
 <span class="sd">        ...     print(mag_noise.measure(x_true))</span>
-<span class="sd">        [0.581]</span>
-<span class="sd">        [0.469]</span>
-<span class="sd">        [0.474]</span>
+<span class="sd">        [0.471 -0.252  0.855]</span>
+<span class="sd">        [0.417 -0.222  0.820]</span>
+<span class="sd">        [0.474 -0.255  0.872]</span>
 
 
 <span class="sd">    **Demo**</span>
 
 <span class="sd">    The built-in :meth:`demo` method provides a compact demonstration of the</span>
-<span class="sd">    magnetometer errors model and plots the true and measured heading:</span>
+<span class="sd">    magnetometer errors model and plots the true and measured body-frame</span>
+<span class="sd">    field components through an attitude sweep:</span>
 
 <span class="sd">    .. code::</span>
 
@@ -1472,41 +1529,62 @@ document.write(`
 <span class="sd">    ``show=False``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise_std</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">isideal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span> <span class="o">=</span> <span class="n">noise_std</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise_std</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">hard_iron</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">soft_iron</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">field_intensity</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">inclination</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">declination</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                 <span class="n">isideal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">noise_std</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hard_iron</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">hard_iron</span> <span class="ow">is</span> <span class="kc">None</span>
+                          <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">hard_iron</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_iron</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">soft_iron</span> <span class="ow">is</span> <span class="kc">None</span>
+                          <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">soft_iron</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_intensity</span> <span class="o">=</span> <span class="n">field_intensity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inclination</span> <span class="o">=</span> <span class="n">inclination</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">declination</span> <span class="o">=</span> <span class="n">declination</span>
+
+        <span class="n">cI</span><span class="p">,</span> <span class="n">sI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">inclination</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">inclination</span><span class="p">)</span>
+        <span class="n">cD</span><span class="p">,</span> <span class="n">sD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">declination</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">declination</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mref</span> <span class="o">=</span> <span class="n">field_intensity</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cI</span> <span class="o">*</span> <span class="n">cD</span><span class="p">,</span> <span class="n">cI</span> <span class="o">*</span> <span class="n">sD</span><span class="p">,</span> <span class="n">sI</span><span class="p">])</span>
+
         <span class="k">if</span> <span class="n">isideal</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hard_iron</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">soft_iron</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 
 <div class="viewcode-block" id="magnetometer.measure">
 <a class="viewcode-back" href="../../../api/generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html#c4dynamics.sensors.navigation.magnetometer.measure">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_true</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Measure vehicle heading.</span>
+<span class="sd">        Measure the body-frame geomagnetic field.</span>
 
-<span class="sd">        The method extracts the yaw entry of ``x_true`` (index 8) and adds the</span>
-<span class="sd">        magnetometer bias and a zero-mean Gaussian noise sample.</span>
+<span class="sd">        The method rotates the reference field ``mref`` into the body frame</span>
+<span class="sd">        using the attitude entries of ``x_true`` (indices 6, 7, 8), then</span>
+<span class="sd">        applies the soft-iron matrix, the hard-iron offset and a zero-mean</span>
+<span class="sd">        Gaussian noise sample per axis.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        x_true : array_like</span>
-<span class="sd">            True state vector; only the yaw entry ``x_true[8]`` is used, [rad].</span>
+<span class="sd">            True state vector; only the attitude entries</span>
+<span class="sd">            ``x_true[6:9]`` (roll, pitch, yaw) are used, [rad].</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        numpy.ndarray</span>
-<span class="sd">            Measured heading as a length-1 array ``[psi]``, [rad].</span>
+<span class="sd">            Measured body-frame field ``[mx, my, mz]``, in the units of</span>
+<span class="sd">            ``field_intensity``.</span>
 
 
 <span class="sd">        **Errors Model**</span>
 
 <span class="sd">        .. math::</span>
 
-<span class="sd">            z = \\psi + b + std \\cdot N(0, 1)</span>
+<span class="sd">            z = S_i \\cdot [BI](\\varphi, \\theta, \\psi) \\cdot m_{ref}</span>
+<span class="sd">                + b_i + std \\cdot N(0, I_3)</span>
 
-<span class="sd">        The bias :math:`b` is constant for the magnetometer instance, while the</span>
-<span class="sd">        noise is regenerated at every call.</span>
+<span class="sd">        The soft-iron matrix :math:`S_i` and hard-iron offset :math:`b_i` are</span>
+<span class="sd">        constant for the magnetometer instance, while the noise is</span>
+<span class="sd">        regenerated at every call.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1516,23 +1594,29 @@ document.write(`
 <span class="sd">            &gt;&gt;&gt; import c4dynamics as c4d</span>
 <span class="sd">            &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">            &gt;&gt;&gt; np.random.seed(42)</span>
-<span class="sd">            &gt;&gt;&gt; mag_sensor = c4d.sensors.magnetometer(noise_std=0, bias=0.1)</span>
+<span class="sd">            &gt;&gt;&gt; mag_sensor = c4d.sensors.magnetometer(isideal=True)</span>
 <span class="sd">            &gt;&gt;&gt; x = np.zeros(12)</span>
 <span class="sd">            &gt;&gt;&gt; x[8] = 0.5</span>
 <span class="sd">            &gt;&gt;&gt; mag_sensor.measure(x)   # doctest: +NUMPY_FORMAT</span>
-<span class="sd">            [0.6]</span>
+<span class="sd">            [0.439  -0.24  0.866]</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">x_true</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span></div>
+        <span class="n">x_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x_true</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">psi</span> <span class="o">=</span> <span class="n">x_true</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">x_true</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">x_true</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="n">m_body</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">rotmat</span><span class="o">.</span><span class="n">dcm321</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">psi</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">mref</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">soft_iron</span> <span class="o">@</span> <span class="n">m_body</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">hard_iron</span>
+                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span><span class="p">)</span></div>
 
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">demo</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Demonstrate magnetometer heading measurements.</span>
+<span class="sd">        Demonstrate 3-axis magnetometer measurements.</span>
 
-<span class="sd">        Simulates a changing vehicle heading and compares the true yaw angle</span>
-<span class="sd">        with noisy magnetometer measurements.</span>
+<span class="sd">        Drives the sensor through a smooth roll / pitch / yaw sweep and</span>
+<span class="sd">        compares the true body-frame geomagnetic field components with the</span>
+<span class="sd">        noisy magnetometer measurements.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1548,38 +1632,42 @@ document.write(`
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        matplotlib.figure.Figure</span>
+<span class="sd">            Figure containing the true and measured mx, my, mz components.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-        <span class="n">sensor</span> <span class="o">=</span> <span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="n">sensor</span> <span class="o">=</span> <span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+        <span class="n">ideal</span> <span class="o">=</span> <span class="n">magnetometer</span><span class="p">(</span><span class="n">isideal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
 
-        <span class="n">psi_true</span> <span class="o">=</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">0.35</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">phi_true</span> <span class="o">=</span> <span class="mf">0.15</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">0.50</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">theta_true</span> <span class="o">=</span> <span class="mf">0.10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">0.40</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">psi_true</span> <span class="o">=</span> <span class="mf">0.80</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">0.35</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
 
-        <span class="n">psi_meas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+        <span class="n">m_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">m_meas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)):</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
-            <span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="n">psi_true</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-            <span class="n">psi_meas</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="n">phi_true</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">theta_true</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">psi_true</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">m_true</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">ideal</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">m_meas</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">psi_true</span><span class="p">),</span>
-                <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True heading&#39;</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;m_x&#39;</span><span class="p">,</span> <span class="s1">&#39;m_y&#39;</span><span class="p">,</span> <span class="s1">&#39;m_z&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">m_true</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">m_meas</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Magnetometer&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1"> [norm.]&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
 
-        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">psi_meas</span><span class="p">),</span>
-                <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Magnetometer&#39;</span><span class="p">)</span>
-
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Heading [deg]&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Magnetometer Measurements&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-
+        <span class="n">ax</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Time [s]&#39;</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Magnetometer Measurements (body-frame field)&#39;</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">show</span><span class="p">:</span>

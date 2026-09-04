@@ -134,25 +134,82 @@ class TestIMU(unittest.TestCase):
 
 class TestMagnetometer(unittest.TestCase):
 
-    def test_zero_noise_is_exact(self):
-        sensor = magnetometer(noise_std=0.0)
-        x = make_state(psi=0.7)
-        z = sensor.measure(x)
-        self.assertAlmostEqual(z[0], 0.7)
+    def _mref(self, sensor):
+        I, D, F = sensor.inclination, sensor.declination, sensor.field_intensity
+        return F * np.array([np.cos(I) * np.cos(D),
+                             np.cos(I) * np.sin(D),
+                             np.sin(I)])
+
+    def test_reference_field_from_intensity_inclination_declination(self):
+        sensor = magnetometer(field_intensity=2.0,
+                              inclination=np.deg2rad(60.0),
+                              declination=np.deg2rad(10.0))
+        np.testing.assert_array_almost_equal(sensor.mref, self._mref(sensor))
+
+    def test_ideal_returns_body_frame_field(self):
+        sensor = magnetometer(isideal=True)
+        x = make_state(phi=0.1, theta=-0.2, psi=0.7)
+        expected = c4d.rotmat.dcm321(0.1, -0.2, 0.7) @ sensor.mref
+        np.testing.assert_array_almost_equal(sensor.measure(x), expected)
+
+    def test_level_north_reads_reference_field(self):
+        sensor = magnetometer(isideal=True)
+        z = sensor.measure(make_state())
+        np.testing.assert_array_almost_equal(z, sensor.mref)
+
+    def test_field_magnitude_is_attitude_invariant(self):
+        sensor = magnetometer(isideal=True)
+        norms = [np.linalg.norm(sensor.measure(make_state(phi=a, theta=b, psi=c)))
+                 for a, b, c in [(0, 0, 0), (0.3, -0.2, 1.0), (-0.5, 0.4, -2.0)]]
+        np.testing.assert_allclose(norms, np.linalg.norm(sensor.mref), rtol=1e-9)
+
+    def test_heading_recoverable_from_level_measurement(self):
+        sensor = magnetometer(isideal=True)
+        for psi in (-2.0, -0.5, 0.0, 0.5, 2.0):
+            mx, my, _ = sensor.measure(make_state(psi=psi))
+            self.assertAlmostEqual(np.arctan2(-my, mx), psi, places=9)
 
     def test_noise_statistics(self):
         np.random.seed(0)
-        sensor = magnetometer(noise_std=0.05)
-        x = make_state(psi=0.0)
-        samples = np.array([sensor.measure(x)[0] for _ in range(20000)])
-        self.assertAlmostEqual(samples.mean(), 0.0, delta=0.005)
-        self.assertAlmostEqual(samples.std(), 0.05, delta=0.005)
+        sensor = magnetometer(noise_std=0.02)
+        x = make_state()
+        samples = np.array([sensor.measure(x) for _ in range(20000)])
+        resid = samples - sensor.mref
+        np.testing.assert_array_almost_equal(resid.mean(axis=0), [0, 0, 0], decimal=2)
+        np.testing.assert_allclose(resid.std(axis=0), 0.02, rtol=0.05)
 
-    def test_bias(self):
-        sensor = magnetometer(noise_std=0.0, bias=0.1)
-        x = make_state(psi=0.0)
-        z = sensor.measure(x)
-        self.assertAlmostEqual(z[0], 0.1)
+    def test_noise_std_accepts_per_axis_vector(self):
+        np.random.seed(0)
+        sensor = magnetometer(noise_std=[0.01, 0.02, 0.05])
+        x = make_state()
+        samples = np.array([sensor.measure(x) for _ in range(20000)])
+        np.testing.assert_allclose(samples.std(axis=0), [0.01, 0.02, 0.05], rtol=0.06)
+
+    def test_hard_iron_is_additive(self):
+        sensor = magnetometer(noise_std=0.0, hard_iron=[0.1, -0.2, 0.05])
+        ref = magnetometer(isideal=True)
+        x = make_state(phi=0.2, theta=0.1, psi=0.5)
+        np.testing.assert_array_almost_equal(
+            sensor.measure(x) - ref.measure(x), [0.1, -0.2, 0.05])
+
+    def test_soft_iron_is_applied(self):
+        S = np.array([[1.2, 0.1, 0.0],
+                      [0.0, 0.9, 0.0],
+                      [0.0, 0.0, 1.05]])
+        sensor = magnetometer(noise_std=0.0, soft_iron=S)
+        x = make_state(phi=0.1, theta=-0.1, psi=0.3)
+        expected = S @ (c4d.rotmat.dcm321(0.1, -0.1, 0.3) @ sensor.mref)
+        np.testing.assert_array_almost_equal(sensor.measure(x), expected)
+
+    def test_isideal_mutes_error_model_only(self):
+        sensor = magnetometer(noise_std=0.05, hard_iron=[1, 1, 1],
+                              soft_iron=np.full((3, 3), 2.0),
+                              inclination=np.deg2rad(45.0), isideal=True)
+        np.testing.assert_array_equal(sensor.noise_std, np.zeros(3))
+        np.testing.assert_array_equal(sensor.hard_iron, np.zeros(3))
+        np.testing.assert_array_equal(sensor.soft_iron, np.eye(3))
+        np.testing.assert_array_almost_equal(
+            sensor.mref, self._mref(sensor))
 
 
 if __name__ == "__main__":

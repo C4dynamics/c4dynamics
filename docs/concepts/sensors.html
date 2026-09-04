@@ -565,15 +565,17 @@ acceleration — both derivatives of the state — so it takes the truth
 <cite>rigidbody</cite> object itself rather than a bare vector, and keeps its own
 previous-sample history internally between calls.</p>
 <p><strong>Error model</strong></p>
-<p>Every navigation sensor shares the same two-term error model:</p>
+<p>Every navigation sensor shares the same additive error model:</p>
 <ul class="simple">
 <li><p><strong>Bias</strong> — a constant offset, fixed at construction and unchanged between
-samples.</p></li>
+samples.  For the <a class="reference internal" href="../api/sensors.navigation.magnetometer.html#c4dynamics.sensors.navigation.magnetometer" title="c4dynamics.sensors.navigation.magnetometer"><code class="xref py py-class docutils literal notranslate"><span class="pre">magnetometer</span></code></a> this is the hard-iron offset
+(a constant 3-vector); a <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">3</span></code> soft-iron matrix adds a constant linear
+distortion on top.</p></li>
 <li><p><strong>Noise</strong> — a zero-mean Gaussian sample, redrawn independently at every call
 to <code class="docutils literal notranslate"><span class="pre">measure</span></code>.</p></li>
 </ul>
-<p>Passing <code class="docutils literal notranslate"><span class="pre">isideal</span> <span class="pre">=</span> <span class="pre">True</span></code> mutes both, so <code class="docutils literal notranslate"><span class="pre">measure</span></code> returns the noise-free,
-bias-free truth.</p>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">isideal</span> <span class="pre">=</span> <span class="pre">True</span></code> mutes all of them, so <code class="docutils literal notranslate"><span class="pre">measure</span></code> returns the
+noise-free, distortion-free truth.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 28.3%" />
@@ -605,18 +607,17 @@ bias-free truth.</p>
 <td><p><span class="math notranslate nohighlight">\(0.05\ m/s^2\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p>Magnetometer</p></td>
-<td><p>heading (yaw) <span class="math notranslate nohighlight">\(\psi\)</span></p></td>
-<td><p>1</p></td>
-<td><p><span class="math notranslate nohighlight">\(0.05\ rad\)</span></p></td>
+<td><p>body-frame geomagnetic field <span class="math notranslate nohighlight">\(m_x, m_y, m_z\)</span></p></td>
+<td><p>3</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.02\)</span> (normalized field)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <p><strong>Measurement equations</strong></p>
-<p>The GPS and gyroscope read states directly, and the magnetometer reads the yaw
-state alone:</p>
+<p>The GPS and gyroscope read states directly:</p>
 <div class="math notranslate nohighlight">
-\[ \begin{align}\begin{aligned}h_{gps}(X) = [x, y, z]^T\\h_{gyro}(X) = [p, q, r]^T\\h_{mag}(X) = \psi\end{aligned}\end{align} \]</div>
+\[ \begin{align}\begin{aligned}h_{gps}(X) = [x, y, z]^T\\h_{gyro}(X) = [p, q, r]^T\end{aligned}\end{align} \]</div>
 <p>The accelerometer is non-linear — it senses the gravity reaction plus the
 vehicle’s own coordinate acceleration, projected into the body frame:</p>
 <div class="math notranslate nohighlight">
@@ -625,9 +626,16 @@ vehicle’s own coordinate acceleration, projected into the body frame:</p>
 <span class="math notranslate nohighlight">\(\dot{v}\)</span> is the inertial-velocity derivative (approximated by the
 <a class="reference internal" href="../api/sensors.navigation.imu.html#c4dynamics.sensors.navigation.imu" title="c4dynamics.sensors.navigation.imu"><code class="xref py py-class docutils literal notranslate"><span class="pre">imu</span></code></a> as a finite difference against
 the previous sample).</p>
-<p>The heading is returned without wrapping to <span class="math notranslate nohighlight">\([-\pi, \pi]\)</span>; a filter that
-consumes it is responsible for wrapping its own innovation. For a worked
-estimation-control pipeline built on all three models, see the
+<p>The magnetometer is a 3-axis device and is non-linear in the same way: it
+rotates a fixed navigation-frame reference field (built from total intensity
+<span class="math notranslate nohighlight">\(F\)</span>, inclination <span class="math notranslate nohighlight">\(I\)</span> and declination <span class="math notranslate nohighlight">\(D\)</span>) into the body
+frame,</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}m_{ref} = F \cdot [\cos I \cos D,\ \cos I \sin D,\ \sin I]^T\\h_{mag}(X) = [BI] \cdot m_{ref}\end{aligned}\end{align} \]</div>
+<p>A heading is not measured directly — it is recovered from the field components
+through the attitude in <span class="math notranslate nohighlight">\(h_{mag}\)</span>, so a filter consuming the vector needs
+no yaw-wrapping. For a worked estimation-control pipeline built on all three
+models, see the
 <a class="reference internal" href="../programs/ekf_estimation/quad_ekf.html"><span class="doc">Quadcopter EKF</span></a> example.</p>
 <p>Whether you are simulating an autonomous vehicle, a missile guidance loop, or a robotic system,
 the Sensors module gives your models the “eyes and ears” they need to interact with the dynamic world.</p>
@@ -765,7 +773,7 @@ with 80 pre-trained COCO classes.</p></td>
 <td><p>Gyroscope + accelerometer.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="../api/sensors.navigation.magnetometer.html#c4dynamics.sensors.navigation.magnetometer" title="c4dynamics.sensors.navigation.magnetometer"><code class="xref py py-class docutils literal notranslate"><span class="pre">magnetometer</span></code></a></p></td>
-<td><p>Heading (yaw) sensor.</p></td>
+<td><p>3-axis geomagnetic field sensor.</p></td>
 </tr>
 </tbody>
 </table>

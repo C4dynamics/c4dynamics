@@ -43,15 +43,18 @@ previous-sample history internally between calls.
 
 **Error model**
 
-Every navigation sensor shares the same two-term error model:
+Every navigation sensor shares the same additive error model:
 
 - **Bias** — a constant offset, fixed at construction and unchanged between
-  samples.
+  samples.  For the :class:`magnetometer
+  <c4dynamics.sensors.navigation.magnetometer>` this is the hard-iron offset
+  (a constant 3-vector); a ``3 x 3`` soft-iron matrix adds a constant linear
+  distortion on top.
 - **Noise** — a zero-mean Gaussian sample, redrawn independently at every call
   to ``measure``.
 
-Passing ``isideal = True`` mutes both, so ``measure`` returns the noise-free,
-bias-free truth.
+Passing ``isideal = True`` mutes all of them, so ``measure`` returns the
+noise-free, distortion-free truth.
 
 .. list-table::
   :widths: 26 34 10 22
@@ -74,22 +77,19 @@ bias-free truth.
     - 3
     - :math:`0.05\ m/s^2`
   * - Magnetometer
-    - heading (yaw) :math:`\psi`
-    - 1
-    - :math:`0.05\ rad`
+    - body-frame geomagnetic field :math:`m_x, m_y, m_z`
+    - 3
+    - :math:`0.02` (normalized field)
 
 **Measurement equations**
 
-The GPS and gyroscope read states directly, and the magnetometer reads the yaw
-state alone:
+The GPS and gyroscope read states directly:
 
 .. math::
 
   h_{gps}(X) = [x, y, z]^T
 
   h_{gyro}(X) = [p, q, r]^T
-
-  h_{mag}(X) = \psi
 
 The accelerometer is non-linear — it senses the gravity reaction plus the
 vehicle's own coordinate acceleration, projected into the body frame:
@@ -103,9 +103,21 @@ where :math:`[BI]` is the body-from-inertial DCM formed by the Euler angles and
 :class:`imu <c4dynamics.sensors.navigation.imu>` as a finite difference against
 the previous sample).
 
-The heading is returned without wrapping to :math:`[-\pi, \pi]`; a filter that
-consumes it is responsible for wrapping its own innovation. For a worked
-estimation-control pipeline built on all three models, see the
+The magnetometer is a 3-axis device and is non-linear in the same way: it
+rotates a fixed navigation-frame reference field (built from total intensity
+:math:`F`, inclination :math:`I` and declination :math:`D`) into the body
+frame,
+
+.. math::
+
+  m_{ref} = F \cdot [\cos I \cos D,\ \cos I \sin D,\ \sin I]^T
+
+  h_{mag}(X) = [BI] \cdot m_{ref}
+
+A heading is not measured directly — it is recovered from the field components
+through the attitude in :math:`h_{mag}`, so a filter consuming the vector needs
+no yaw-wrapping. For a worked estimation-control pipeline built on all three
+models, see the
 :doc:`Quadcopter EKF </programs/ekf_estimation/quad_ekf>` example.
 
 
@@ -269,7 +281,7 @@ See Also
   * - :class:`imu <c4dynamics.sensors.navigation.imu>`
     - Gyroscope + accelerometer.
   * - :class:`magnetometer <c4dynamics.sensors.navigation.magnetometer>`
-    - Heading (yaw) sensor.
+    - 3-axis geomagnetic field sensor.
 
 
 

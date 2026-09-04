@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Changed
+- `c4dynamics.sensors.navigation.magnetometer` is now a full 3-axis device.
+  `measure()` returns the body-frame geomagnetic field vector
+  `[mx, my, mz]`.
+  **Breaking**: callers that read `magnetometer.measure(x)[0]` as a yaw
+  angle must switch to the vector form (or recover heading from the
+  horizontal components).
+- `quad_ekf` use case: the EKF magnetometer update is now a nonlinear
+  3-axis vector correction (`h(x) = [BI] @ mref`, numeric 3x12 Jacobian),
+  replacing the linear scalar-heading update and its innovation
+  yaw-wrapping.
 
 
 ## [2.4.2] - 2026-09-03
