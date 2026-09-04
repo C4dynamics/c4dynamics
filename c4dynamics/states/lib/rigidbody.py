@@ -1,13 +1,13 @@
-import numpy as np
 import sys
+
+import numpy as np
 
 # sys.path.append(".")
 import c4dynamics as c4d
-
 from c4dynamics.states.lib.datapoint import datapoint
 
 
-class rigidbody(datapoint):  #
+class rigidbody(datapoint):
     """
     A rigid-body object
 
@@ -211,7 +211,7 @@ class rigidbody(datapoint):  #
         c4d.state.__init__(self, **rbargs)
 
     @property
-    def I(self):  # noqa: E741,E743
+    def I(self):
         """
         Gets and sets the array of moments of inertia.
 
@@ -325,7 +325,7 @@ class rigidbody(datapoint):  #
         return np.array([self._ixx, self._iyy, self._izz])
 
     @I.setter
-    def I(self, I):  # noqa: E741,E743
+    def I(self, I):
         self._ixx = I[0]
         self._iyy = I[1]
         self._izz = I[2]

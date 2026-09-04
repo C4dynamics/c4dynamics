@@ -42,9 +42,11 @@ See Also
 
 """
 
-import c4dynamics as c4d
-import numpy as np
 import sys
+
+import numpy as np
+
+import c4dynamics as c4d
 
 
 class gps:

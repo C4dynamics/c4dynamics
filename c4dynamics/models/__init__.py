@@ -17,8 +17,8 @@ control logic (see :mod:`c4dynamics.controllers` for that).
 
 import sys
 
-from c4dynamics.models.quad import default_quad_config as default_quad_config  # noqa: F401
-from c4dynamics.models import quad as quad  # noqa: F401
+from c4dynamics.models.quad import default_quad_config as default_quad_config
+from c4dynamics.models import quad as quad
 
 if __name__ == "__main__":
 

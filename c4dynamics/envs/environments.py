@@ -1,5 +1,6 @@
-from c4dynamics import state, d2r
 import numpy as np
+
+from c4dynamics import d2r, state
 
 
 class helicopter(state):

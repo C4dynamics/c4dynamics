@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 # pragma: no cover
 
-from pptx import Presentation
-from pptx.util import Inches
 import argparse
-import natsort
 import os
 import re
+
+import natsort
+from pptx import Presentation
+from pptx.util import Inches
 
 
 def slides_gen(fol):

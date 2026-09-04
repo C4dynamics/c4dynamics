@@ -1,6 +1,8 @@
+import sys
+
 import numpy as np
 from scipy.special import erfinv
-import sys
+
 # sys.path.append(".")
 import c4dynamics as c4d
 

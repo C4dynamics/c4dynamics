@@ -1,25 +1,25 @@
-# -*- coding: utf-8 -*-
 # pragma: no cover
 # import time
+import argparse
 import os
 import sys
-import argparse
 
 sys.path.append("")
 sys.path.append("examples")
-import c4dynamics as c4d
+import pickle
+
+# from enum import Enum
+import numpy as np
 
 # c4d.cprint('im in ' + os.getcwd(), 'y')
 # for p in sys.path:
 #   c4d.cprint(p, 'c')
 from matplotlib import pyplot as plt
 
-# from enum import Enum
-import numpy as np
-import pickle
-
 # from scipy.interpolate import interp1d
 from programs._mtracks import Trkstate
+
+import c4dynamics as c4d
 
 # import multiprocessing
 plt.style.use("dark_background")

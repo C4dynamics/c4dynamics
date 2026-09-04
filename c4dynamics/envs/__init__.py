@@ -2,7 +2,7 @@ import sys
 
 # sys.path.append(".")
 
-from c4dynamics.envs.mountain_car import mountain_car as mountain_car   # noqa: F401
+from c4dynamics.envs.mountain_car import mountain_car as mountain_car
 
 if __name__ == "__main__":
 

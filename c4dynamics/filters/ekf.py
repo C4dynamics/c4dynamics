@@ -1,10 +1,11 @@
-import numpy as np
 import sys
+from typing import Optional
+
+import numpy as np
 
 # sys.path.append(".")
 # import c4dynamics as c4d
 from c4dynamics.filters import kalman
-from typing import Optional
 
 
 class ekf(kalman):

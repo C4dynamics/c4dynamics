@@ -1,10 +1,12 @@
 import sys
+import warnings
+from typing import Any
+
 import numpy as np
+from numpy.typing import NDArray
+
 # sys.path.append(".")
 import c4dynamics as c4d
-from numpy.typing import NDArray
-from typing import Any
-import warnings
 
 # ======= top level
 # ------- level 2
@@ -147,7 +149,6 @@ class state:
         ("Psi", "\u03a8"),
         ("Omega", "\u03a9"),
     )
-    #
 
     _reserved_keys = (
         "X",
@@ -406,7 +407,7 @@ class state:
         """
         xout = []
 
-        for k in self._didx.keys():
+        for k in self._didx:
             if k == "t":
                 continue
             # xout.append(eval('self.' + k + '0'))
@@ -1542,9 +1543,9 @@ class state:
 
     def cartesian(self):
         # TODO document!
-        if any([var for var in ["vx", "vy", "vz"] if hasattr(self, var)]):
+        if any(hasattr(self, var) for var in ["vx", "vy", "vz"]):
             return 2
-        elif any([var for var in ["x", "y", "z"] if hasattr(self, var)]):
+        elif any(hasattr(self, var) for var in ["x", "y", "z"]):
             return 1
         else:
             return 0

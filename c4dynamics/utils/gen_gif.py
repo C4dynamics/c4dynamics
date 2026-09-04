@@ -7,8 +7,8 @@ except ImportError:
     pass
 
 import os
-import warnings
 import sys
+import warnings
 
 # sys.path.append(".")
 import c4dynamics as c4d
@@ -112,7 +112,7 @@ def gif(dirname, gif_name, duration=None):
              " ('.png', '.jpg', '.jpeg', 'bmp', '.tiff', are supported). """,
             c4d.c4warn,
         )
-        return None
+        return
 
     fps = 60  # 60hz (60frames per second) -> 16.6msec
     if duration is None:

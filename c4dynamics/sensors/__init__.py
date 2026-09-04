@@ -31,12 +31,12 @@ import sys
 
 # sys.path.append(".")
 
-from c4dynamics.sensors.radar import radar as radar  # noqa: F401
-from c4dynamics.sensors.lineofsight import lineofsight as lineofsight  # noqa: F401
-from c4dynamics.sensors.seeker import seeker as seeker  # noqa: F401
-from c4dynamics.sensors.navigation import gps as gps  # noqa: F401
-from c4dynamics.sensors.navigation import imu as imu  # noqa: F401
-from c4dynamics.sensors.navigation import magnetometer as magnetometer  # noqa: F401
+from c4dynamics.sensors.radar import radar as radar
+from c4dynamics.sensors.lineofsight import lineofsight as lineofsight
+from c4dynamics.sensors.seeker import seeker as seeker
+from c4dynamics.sensors.navigation import gps as gps
+from c4dynamics.sensors.navigation import imu as imu
+from c4dynamics.sensors.navigation import magnetometer as magnetometer
 
 # Background Material
 # -------------------

@@ -1,11 +1,13 @@
-from typing import Union, Tuple
-from numpy.typing import NDArray
-import numpy as np
 import sys
+from typing import Tuple, Union
+
+import numpy as np
+from numpy.typing import NDArray
+
+from c4dynamics import datapoint, rigidbody
 
 # sys.path.append(".")
 from c4dynamics.eqm.derivs import eqm3, eqm6
-from c4dynamics import datapoint, rigidbody
 
 
 def int3(

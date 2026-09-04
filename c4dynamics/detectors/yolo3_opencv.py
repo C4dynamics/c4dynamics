@@ -8,13 +8,13 @@ except ImportError:
     # vision modules are unavailable
     pass
 
+from importlib.resources import files
+from typing import Optional
+
 import numpy as np
 
 # sys.path.append(".")
-from c4dynamics import c4d
-from c4dynamics import pixelpoint
-from typing import Optional
-from importlib.resources import files
+from c4dynamics import c4d, pixelpoint
 
 MODEL_SIZE = (416, 416, 3)
 
@@ -196,7 +196,7 @@ class yolov3:
     .. figure:: /_examples/yolov3/intro.png
 
 
-    """  # noqa: E501
+    """
 
     class_names = (
         "person",
@@ -633,7 +633,7 @@ class yolov3:
         .. figure:: /_examples/yolov3/outformat.png
 
 
-        """  # noqa: E501
+        """
         #
         # Step 1: Preprocess the Frame
         #   - Create a blob (binary large object) from the input frame with the
@@ -746,7 +746,7 @@ if __name__ == "__main__":
     current_module = sys.modules[__name__]
 
     try:
-        import cv2  # noqa: F811
+        import cv2
     except ImportError:
         # if hasattr(current_module, "yolov3"):
         current_module.yolov3.__doc__ = ""  # clears doctest examples

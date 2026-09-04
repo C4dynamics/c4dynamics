@@ -1,9 +1,11 @@
-import numpy as np
 import sys
+import warnings
+
+import numpy as np
+
 # sys.path.append(".")
 import c4dynamics as c4d
 from c4dynamics.states.state import state
-import warnings
 
 
 def create(X):
@@ -528,10 +530,10 @@ class datapoint(state):
             warnings.warn(
                 f"""{var} is not a state variable or a valid trajectory to plot.""", c4d.c4warn
             )
-            return None
+            return
         if not self._data:
             warnings.warn(f"""No stored data for {var}.""", c4d.c4warn)
-            return None
+            return
 
         if darkmode:
             plt.style.use("dark_background")
