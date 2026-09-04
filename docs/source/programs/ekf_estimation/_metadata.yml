@@ -1,0 +1,11 @@
+# Quarto folder-level metadata (ignored by Sphinx/nbsphinx).
+# Tunes the Typst/PDF render of the notebooks here.
+format:
+  typst:
+    fontsize: 14pt          # body text (Quarto default is 11pt)
+    include-in-header:
+      text: |
+        #show heading.where(level: 1): set text(size: 2.5em)
+        #show heading.where(level: 2): set text(size: 2em)
+        #show heading.where(level: 3): set text(size: 1.25em)
+        #show heading.where(level: 4): set text(size: 1.1em)
