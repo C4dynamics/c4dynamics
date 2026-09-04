@@ -536,31 +536,37 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="c4dynamics.sensors.navigation.magnetometer.measure">
 <span class="sig-prename descclassname"><span class="pre">magnetometer.</span></span><span class="sig-name descname"><span class="pre">measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_true</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/c4dynamics/sensors/navigation.html#magnetometer.measure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.sensors.navigation.magnetometer.measure" title="Link to this definition">#</a></dt>
-<dd><p>Measure vehicle heading.</p>
-<p>The method extracts the yaw entry of <code class="docutils literal notranslate"><span class="pre">x_true</span></code> (index 8) and adds the
-magnetometer bias and a zero-mean Gaussian noise sample.</p>
+<dd><p>Measure the body-frame geomagnetic field.</p>
+<p>The method rotates the reference field <code class="docutils literal notranslate"><span class="pre">mref</span></code> into the body frame
+using the attitude entries of <code class="docutils literal notranslate"><span class="pre">x_true</span></code> (indices 6, 7, 8), then
+applies the soft-iron matrix, the hard-iron offset and a zero-mean
+Gaussian noise sample per axis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>x_true</strong> (<em>array_like</em>) – True state vector; only the yaw entry <code class="docutils literal notranslate"><span class="pre">x_true[8]</span></code> is used, [rad].</p>
+<dd class="field-odd"><p><strong>x_true</strong> (<em>array_like</em>) – True state vector; only the attitude entries
+<code class="docutils literal notranslate"><span class="pre">x_true[6:9]</span></code> (roll, pitch, yaw) are used, [rad].</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>numpy.ndarray</em> – Measured heading as a length-1 array <code class="docutils literal notranslate"><span class="pre">[psi]</span></code>, [rad].</p>
+<dd class="field-even"><p><em>numpy.ndarray</em> – Measured body-frame field <code class="docutils literal notranslate"><span class="pre">[mx,</span> <span class="pre">my,</span> <span class="pre">mz]</span></code>, in the units of
+<code class="docutils literal notranslate"><span class="pre">field_intensity</span></code>.</p>
 </dd>
 </dl>
 <p><strong>Errors Model</strong></p>
 <div class="math notranslate nohighlight">
-\[z = \psi + b + std \cdot N(0, 1)\]</div>
-<p>The bias <span class="math notranslate nohighlight">\(b\)</span> is constant for the magnetometer instance, while the
-noise is regenerated at every call.</p>
+\[z = S_i \cdot [BI](\varphi, \theta, \psi) \cdot m_{ref}
+    + b_i + std \cdot N(0, I_3)\]</div>
+<p>The soft-iron matrix <span class="math notranslate nohighlight">\(S_i\)</span> and hard-iron offset <span class="math notranslate nohighlight">\(b_i\)</span> are
+constant for the magnetometer instance, while the noise is
+regenerated at every call.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">isideal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>   
-<span class="go">[0.6]</span>
+<span class="go">[0.439  -0.24  0.866]</span>
 </pre></div>
 </div>
 </dd></dl>

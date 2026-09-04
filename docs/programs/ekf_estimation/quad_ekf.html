@@ -550,7 +550,12 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#10.-Summary-&amp;-Conclusions">10. Summary &amp; Conclusions</a></li>
 </ul>
 </li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Appendix:-Sensor-Model-Demonstrations">Appendix: Sensor Model Demonstrations</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Appendix:-Sensor-Model-Demonstrations">Appendix: Sensor Model Demonstrations</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#IMU">IMU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#GPS">GPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Magnetometer">Magnetometer</a></li>
+</ul>
+</li>
 </ul>
 
             </nav>
@@ -939,27 +944,29 @@ H_{gyro} =
 <h3>4.4. Magnetometer<a class="headerlink" href="#4.4.-Magnetometer" title="Link to this heading">#</a></h3>
 <div class="line-block">
 <div class="line"><strong>Measures</strong></div>
-<div class="line">Heading (yaw) <span class="math notranslate nohighlight">\(\psi\)</span> directly.</div>
+<div class="line">The local geomagnetic field vector expressed in the body frame, <span class="math notranslate nohighlight">\(\mathbf m_b \in \mathbb R^3\)</span>. This is a full 3-axis magnetometer: it does <strong>not</strong> hand the filter a heading, it hands it three field components, and the heading falls out of the update through the attitude that appears in <span class="math notranslate nohighlight">\(h(\mathbf x)\)</span>.</div>
 </div>
 <div class="line-block">
 <div class="line"><strong>Error model</strong></div>
-<div class="line">White noise, <span class="math notranslate nohighlight">\(\sigma_{mag}=0.05\,rad\)</span>, plus an optional constant bias.</div>
+<div class="line">White noise, <span class="math notranslate nohighlight">\(\sigma_{mag}=0.02\)</span> per axis (normalized-field units, reference total intensity <span class="math notranslate nohighlight">\(F=1\)</span>), plus optional hard-iron (a constant 3-vector offset) and soft-iron (a <span class="math notranslate nohighlight">\(3\times3\)</span> mixing matrix) distortion — both off by default.</div>
 </div>
 <div class="line-block">
 <div class="line"><strong>Sample rate</strong></div>
-<div class="line">Sampled at <span class="math notranslate nohighlight">\(50\,Hz\)</span>.</div>
+<div class="line"><span class="math notranslate nohighlight">\(50\,Hz\)</span>.</div>
 </div>
 <div class="line-block">
 <div class="line"><strong>Measurement equation</strong></div>
-<div class="line">Reading out a single state:</div>
+<div class="line">The reference field is fixed in the navigation frame by its total intensity <span class="math notranslate nohighlight">\(F\)</span>, inclination <span class="math notranslate nohighlight">\(I\)</span> and declination <span class="math notranslate nohighlight">\(D\)</span> (here <span class="math notranslate nohighlight">\(F=1\)</span>, <span class="math notranslate nohighlight">\(I=60^\circ\)</span>, <span class="math notranslate nohighlight">\(D=0\)</span>):</div>
 </div>
 <div class="math notranslate nohighlight">
-\[h(\mathbf x) = \psi, \qquad
-H_{mag} = \begin{bmatrix}0&amp;\cdots&amp;0&amp;1&amp;0&amp;0&amp;0\end{bmatrix}\]</div>
+\[\mathbf m_{ref} = F\,[\cos I \cdot \cos D,\ \cos I \cdot \sin D,\ \sin I]^\top\]</div>
+<p>and the measurement is that vector rotated into the body frame by the attitude:</p>
+<div class="math notranslate nohighlight">
+\[h(\mathbf x) = [BI](\varphi,\theta,\psi)\cdot \mathbf m_{ref}\]</div>
+<p>— the same body-from-inertial rotation used for the accelerometer and throughout Section <span class="math notranslate nohighlight">\(3\)</span>. Like the accelerometer, this is non-linear in the attitude, so <span class="math notranslate nohighlight">\(H_{mag}=\partial h/\partial\mathbf x\)</span> (a <span class="math notranslate nohighlight">\(3\times12\)</span> matrix, non-zero only in the <span class="math notranslate nohighlight">\(\varphi,\theta,\psi\)</span> columns) is computed numerically.</p>
 <div class="line-block">
 <div class="line"><strong>Update</strong></div>
-<div class="line">A <span class="math notranslate nohighlight">\(1\)</span>-dimensional innovation, gated at the <span class="math notranslate nohighlight">\(\chi^2_1\)</span> threshold. <span class="math notranslate nohighlight">\(R_{mag}=0.055^2\)</span>.</div>
-<div class="line">One wrinkle: yaw is an angle, so the innovation is wrapped to <span class="math notranslate nohighlight">\([-\pi,\pi]\)</span> before gating. Without this, an estimate near <span class="math notranslate nohighlight">\(\pm\pi\)</span> would be corrected the wrong way round the circle.</div>
+<div class="line">A <span class="math notranslate nohighlight">\(3\)</span>-dimensional innovation, gated at the <span class="math notranslate nohighlight">\(\chi^2_3\)</span> 95% threshold. <span class="math notranslate nohighlight">\(R_{mag}=\operatorname{diag}(0.025^2,0.025^2,0.025^2)\)</span>, just above the injected per-axis noise variance (<span class="math notranslate nohighlight">\(0.02^2\)</span>). Because the residual <span class="math notranslate nohighlight">\(\mathbf z-h(\hat{\mathbf x})\)</span> lives in field space rather than angle space, the old yaw-wrapping wrinkle disappears: a yaw estimate near <span class="math notranslate nohighlight">\(\pm\pi\)</span> is corrected the short way round automatically.</div>
 </div>
 </section>
 <section id="4.5.-Summary">
@@ -989,9 +996,9 @@ H_{mag} = \begin{bmatrix}0&amp;\cdots&amp;0&amp;1&amp;0&amp;0&amp;0\end{bmatrix}
 <td><p><span class="math notranslate nohighlight">\(0.05\,m/s^2\)</span></p></td>
 </tr>
 <tr class="row-odd"><td><p>Magnetometer</p></td>
-<td><p>heading <span class="math notranslate nohighlight">\(\psi\)</span></p></td>
+<td><p>body-frame field <span class="math notranslate nohighlight">\(m_x,m_y,m_z\)</span></p></td>
 <td><p><span class="math notranslate nohighlight">\(50\)</span></p></td>
-<td><p><span class="math notranslate nohighlight">\(0.05\,rad\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(0.02\)</span> (norm.)</p></td>
 </tr>
 </tbody>
 </table>
@@ -1033,7 +1040,7 @@ numerically keeps the Jacobian correct automatically if the dynamics model ever 
 <p>Two refinements are applied as a thin layer over the framework <code class="docutils literal notranslate"><span class="pre">update</span></code>:</p>
 <ul class="simple">
 <li><p><strong>Adaptive GPS</strong> <span class="math notranslate nohighlight">\(R\)</span> - when <span class="math notranslate nohighlight">\(GPS\)</span> innovations grow, <span class="math notranslate nohighlight">\(R_{gps}\)</span> is inflated so the filter down-weights degraded measurements (a Mehra-style two-phase scheme).</p></li>
-<li><p><strong>Angle-wrapped yaw</strong> - the magnetometer innovation is wrapped to <span class="math notranslate nohighlight">\([-\pi,\pi]\)</span> so a yaw estimate near <span class="math notranslate nohighlight">\(\pm\pi\)</span> is corrected toward the measurement, not away from it.</p></li>
+<li><p><strong>3-axis magnetometer</strong> - the magnetometer update is a full vector correction, <span class="math notranslate nohighlight">\(h(\mathbf x)=[BI]\,\mathbf m_{ref}\)</span>, with a numeric <span class="math notranslate nohighlight">\(3\times12\)</span> Jacobian. The residual is in field space, so no yaw-wrapping is needed - a yaw estimate near <span class="math notranslate nohighlight">\(\pm\pi\)</span> is still corrected the short way round.</p></li>
 </ul>
 <p>All of this is encapsulated in <code class="docutils literal notranslate"><span class="pre">ekf.ekf_quad</span></code>; the controllers and the loop never see it.</p>
 </section>
@@ -1079,7 +1086,7 @@ Cascade-<span class="math notranslate nohighlight">\(PID\)</span> controllers re
     <span class="s1">&#39;P0&#39;</span>     <span class="p">:</span> <span class="n">P0</span><span class="p">,</span>
     <span class="s1">&#39;R_gps&#39;</span>  <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">0.50</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.50</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.50</span><span class="o">**</span><span class="mi">2</span><span class="p">]),</span>
     <span class="s1">&#39;R_gyro&#39;</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">0.015</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.015</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.015</span><span class="o">**</span><span class="mi">2</span><span class="p">]),</span>
-    <span class="s1">&#39;R_mag&#39;</span>  <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.055</span><span class="o">**</span><span class="mi">2</span><span class="p">]]),</span>
+    <span class="s1">&#39;R_mag&#39;</span>  <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">0.025</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.025</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.025</span><span class="o">**</span><span class="mi">2</span><span class="p">]),</span>
     <span class="s1">&#39;R_acc&#39;</span>  <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">0.10</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.10</span><span class="o">**</span><span class="mi">2</span><span class="p">]),</span>
     <span class="c1"># initial-estimate offset (1-sigma) from truth</span>
     <span class="s1">&#39;x0_pos_sigma&#39;</span><span class="p">:</span> <span class="mf">0.30</span><span class="p">,</span>
@@ -1087,8 +1094,11 @@ Cascade-<span class="math notranslate nohighlight">\(PID\)</span> controllers re
     <span class="c1"># sensor white-noise levels (1-sigma) actually injected</span>
     <span class="s1">&#39;gps_std&#39;</span> <span class="p">:</span> <span class="mf">0.50</span><span class="p">,</span>
     <span class="s1">&#39;gyro_std&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
-    <span class="s1">&#39;mag_std&#39;</span> <span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="s1">&#39;mag_std&#39;</span> <span class="p">:</span> <span class="mf">0.02</span><span class="p">,</span>
     <span class="s1">&#39;acc_std&#39;</span> <span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="c1"># 3-axis magnetometer reference-field geometry [rad]</span>
+    <span class="s1">&#39;mag_inclination&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="mf">60.0</span><span class="p">),</span>
+    <span class="s1">&#39;mag_declination&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="c1"># sensor decimation relative to the 200 Hz master loop</span>
     <span class="s1">&#39;gps_rate&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>   <span class="c1"># 10 Hz</span>
     <span class="s1">&#39;mag_rate&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>    <span class="c1"># 50 Hz</span>
@@ -1169,9 +1179,9 @@ Cascade-<span class="math notranslate nohighlight">\(PID\)</span> controllers re
 <div class="highlight"><pre>
 EKF closed-loop  |  tf = 90.0 s  |  control dt = 0.005 s  |  IMU = 200 Hz  (sim dt = 0.005 s)
 
-<span class="ansi-yellow-intense-fg">Quadcopter hit the ground at t=89.225 s (z=-0.0030 m); stopping simulation.
+<span class="ansi-yellow-intense-fg">Quadcopter hit the ground at t=89.830 s (z=-0.0036 m); stopping simulation.
 </span>To suppress c4dynamics&#39; warnings, run: import warnings,import c4dynamics as c4d, warnings.simplefilter(&#39;ignore&#39;, c4d.c4warn)
- (File: C:\Users\zivme\Dropbox\c4dynamics\c4dynamics\utils\use_cases\quad_ekf.py, Line: 672)
+ (File: C:\Users\zivme\Dropbox\c4dynamics\c4dynamics\utils\use_cases\quad_ekf.py, Line: 722)
 EKF closed-loop complete.
 </pre></div></div>
 </div>
@@ -1179,7 +1189,7 @@ EKF closed-loop complete.
 <section id="8.-Results">
 <h2>8. Results<a class="headerlink" href="#8.-Results" title="Link to this heading">#</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The whole flight, viewed edge-on against the x-z plane.</span>
@@ -1279,12 +1289,12 @@ EKF closed-loop complete.
 </div>
 <p>Each panel is the estimation error <code class="docutils literal notranslate"><span class="pre">true</span> <span class="pre">-</span> <span class="pre">est</span></code> for one state, against the <span class="math notranslate nohighlight">\(\pm 2\sigma\)</span> envelope the filter reports for it.</p>
 <ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(x\)</span> rides its band: error RMS <span class="math notranslate nohighlight">\(\approx 0.11\,m\)</span> against a <span class="math notranslate nohighlight">\(\approx\pm 0.22\,m\)</span> envelope — it sits at about the <span class="math notranslate nohighlight">\(1\sigma\)</span> level and only brushes the edge. <span class="math notranslate nohighlight">\(GPS\)</span> at <span class="math notranslate nohighlight">\(10\,Hz\)</span> sets this uncertainty and the filter has it about right.</p></li>
-<li><p><span class="math notranslate nohighlight">\(v_x\)</span> stays well inside — <span class="math notranslate nohighlight">\(\approx 0.03\,m/s\)</span> error in a <span class="math notranslate nohighlight">\(\approx\pm 0.16\,m/s\)</span> band.</p></li>
-<li><p><span class="math notranslate nohighlight">\(\varphi\)</span> hugs zero: a few tenths of a degree of error inside a <span class="math notranslate nohighlight">\(\approx\pm 8^\circ\)</span> band. The <span class="math notranslate nohighlight">\(200\,Hz\)</span> accelerometer pins roll far tighter than the covariance admits.</p></li>
-<li><p><span class="math notranslate nohighlight">\(\psi\)</span> is the loosest attitude channel — error <span class="math notranslate nohighlight">\(\approx 1.2^\circ\)</span> against <span class="math notranslate nohighlight">\(\approx\pm 3.7^\circ\)</span> — set by the <span class="math notranslate nohighlight">\(50\,Hz\)</span> magnetometer.</p></li>
+<li><p><span class="math notranslate nohighlight">\(x\)</span> sits well inside its band: error RMS <span class="math notranslate nohighlight">\(\approx 0.07\,m\)</span> against a <span class="math notranslate nohighlight">\(\approx\pm 0.22\,m\)</span> envelope — about <span class="math notranslate nohighlight">\(0.6\sigma\)</span>. <span class="math notranslate nohighlight">\(GPS\)</span> at <span class="math notranslate nohighlight">\(10\,Hz\)</span> sets this uncertainty and the filter carries a little margin.</p></li>
+<li><p><span class="math notranslate nohighlight">\(v_x\)</span> stays well inside — <span class="math notranslate nohighlight">\(\approx 0.02\,m/s\)</span> error in a <span class="math notranslate nohighlight">\(\approx\pm 0.14\,m/s\)</span> band.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\varphi\)</span> hugs zero: <span class="math notranslate nohighlight">\(\approx 0.6^\circ\)</span> of error inside a <span class="math notranslate nohighlight">\(\approx\pm 6^\circ\)</span> band. The <span class="math notranslate nohighlight">\(200\,Hz\)</span> accelerometer pins roll far tighter than the covariance admits.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\psi\)</span> error is <span class="math notranslate nohighlight">\(\approx 0.8^\circ\)</span> inside a wide <span class="math notranslate nohighlight">\(\approx\pm 10^\circ\)</span> band — the <span class="math notranslate nohighlight">\(50\,Hz\)</span> 3-axis magnetometer keeps yaw honest, and with the vector update’s inflated <span class="math notranslate nohighlight">\(R\)</span> the filter reports generous uncertainty on it.</p></li>
 </ul>
-<p>No channel escapes its band, so the filter is nowhere over-confident; the velocity and roll channels sit far enough inside that they read as conservative. That slack is what the NEES quantifies next.</p>
+<p>No channel escapes its band, so the filter is nowhere over-confident; every channel sits far enough inside that it reads as conservative. That slack is what the NEES quantifies next.</p>
 <ul class="simple">
 <li><p><strong>NEES</strong> (Normalized Estimation Error Squared)</p></li>
 </ul>
@@ -1336,20 +1346,20 @@ EKF closed-loop complete.
 <div class="highlight"><pre>
 state           RMSE   unit
 ---------------------------
-x             0.1077   m
-y             0.0792   m
-z             0.1831   m
-vx            0.0250   m/s
-vy            0.0259   m/s
-vz            0.1411   m/s
-phi           0.0076   rad
-theta         0.0074   rad
-psi           0.0216   rad
+x             0.0678   m
+y             0.0636   m
+z             0.1814   m
+vx            0.0245   m/s
+vy            0.0253   m/s
+vz            0.1304   m/s
+phi           0.0105   rad
+theta         0.0109   rad
+psi           0.0141   rad
 p             0.0055   rad/s
 q             0.0054   rad/s
-r             0.0057   rad/s
+r             0.0058   rad/s
 ---------------------------
-NEES            3.81   (ideal ~ 12)
+NEES            3.25   (ideal ~ 12)
 </pre></div></div>
 </div>
 <ul class="simple">
@@ -1389,10 +1399,10 @@ NEES            3.81   (ideal ~ 12)
 ==================================================
    TRACKING PERFORMANCE  (loop closed on estimate)
 ==================================================
-  RMSE x : 0.2283 m   (5.7% of x amplitude)
-  RMSE y : 0.4229 m   (21.1% of y amplitude)
-  RMSE z : 0.3281 m   (6.6% of altitude)
-  Max altitude deviation : 88.9 cm
+  RMSE x : 0.2154 m   (5.4% of x amplitude)
+  RMSE y : 0.3737 m   (18.7% of y amplitude)
+  RMSE z : 0.3625 m   (7.3% of altitude)
+  Max altitude deviation : 135.3 cm
 ==================================================
 </pre></div></div>
 </div>
@@ -1400,8 +1410,8 @@ NEES            3.81   (ideal ~ 12)
 <p><img alt="cascade-PID (truth-fed) tracking performance" src="https://raw.githubusercontent.com/c4dynamics/c4dynamics/main/docs/source/programs/ekf_estimation/quad_ekf_truth_tracking.png" /></p>
 <p>Fed perfect state, the Cascade-PID example scored roughly <span class="math notranslate nohighlight">\(5\%\)</span> / <span class="math notranslate nohighlight">\(19\%\)</span> / <span class="math notranslate nohighlight">\(0.1\%\)</span> RMSE on <span class="math notranslate nohighlight">\(x\)</span> / <span class="math notranslate nohighlight">\(y\)</span> / <span class="math notranslate nohighlight">\(z\)</span>. Closing the same loop on the <span class="math notranslate nohighlight">\(EKF\)</span> estimate:</p>
 <ul class="simple">
-<li><p><strong>Horizontal</strong> (<span class="math notranslate nohighlight">\(x, y\)</span>) barely moves — a point or two of normalized RMSE. <span class="math notranslate nohighlight">\(GPS\)</span> pins the absolute position at <span class="math notranslate nohighlight">\(10\,Hz\)</span> and the estimate stays tight enough that the outer loop hardly notices it isn’t truth.</p></li>
-<li><p><strong>Altitude</strong> (<span class="math notranslate nohighlight">\(z\)</span>) is where estimation costs something real: RMSE grows from millimetres to <span class="math notranslate nohighlight">\(\approx 0.3\,m\)</span> and the worst-case excursion from a few centimetres to <span class="math notranslate nohighlight">\(\approx 0.9\,m\)</span>. Unlike roll/pitch and horizontal velocity, the <span class="math notranslate nohighlight">\(z\)</span> channel gets no accelerometer aiding — height rides on <span class="math notranslate nohighlight">\(10\,Hz\)</span> <span class="math notranslate nohighlight">\(GPS\)</span> alone (there is no barometer) — and the softened <span class="math notranslate nohighlight">\(K_{p_z}, K_{i_z}\)</span> (Section <span class="math notranslate nohighlight">\(7\)</span>) further trade altitude stiffness for calm against that noise.
+<li><p><strong>Horizontal</strong> (<span class="math notranslate nohighlight">\(x, y\)</span>) barely moves — still <span class="math notranslate nohighlight">\(\approx 5\%\)</span> / <span class="math notranslate nohighlight">\(19\%\)</span> normalized RMSE. <span class="math notranslate nohighlight">\(GPS\)</span> pins the absolute position at <span class="math notranslate nohighlight">\(10\,Hz\)</span> and the estimate stays tight enough that the outer loop hardly notices it isn’t truth.</p></li>
+<li><p><strong>Altitude</strong> (<span class="math notranslate nohighlight">\(z\)</span>) is where estimation costs something real: RMSE grows from millimetres to <span class="math notranslate nohighlight">\(\approx 0.36\,m\)</span> and the worst-case excursion from a few centimetres to <span class="math notranslate nohighlight">\(\approx 1.4\,m\)</span>. Unlike roll/pitch and horizontal velocity, the <span class="math notranslate nohighlight">\(z\)</span> channel gets no accelerometer aiding — height rides on <span class="math notranslate nohighlight">\(10\,Hz\)</span> <span class="math notranslate nohighlight">\(GPS\)</span> alone (there is no barometer) — and the softened <span class="math notranslate nohighlight">\(K_{p_z}, K_{i_z}\)</span> (Section <span class="math notranslate nohighlight">\(7\)</span>) further trade altitude stiffness for calm against that noise.
 This is the main price of output-feedback control in this example.</p></li>
 </ul>
 </section>
@@ -1446,15 +1456,15 @@ This is the main price of output-feedback control in this example.</p></li>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-IMU rate =     10 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2535 m  (n=20/20)
-IMU rate =     50 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2625 m  (n=20/20)
-IMU rate =    100 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.3002 m  (n=20/20)
-IMU rate =    150 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2879 m  (n=20/20)
-IMU rate =    200 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2830 m  (n=20/20)
+IMU rate =     10 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2050 m  (n=20/20)
+IMU rate =     50 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2952 m  (n=20/20)
+IMU rate =    100 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2676 m  (n=20/20)
+IMU rate =    150 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2904 m  (n=20/20)
+IMU rate =    200 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2898 m  (n=20/20)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">quad_ekf</span><span class="o">.</span><span class="n">plot_gps_dropout</span><span class="p">(</span><span class="n">dropout_sweep</span><span class="p">)</span>
@@ -1484,10 +1494,9 @@ IMU rate =    200 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2830
 <section id="10.-Summary-&amp;-Conclusions">
 <h2>10. Summary &amp; Conclusions<a class="headerlink" href="#10.-Summary-&-Conclusions" title="Link to this heading">#</a></h2>
 <p>The same figure-8 that the Cascade-<span class="math notranslate nohighlight">\(PID\)</span> example flew on perfect state is now flown on a state <strong>estimated</strong> from realistic <span class="math notranslate nohighlight">\(GPS\)</span> and <span class="math notranslate nohighlight">\(IMU\)</span> — a complete estimation-control pipeline, built entirely on c4dynamics abstractions (<code class="docutils literal notranslate"><span class="pre">c4d.rigidbody</span></code>, <code class="docutils literal notranslate"><span class="pre">c4d.filters.ekf</span></code>, and the <code class="docutils literal notranslate"><span class="pre">sensors.navigation</span></code> models).</p>
-<p><strong>Estimation.</strong> <span class="math notranslate nohighlight">\(GPS\)</span> at <span class="math notranslate nohighlight">\(10\,Hz\)</span> bounds the absolute position while the dynamics model bridges the gaps between fixes: position tracks truth to <span class="math notranslate nohighlight">\(≈ 0.1\,m\)</span> and horizontal velocity to a few <span class="math notranslate nohighlight">\(cm/s\)</span> — with no velocity sensor at all. Roll and pitch, observed through the accelerometer’s specific-force model at <span class="math notranslate nohighlight">\(200\,Hz\)</span>, hold to a few tenths of a degree; yaw, on the <span class="math notranslate nohighlight">\(50\,Hz\)</span> magnetometer, to <span class="math notranslate nohighlight">\(≈ 1°\)</span>. The filter runs a little conservative (mean <span class="math notranslate nohighlight">\(NEES ≈ 4\)</span>
+<p><strong>Estimation.</strong> <span class="math notranslate nohighlight">\(GPS\)</span> at <span class="math notranslate nohighlight">\(10\,Hz\)</span> bounds the absolute position while the dynamics model bridges the gaps between fixes: position tracks truth to <span class="math notranslate nohighlight">\(≈ 0.1\,m\)</span> and horizontal velocity to a few <span class="math notranslate nohighlight">\(cm/s\)</span> — with no velocity sensor at all. Roll and pitch, observed through the accelerometer’s specific-force model at <span class="math notranslate nohighlight">\(200\,Hz\)</span>, hold to about half a degree; yaw, from the <span class="math notranslate nohighlight">\(50\,Hz\)</span> 3-axis magnetometer, to <span class="math notranslate nohighlight">\(≈ 0.8°\)</span>. The filter runs conservative (mean <span class="math notranslate nohighlight">\(NEES ≈ 3\)</span>
 against an ideal of <span class="math notranslate nohighlight">\(12\)</span>): it reports more uncertainty than it turns out to need, which is the safe direction to err.</p>
-<p><strong>Control on the estimate.</strong> Feeding that estimate to the cascade controller in place of truth costs almost nothing horizontally — figure-8 tracking <span class="math notranslate nohighlight">\(RMSE\)</span> rises from <span class="math notranslate nohighlight">\(≈ 5\%/19\%\)</span> to <span class="math notranslate nohighlight">\(≈ 6\%/21\%\)</span> of amplitude. Altitude is the exception: with no barometer and no accelerometer aiding on the <span class="math notranslate nohighlight">\(z\)</span> channel, the hold degrades from millimetres to <span class="math notranslate nohighlight">\(≈ 0.3\,m\)</span> <span class="math notranslate nohighlight">\(RMSE\)</span>, and the <span class="math notranslate nohighlight">\(z\)</span> gains had to be softened (Section <span class="math notranslate nohighlight">\(7\)</span>) to keep the loop calm against the noisier
-signal.</p>
+<p><strong>Control on the estimate.</strong> Feeding that estimate to the cascade controller in place of truth costs almost nothing horizontally — figure-8 tracking <span class="math notranslate nohighlight">\(RMSE\)</span> stays around <span class="math notranslate nohighlight">\(≈ 5\%/19\%\)</span> of amplitude. Altitude is the exception: with no barometer and no accelerometer aiding on the <span class="math notranslate nohighlight">\(z\)</span> channel, the hold degrades from millimetres to <span class="math notranslate nohighlight">\(≈ 0.35\,m\)</span> <span class="math notranslate nohighlight">\(RMSE\)</span>, and the <span class="math notranslate nohighlight">\(z\)</span> gains had to be softened (Section <span class="math notranslate nohighlight">\(7\)</span>) to keep the loop calm against the noisier signal.</p>
 <p><strong>IMU rate.</strong> Because this filter uses the <span class="math notranslate nohighlight">\(IMU\)</span> to <em>correct</em> a model-based prediction rather than to <em>drive</em> it, its update rate is not a performance knob — raising it does not help the estimate ride out a <span class="math notranslate nohighlight">\(GPS\)</span> dropout (Section <span class="math notranslate nohighlight">\(9\)</span>). A strapdown <span class="math notranslate nohighlight">\(INS\)</span>, where the <span class="math notranslate nohighlight">\(IMU\)</span> rate <em>is</em> the prediction rate, would answer differently.</p>
 <p><strong>Natural next steps</strong> — small extensions to this example:</p>
 <ul class="simple">
@@ -1506,38 +1515,68 @@ signal.</p>
 <div class="line">Section <span class="math notranslate nohighlight">\(4\)</span> gave each sensor’s error model and measurement equation on paper.</div>
 <div class="line">This appendix runs the sensor objects on their own, outside the filter: each demo() drives its sensor with a known reference signal and plots the noisy, biased output against that ground truth — so the raw measurement behaviour the <span class="math notranslate nohighlight">\(EKF\)</span>’s update stage has to cope with is visible in isolation, before it’s buried inside the closed loop.</div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics.sensors.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">imu</span><span class="p">,</span> <span class="n">gps</span><span class="p">,</span> <span class="n">magnetometer</span>
-<span class="n">imu</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
-<span class="n">gps</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
-<span class="n">magnetometer</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
+<section id="IMU">
+<h2>IMU<a class="headerlink" href="#IMU" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
 </div>
-<div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_88_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_88_0.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_88_1.png" src="../../_images/programs_ekf_estimation_quad_ekf_88_1.png" />
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">imu</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
+</pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_88_2.png" src="../../_images/programs_ekf_estimation_quad_ekf_88_2.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_90_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_90_0.png" />
 </div>
 </div>
+</section>
+<section id="GPS">
+<h2>GPS<a class="headerlink" href="#GPS" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gps</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_92_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_92_0.png" />
+</div>
+</div>
+</section>
+<section id="Magnetometer">
+<h2>Magnetometer<a class="headerlink" href="#Magnetometer" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">magnetometer</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_94_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_94_0.png" />
+</div>
+</div>
+</section>
 </section>
 
 
@@ -1615,7 +1654,12 @@ signal.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#10.-Summary-&amp;-Conclusions">10. Summary &amp; Conclusions</a></li>
 </ul>
 </li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Appendix:-Sensor-Model-Demonstrations">Appendix: Sensor Model Demonstrations</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Appendix:-Sensor-Model-Demonstrations">Appendix: Sensor Model Demonstrations</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#IMU">IMU</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#GPS">GPS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Magnetometer">Magnetometer</a></li>
+</ul>
+</li>
 </ul>
 
   </nav></div>

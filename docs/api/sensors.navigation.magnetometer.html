@@ -535,19 +535,36 @@ document.write(`
 <h1>Magnetometer<a class="headerlink" href="#magnetometer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="c4dynamics.sensors.navigation.magnetometer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c4dynamics.sensors.navigation.</span></span><span class="sig-name descname"><span class="pre">magnetometer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isideal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/c4dynamics/sensors/navigation.html#magnetometer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.sensors.navigation.magnetometer" title="Link to this definition">#</a></dt>
-<dd><p>Magnetometer — heading (yaw) sensor.</p>
-<p>The <a class="reference internal" href="#c4dynamics.sensors.navigation.magnetometer" title="c4dynamics.sensors.navigation.magnetometer"><code class="xref py py-class docutils literal notranslate"><span class="pre">magnetometer</span></code></a> class models a magnetometer that measures the
-heading (yaw angle) <span class="math notranslate nohighlight">\(\psi\)</span> of a vehicle.  The measurement is
-affected by a constant bias and sample-to-sample white Gaussian noise.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">c4dynamics.sensors.navigation.</span></span><span class="sig-name descname"><span class="pre">magnetometer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_iron</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_iron</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_intensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inclination</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0471975511965976</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">declination</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isideal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/c4dynamics/sensors/navigation.html#magnetometer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#c4dynamics.sensors.navigation.magnetometer" title="Link to this definition">#</a></dt>
+<dd><p>Magnetometer — 3-axis geomagnetic field sensor.</p>
+<p>The <a class="reference internal" href="#c4dynamics.sensors.navigation.magnetometer" title="c4dynamics.sensors.navigation.magnetometer"><code class="xref py py-class docutils literal notranslate"><span class="pre">magnetometer</span></code></a> class models a strapdown 3-axis magnetometer.
+It measures the local geomagnetic field vector expressed in the vehicle
+<strong>body frame</strong>: a fixed reference field in the navigation frame, rotated
+into the body frame by the true attitude, then corrupted by soft-iron and
+hard-iron distortion and sample-to-sample white Gaussian noise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>noise_std</strong> (<em>float</em><em>, </em><em>optional</em>) – Standard deviation of the heading measurement noise, [rad].
-Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
-<li><p><strong>bias</strong> (<em>float</em><em>, </em><em>optional</em>) – Constant heading bias, [rad].  Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p><strong>isideal</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, overrides <code class="docutils literal notranslate"><span class="pre">noise_std</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> to zero, producing
-an ideal (noise-free, bias-free) magnetometer. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>noise_std</strong> (<em>float</em><em> or </em><em>array_like</em><em>, </em><em>optional</em>) – Standard deviation of the field measurement noise, per body axis, in
+the same units as <code class="docutils literal notranslate"><span class="pre">field_intensity</span></code> (dimensionless when the field
+is left normalized).  A scalar is broadcast to all three axes.
+Defaults to <code class="docutils literal notranslate"><span class="pre">0.02</span></code>.</p></li>
+<li><p><strong>hard_iron</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Constant additive bias <code class="docutils literal notranslate"><span class="pre">[bx,</span> <span class="pre">by,</span> <span class="pre">bz]</span></code> (hard-iron offset), in the
+same units as <code class="docutils literal notranslate"><span class="pre">field_intensity</span></code>.  Defaults to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p></li>
+<li><p><strong>soft_iron</strong> (<em>array_like</em><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">3</span></code> soft-iron distortion matrix applied to the body-frame field
+before the hard-iron offset and the noise.  Defaults to the identity.</p></li>
+<li><p><strong>field_intensity</strong> (<em>float</em><em>, </em><em>optional</em>) – Total intensity <span class="math notranslate nohighlight">\(F\)</span> of the reference geomagnetic field.
+Defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code> (the field is returned normalized).  Set a real
+value (e.g. <code class="docutils literal notranslate"><span class="pre">50e-6</span></code> T or <code class="docutils literal notranslate"><span class="pre">50</span></code> for µT) to work in physical units —
+<code class="docutils literal notranslate"><span class="pre">noise_std</span></code> and <code class="docutils literal notranslate"><span class="pre">hard_iron</span></code> then carry the same unit.</p></li>
+<li><p><strong>inclination</strong> (<em>float</em><em>, </em><em>optional</em>) – Inclination (dip) angle <span class="math notranslate nohighlight">\(I\)</span> of the reference field, [rad],
+positive pointing down.  Defaults to <code class="docutils literal notranslate"><span class="pre">np.pi</span> <span class="pre">/</span> <span class="pre">3</span></code> (<span class="math notranslate nohighlight">\(60^\circ\)</span>,
+a typical mid-latitude value).</p></li>
+<li><p><strong>declination</strong> (<em>float</em><em>, </em><em>optional</em>) – Declination angle <span class="math notranslate nohighlight">\(D\)</span> of the reference field, [rad], positive
+east of north.  Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><strong>isideal</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, overrides <code class="docutils literal notranslate"><span class="pre">noise_std</span></code> / <code class="docutils literal notranslate"><span class="pre">hard_iron</span></code> / <code class="docutils literal notranslate"><span class="pre">soft_iron</span></code>
+to produce an ideal (noise-free, distortion-free) magnetometer.  The
+reference field itself is unaffected.  Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -556,106 +573,135 @@ an ideal (noise-free, bias-free) magnetometer. Defaults to <code class="docutils
 <p><a class="reference internal" href="filters.ekf.html#c4dynamics.filters.ekf.ekf" title="c4dynamics.filters.ekf.ekf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ekf</span></code></a>, <a class="reference internal" href="sensors.navigation.gps.html#c4dynamics.sensors.navigation.gps" title="c4dynamics.sensors.navigation.gps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gps</span></code></a>, <a class="reference internal" href="sensors.navigation.imu.html#c4dynamics.sensors.navigation.imu" title="c4dynamics.sensors.navigation.imu"><code class="xref py py-obj docutils literal notranslate"><span class="pre">imu</span></code></a></p>
 </div>
 <p><strong>Functionality</strong></p>
-<p>At each sample the magnetometer returns a heading measurement based on the
-true state of the vehicle.  Given the 12-state vector</p>
+<p>The reference field is built from its total intensity, inclination and
+declination and held fixed in the navigation frame associated with the
+state’s 3-2-1 Euler angles (<code class="docutils literal notranslate"><span class="pre">x</span></code> forward/north, <code class="docutils literal notranslate"><span class="pre">y</span></code> right/east, <code class="docutils literal notranslate"><span class="pre">z</span></code>
+down):</p>
+<div class="math notranslate nohighlight">
+\[m_{ref} = F \cdot
+    [\cos I \cos D,\ \cos I \sin D,\ \sin I]^T\]</div>
+<p>At each sample, given the 12-state vector</p>
 <div class="math notranslate nohighlight">
 \[X = [x, y, z, v_x, v_y, v_z, \varphi, \theta, \psi, p, q, r]^T\]</div>
-<p>the ideal measurement is the yaw angle alone</p>
+<p>the reference field is rotated into the body frame by the true attitude
+and distorted:</p>
 <div class="math notranslate nohighlight">
-\[z_{ideal} = \psi\]</div>
-<p>and the simulated measurement is</p>
-<div class="math notranslate nohighlight">
-\[z = \psi + b + n\]</div>
-<p>where <span class="math notranslate nohighlight">\(b\)</span> is the constant bias and <span class="math notranslate nohighlight">\(n\)</span> is a zero-mean Gaussian
-random variable with standard deviation <code class="docutils literal notranslate"><span class="pre">noise_std</span></code>.</p>
-<p>The heading is returned as given, without wrapping to
-<span class="math notranslate nohighlight">\([-\pi, \pi]\)</span>; a filter that consumes the measurement is
-responsible for wrapping its innovation (see <code class="xref py py-class docutils literal notranslate"><span class="pre">ekf</span></code>).  In a typical
-setup the magnetometer is sampled at a lower rate than the IMU, e.g.
-<span class="math notranslate nohighlight">\(50\,Hz\)</span>.</p>
+\[ \begin{align}\begin{aligned}m_{body} = [BI](\varphi, \theta, \psi) \cdot m_{ref}\\z = S_i \cdot m_{body} + b_i + n\end{aligned}\end{align} \]</div>
+<p>where <span class="math notranslate nohighlight">\([BI]\)</span> is the body-from-inertial 3-2-1 DCM
+(<a class="reference internal" href="generated/rotmat/c4dynamics.rotmat.rotmat.dcm321.html#c4dynamics.rotmat.rotmat.dcm321" title="c4dynamics.rotmat.rotmat.dcm321"><code class="xref py py-func docutils literal notranslate"><span class="pre">dcm321</span></code></a>), <span class="math notranslate nohighlight">\(S_i\)</span> is the
+soft-iron matrix, <span class="math notranslate nohighlight">\(b_i\)</span> is the hard-iron offset, and <span class="math notranslate nohighlight">\(n\)</span> is a
+zero-mean Gaussian vector with per-axis standard deviation <code class="docutils literal notranslate"><span class="pre">noise_std</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">measure</span></code> returns the full 3-axis body-frame field vector.  A consumer
+that needs a heading derives it from the horizontal components after
+de-rotating roll and pitch (tilt compensation); a filter that consumes
+the vector directly (see <code class="xref py py-class docutils literal notranslate"><span class="pre">ekf</span></code>) needs no yaw-wrapping, because the
+measurement is linear in the rotated field rather than in the angle
+itself.  In a typical setup the magnetometer is sampled at a lower rate
+than the IMU, e.g. <span class="math notranslate nohighlight">\(50\,Hz\)</span>.</p>
 <p><strong>Errors Model</strong></p>
-<p>The magnetometer measurement is subject to two error sources: bias and
-noise.</p>
+<p>The magnetometer measurement is subject to three error sources:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Bias</span></code>:
-a constant offset in the measured heading.  It is set when the
-magnetometer is constructed through the <code class="docutils literal notranslate"><span class="pre">bias</span></code> parameter and remains
-unchanged between measurements.  When <code class="docutils literal notranslate"><span class="pre">bias</span></code> is not provided, the bias
-is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Hard</span> <span class="pre">iron</span></code>:
+a constant additive offset <code class="docutils literal notranslate"><span class="pre">[bx,</span> <span class="pre">by,</span> <span class="pre">bz]</span></code> (magnetized material fixed
+to the body).  Set through the <code class="docutils literal notranslate"><span class="pre">hard_iron</span></code> parameter and unchanged
+between measurements.  Defaults to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Soft</span> <span class="pre">iron</span></code>:
+a constant <code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">x</span> <span class="pre">3</span></code> linear distortion <span class="math notranslate nohighlight">\(S_i\)</span> (nearby ferrous
+material that reshapes the field).  Set through the <code class="docutils literal notranslate"><span class="pre">soft_iron</span></code>
+parameter.  Defaults to the identity.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Noise</span></code>:
-a random variation in the heading measurement.  At every call to
-<a class="reference internal" href="generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html#c4dynamics.sensors.navigation.magnetometer.measure" title="c4dynamics.sensors.navigation.magnetometer.measure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">measure</span></code></a>, an independent normally distributed sample with mean
-zero and standard deviation <code class="docutils literal notranslate"><span class="pre">noise_std</span></code> is added.</p></li>
+a zero-mean Gaussian sample, drawn independently per axis at every call
+to <a class="reference internal" href="generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html#c4dynamics.sensors.navigation.magnetometer.measure" title="c4dynamics.sensors.navigation.magnetometer.measure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">measure</span></code></a>, with standard deviation <code class="docutils literal notranslate"><span class="pre">noise_std</span></code>.</p></li>
 </ul>
-<p>The errors model can be disabled by setting <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code> and
-<code class="docutils literal notranslate"><span class="pre">bias</span> <span class="pre">=</span> <span class="pre">0</span></code>, or by passing <code class="docutils literal notranslate"><span class="pre">isideal</span> <span class="pre">=</span> <span class="pre">True</span></code> at construction, which
-mutes both regardless of the <code class="docutils literal notranslate"><span class="pre">noise_std</span></code> / <code class="docutils literal notranslate"><span class="pre">bias</span></code> arguments.  Unlike
-the <code class="xref py py-class docutils literal notranslate"><span class="pre">seeker</span></code> model, the magnetometer does not generate a random
-bias during construction and does not include a scale-factor error; the
-supplied <code class="docutils literal notranslate"><span class="pre">bias</span></code> is deterministic for a given instance.</p>
+<p>The errors model can be disabled by passing <code class="docutils literal notranslate"><span class="pre">isideal</span> <span class="pre">=</span> <span class="pre">True</span></code> at
+construction, which forces <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">hard_iron</span> <span class="pre">=</span> <span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>
+and <code class="docutils literal notranslate"><span class="pre">soft_iron</span> <span class="pre">=</span> <span class="pre">I</span></code> regardless of the arguments.  Unlike the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">seeker</span></code> model, the magnetometer does not generate a random bias
+during construction; the supplied distortion is deterministic for a given
+instance.</p>
 <p><strong>Construction</strong></p>
 <p>A magnetometer instance is created by making a direct call to the
 constructor:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The measurement noise and constant bias can be specified when creating the
-sensor.</p>
+<p>The noise, the hard-iron / soft-iron distortion and the reference-field
+geometry can all be specified when creating the sensor.</p>
 <p class="rubric">Examples</p>
 <p>Import required packages:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </pre></div>
 </div>
-<p><strong>True heading</strong></p>
-<p>For the examples below, build a 12-state vector and set its yaw entry
-(index 8) to the true heading:</p>
+<p><strong>True attitude</strong></p>
+<p>For the examples below, build a 12-state vector and set its attitude
+entries (indices 6, 7, 8 = roll, pitch, yaw):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x_true</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>   <span class="c1"># true heading [rad]</span>
 </pre></div>
 </div>
 <p><strong>Ideal magnetometer</strong></p>
-<p>An ideal magnetometer can be created by muting the errors model:</p>
+<p>An ideal magnetometer can be created by muting the errors model.  Level
+and heading north, it reads the reference field directly — horizontal
+component forward, vertical component (the dip) down:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mag_ideal</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">isideal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_ideal</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">)</span>   
-<span class="go">[0.5]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_ideal</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">12</span><span class="p">))</span>   
+<span class="go">[0.5  0.  0.866]</span>
 </pre></div>
 </div>
-<p>The measured heading is then identical to the true heading.</p>
+<p>Rotating to a heading of <code class="docutils literal notranslate"><span class="pre">0.5</span></code> rad swings the horizontal field into the
+body <code class="docutils literal notranslate"><span class="pre">y</span></code> axis while its magnitude and the vertical component are
+preserved:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mag_ideal</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">)</span>   
+<span class="go">[0.439  -0.24  0.866]</span>
+</pre></div>
+</div>
 <p><strong>Non-ideal magnetometer</strong></p>
-<p>A non-ideal magnetometer introduces a constant heading bias and white
-measurement noise.  Set the random seed to make the example reproducible:</p>
+<p>A non-ideal magnetometer adds white measurement noise (and, optionally,
+hard-iron / soft-iron distortion).  Set the random seed to make the
+example reproducible:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mag_sensor</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">)</span>   
-<span class="go">[0.545]</span>
+<span class="go">[0.449  -0.242  0.879]</span>
 </pre></div>
 </div>
-<p><strong>Bias</strong></p>
-<p>The bias is constant across all measurements.  A magnetometer with a
-<code class="docutils literal notranslate"><span class="pre">0.1</span></code> rad heading bias can be created as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mag_bias</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_bias</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">)</span> <span class="o">-</span> <span class="n">x_true</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>   
-<span class="go">[0.1]</span>
+<p><strong>Hard iron</strong></p>
+<p>The hard-iron offset is constant across all measurements.  A magnetometer
+with a <code class="docutils literal notranslate"><span class="pre">[0.1,</span> <span class="pre">0,</span> <span class="pre">0]</span></code> offset can be created as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mag_hi</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">hard_iron</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_ref</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">isideal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_hi</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">)</span> <span class="o">-</span> <span class="n">mag_ref</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">)</span>   
+<span class="go">[0.1  0.  0.]</span>
 </pre></div>
 </div>
-<p>The difference between the measurement and the true heading is the
-specified bias.</p>
+<p>The difference between the measurement and the ideal field is the
+specified offset.</p>
+<p><strong>Soft iron</strong></p>
+<p>The soft-iron matrix scales / mixes the body-frame field.  A diagonal
+<code class="docutils literal notranslate"><span class="pre">soft_iron</span></code> with a <code class="docutils literal notranslate"><span class="pre">1.2</span></code> gain on the body <code class="docutils literal notranslate"><span class="pre">x</span></code> axis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mag_si</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">noise_std</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">soft_iron</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mf">1.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_si</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">12</span><span class="p">))</span>   
+<span class="go">[0.6  0.  0.866]</span>
+</pre></div>
+</div>
 <p><strong>Measurement noise</strong></p>
-<p>With zero bias, repeated measurements of the same state demonstrate the
-random noise generated at every call to <a class="reference internal" href="generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html#c4dynamics.sensors.navigation.magnetometer.measure" title="c4dynamics.sensors.navigation.magnetometer.measure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">measure</span></code></a>:</p>
+<p>With no distortion, repeated measurements of the same state demonstrate
+the random per-axis noise generated at every call to <a class="reference internal" href="generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html#c4dynamics.sensors.navigation.magnetometer.measure" title="c4dynamics.sensors.navigation.magnetometer.measure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">measure</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_noise</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mag_noise</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="p">(</span><span class="n">noise_std</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span> 
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">mag_noise</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">x_true</span><span class="p">))</span>
-<span class="go">[0.581]</span>
-<span class="go">[0.469]</span>
-<span class="go">[0.474]</span>
+<span class="go">[0.471 -0.252  0.855]</span>
+<span class="go">[0.417 -0.222  0.820]</span>
+<span class="go">[0.474 -0.255  0.872]</span>
 </pre></div>
 </div>
 <p><strong>Demo</strong></p>
 <p>The built-in <code class="xref py py-meth docutils literal notranslate"><span class="pre">demo</span></code> method provides a compact demonstration of the
-magnetometer errors model and plots the true and measured heading:</p>
+magnetometer errors model and plots the true and measured body-frame
+field components through an attitude sweep:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">c4d</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">magnetometer</span><span class="o">.</span><span class="n">demo</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -668,7 +714,7 @@ magnetometer errors model and plots the true and measured heading:</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/magnetometer/c4dynamics.sensors.navigation.magnetometer.measure.html#c4dynamics.sensors.navigation.magnetometer.measure" title="c4dynamics.sensors.navigation.magnetometer.measure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">magnetometer.measure</span></code></a>(x_true)</p></td>
-<td><p>Measure vehicle heading.</p></td>
+<td><p>Measure the body-frame geomagnetic field.</p></td>
 </tr>
 </tbody>
 </table>
