@@ -25,18 +25,18 @@ control problems.
 
 import sys
 
-from c4dynamics.controllers.quad_pid import dynamics as dynamics  # noqa: F401
-from c4dynamics.controllers.quad_pid import position_reference as position_reference  # noqa: F401
-from c4dynamics.controllers.quad_pid import velocity_reference as velocity_reference  # noqa: F401
-from c4dynamics.controllers.quad_pid import InitializeControllers as InitializeControllers  # noqa: F401
-from c4dynamics.controllers.quad_pid import OuterPositionPID as OuterPositionPID  # noqa: F401
-from c4dynamics.controllers.quad_pid import MiddleAttitudePID as MiddleAttitudePID  # noqa: F401
-from c4dynamics.controllers.quad_pid import InnerRatePID as InnerRatePID  # noqa: F401
-from c4dynamics.controllers.quad_pid import ControlAllocator as ControlAllocator  # noqa: F401
-from c4dynamics.controllers.quad_pid import run_fig8_pid as run_fig8_pid  # noqa: F401
-from c4dynamics.controllers.quad_pid import plot_results as plot_results  # noqa: F401
-from c4dynamics.controllers.quad_pid import compute_metrics as compute_metrics  # noqa: F401
-from c4dynamics.controllers import quad_pid as quad_pid  # noqa: F401
+from c4dynamics.controllers.quad_pid import dynamics as dynamics
+from c4dynamics.controllers.quad_pid import position_reference as position_reference
+from c4dynamics.controllers.quad_pid import velocity_reference as velocity_reference
+from c4dynamics.controllers.quad_pid import InitializeControllers as InitializeControllers
+from c4dynamics.controllers.quad_pid import OuterPositionPID as OuterPositionPID
+from c4dynamics.controllers.quad_pid import MiddleAttitudePID as MiddleAttitudePID
+from c4dynamics.controllers.quad_pid import InnerRatePID as InnerRatePID
+from c4dynamics.controllers.quad_pid import ControlAllocator as ControlAllocator
+from c4dynamics.controllers.quad_pid import run_fig8_pid as run_fig8_pid
+from c4dynamics.controllers.quad_pid import plot_results as plot_results
+from c4dynamics.controllers.quad_pid import compute_metrics as compute_metrics
+from c4dynamics.controllers import quad_pid as quad_pid
 
 
 if __name__ == "__main__":

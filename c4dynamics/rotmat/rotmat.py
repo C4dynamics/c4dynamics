@@ -1,9 +1,11 @@
-import numpy as np
 import sys
+
+import numpy as np
+
 # sys.path.append(".")
 # import c4dynamics as c4d
 from c4dynamics.utils.const import r2d
-from c4dynamics.utils.math import sin, cos, asin, atan2
+from c4dynamics.utils.math import asin, atan2, cos, sin
 
 
 def rotx(phi):

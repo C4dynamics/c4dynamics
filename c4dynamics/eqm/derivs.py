@@ -1,10 +1,12 @@
-from typing import Union
-import numpy as np
 import sys
+from typing import Union
+
+import numpy as np
+
+from c4dynamics import datapoint, rigidbody
 
 # sys.path.append(".")
-from c4dynamics.utils.math import sin, cos, tan
-from c4dynamics import datapoint, rigidbody
+from c4dynamics.utils.math import cos, sin, tan
 
 
 def eqm3(dp: "datapoint", F: Union[np.ndarray, list]) -> np.ndarray:

@@ -1,12 +1,12 @@
-import numpy as np
-
 # from scipy.special import erfinv
 import sys
+from typing import Optional
+
+import numpy as np
 
 # sys.path.append(".")
 import c4dynamics as c4d
 from c4dynamics.sensors.seeker import seeker
-from typing import Optional
 
 # np.warnings.filterwarnings('ignore', category = np.VisibleDeprecationWarning)
 

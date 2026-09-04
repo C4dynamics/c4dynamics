@@ -73,6 +73,20 @@ exclude = [
     "c4dynamics/envs/mountain_car.py"
 ]
 
+[tool.ruff.lint]
+ignore = [
+    "FA100",  # `from __future__ import annotations` is not adopted project-wide
+    "UP006",  # keep typing.Tuple/List: annotations are runtime-evaluated, min Python is 3.9
+    "UP035",
+    "B006",   # mutable defaults here are numeric constants used read-only (e.g. angle0=[0,0,0])
+    "RUF059", # unpacking a physics state and using a subset is idiomatic in this codebase
+]
+
+[tool.ruff.lint.per-file-ignores]
+# __init__.py modules use a hand-tuned import order to avoid circular imports;
+# the import sorter must not touch them.
+"**/__init__.py" = ["I001", "E402"]
+
 
 [project.urls]
 Homepage = "https://github.com/c4dynamics/c4dynamics/discussions"

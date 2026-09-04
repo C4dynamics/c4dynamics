@@ -1,12 +1,13 @@
 import os
 import sys
 import time
+import warnings
+from typing import List, Optional, Union
+
 import numpy as np
 
 # sys.path.append(".")
 import c4dynamics as c4d
-from typing import Optional, Union, List
-import warnings
 
 
 def animate(
@@ -315,7 +316,7 @@ def animate(
 
     """
     try:
-        import open3d as o3d  # noqa: F401, F811
+        import open3d as o3d
     except ImportError:
         raise ImportError(
             "The 'open3d' package is required for this function to work. "
@@ -332,7 +333,7 @@ def animate(
 
     if not rb._data:
         warnings.warn("""No stored data for the given rigidbody.""", c4d.c4warn)
-        return None
+        return
 
     #
     # load the model
@@ -373,7 +374,7 @@ def animate(
     for i, f in enumerate(sorted(files)):
 
         mfilepath = os.path.join(modelpath, f)
-        ismesh = True if any(f[-3:].lower() == s for s in ["stl", "obj", "ply"]) else False
+        ismesh = any(f[-3:].lower() == s for s in ["stl", "obj", "ply"])
         imodel = (
             o3d.io.read_triangle_mesh(mfilepath) if ismesh else o3d.io.read_point_cloud(mfilepath)
         )

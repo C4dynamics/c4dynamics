@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pragma: no cover
 
 # sngl3
@@ -11,6 +10,7 @@
 #   load mulitple images as an array where each row is an image
 
 import glob
+
 import numpy as np
 from matplotlib import image
 

@@ -1,17 +1,17 @@
-from typing import Optional
 import hashlib
-import shutil
 import os
+import shutil
 import sys
+from typing import Optional
 
 # sys.path.append(".")
 from c4dynamics.datasets._registry import (
     CACHE_DIR,
-    image_register,
-    video_register,
-    nn_register,
-    d3_register,
     d3_f16_register,
+    d3_register,
+    image_register,
+    nn_register,
+    video_register,
 )
 
 imagesmap = {

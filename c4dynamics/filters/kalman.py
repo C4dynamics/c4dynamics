@@ -1,13 +1,14 @@
+import sys
+import warnings
+from typing import Optional
+
+import numpy as np
 from scipy.linalg import (
     solve_discrete_are,
 )  # NOTE only this file and maybe math.py use scipy. worth replacing and exclude from requirements.
-from typing import Optional
-import sys
 
 # sys.path.append(".")
 import c4dynamics as c4d
-import numpy as np
-import warnings
 
 
 class kalman(c4d.state):

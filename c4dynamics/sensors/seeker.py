@@ -1,12 +1,12 @@
-import numpy as np
-
 # from scipy.special import erfinv
 import sys
+import warnings
+from typing import Optional
+
+import numpy as np
 
 # sys.path.append(".")
 import c4dynamics as c4d
-import warnings
-from typing import Optional
 
 
 # TODO: change 'seeker' to 'direction seeker'
@@ -494,7 +494,6 @@ class seeker(c4d.rigidbody):
     # default machine epsilon for float64
 
     _lastsample = -np.inf
-    #
 
     # rng_noise_std = 0
 
@@ -520,7 +519,7 @@ class seeker(c4d.rigidbody):
         self.noise_std = kwargs.pop("noise_std", noise_std_def * c4d.d2r)
         self.scale_factor_std = kwargs.pop("scale_factor_std", scale_factor_std_def)
 
-        for k in kwargs.keys():
+        for k in kwargs:
             if k == "rng_noise_std":
                 if not isradar:
                     # c4d.cprint(f'Warning: {k} is not an attribute of seeker', 'r')

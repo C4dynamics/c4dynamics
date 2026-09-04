@@ -56,8 +56,8 @@ from . import eqm as eqm
 #
 # utils
 ##
-from .utils.const import *  # noqa: F403
-from .utils.math import *  # noqa: F403
+from .utils.const import *
+from .utils.math import *
 from .utils.gen_gif import gif as gif
 from .utils.cprint import cprint as cprint
 from .utils.plottools import plotdefaults as plotdefaults
@@ -80,7 +80,7 @@ from . import detectors as detectors
 #
 # reinforcement learning
 ##
-from . import envs as envs  # noqa: F401
+from . import envs as envs
 
 #
 # version
@@ -154,13 +154,6 @@ class IgnoreOutputChecker(doctest.OutputChecker):
 
                 abs_tol = 1e-3
                 rel_tol = 1e-3
-
-                if False:
-
-                    # Calculate element-wise absolute and relative differences
-                    # if diff < abs (for small values) OR diff/want < rel (for large values)
-                    np.abs(want - got) < abs_tol
-                    np.abs((want - got) / np.where(want != 0, want, np.inf)) < rel_tol
 
                 return np.allclose(want, got, atol=abs_tol, rtol=rel_tol)
 
@@ -238,10 +231,10 @@ def rundoctests(module, exclude_functions=[]):
     np.set_printoptions(legacy="1.25")
 
     if tofile:
-        with open(os.path.join("tests", "_out", "output.txt"), "w") as f:
-            with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
-                # result = doctest.testmod(optionflags = optionflags)
-                result = testmod_filtering(module, exclude_functions, optionflags=optionflags)
+        with open(os.path.join("tests", "_out", "output.txt"), "w") as f, \
+             contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
+            # result = doctest.testmod(optionflags = optionflags)
+            result = testmod_filtering(module, exclude_functions, optionflags=optionflags)
     else:
         # result = doctest.testmod(optionflags = optionflags)
         result = testmod_filtering(module, exclude_functions, optionflags=optionflags)

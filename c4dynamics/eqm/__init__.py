@@ -3,10 +3,10 @@ import os
 
 # sys.path.append(".")
 
-from c4dynamics.eqm.derivs import eqm3 as eqm3  # noqa: F401
-from c4dynamics.eqm.derivs import eqm6 as eqm6  # noqa: F401
-from c4dynamics.eqm.integrate import int3 as int3  # noqa: F401
-from c4dynamics.eqm.integrate import int6 as int6  # noqa: F401
+from c4dynamics.eqm.derivs import eqm3 as eqm3
+from c4dynamics.eqm.derivs import eqm6 as eqm6
+from c4dynamics.eqm.integrate import int3 as int3
+from c4dynamics.eqm.integrate import int6 as int6
 
 if __name__ == "__main__":
 
@@ -21,9 +21,9 @@ if __name__ == "__main__":
     optionflags = doctest.FAIL_FAST
 
     if tofile:
-        with open(os.path.join("tests", "_out", "output.txt"), "w") as f:
-            with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
-                result = doctest.testmod(optionflags=optionflags)
+        with open(os.path.join("tests", "_out", "output.txt"), "w") as f, \
+             contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
+            result = doctest.testmod(optionflags=optionflags)
     else:
         result = doctest.testmod(optionflags=optionflags)
 

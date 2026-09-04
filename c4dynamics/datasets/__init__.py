@@ -74,13 +74,13 @@ import sys
 #     download_all,
 #     clear_cache,
 # )
-from c4dynamics.datasets._manager import sha256 as sha256   # noqa: F401
-from c4dynamics.datasets._manager import image as image   # noqa: F401
-from c4dynamics.datasets._manager import video as video   # noqa: F401
-from c4dynamics.datasets._manager import nn_model as nn_model   # noqa: F401
-from c4dynamics.datasets._manager import d3_model as d3_model   # noqa: F401
-from c4dynamics.datasets._manager import download_all as download_all   # noqa: F401
-from c4dynamics.datasets._manager import clear_cache as clear_cache   # noqa: F401
+from c4dynamics.datasets._manager import sha256 as sha256
+from c4dynamics.datasets._manager import image as image
+from c4dynamics.datasets._manager import video as video
+from c4dynamics.datasets._manager import nn_model as nn_model
+from c4dynamics.datasets._manager import d3_model as d3_model
+from c4dynamics.datasets._manager import download_all as download_all
+from c4dynamics.datasets._manager import clear_cache as clear_cache
 
 if __name__ == "__main__":
 

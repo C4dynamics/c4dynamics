@@ -1,18 +1,15 @@
-# -*- coding: utf-8 -*-
 # pragma: no cover
 
 import os
 import re
+import tkinter as tk
+from tkinter import filedialog
 
 # print(sys.version)
 import natsort
-
+from lxml import etree
 from pptx import Presentation
 from pptx.util import Inches
-
-from lxml import etree
-import tkinter as tk
-from tkinter import filedialog
 
 edit_existing = True  # False #
 imfol = "cars2_short/accsize2model"  # 'cars2_short/velmodel' #

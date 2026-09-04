@@ -22,9 +22,9 @@ import sys
 
 # sys.path.append(".")
 
-from c4dynamics.filters.kalman import kalman as kalman  # noqa: F401
-from c4dynamics.filters.ekf import ekf as ekf  # noqa: F401
-from c4dynamics.filters.lowpass import lowpass as lowpass  # noqa: F401
+from c4dynamics.filters.kalman import kalman as kalman
+from c4dynamics.filters.ekf import ekf as ekf
+from c4dynamics.filters.lowpass import lowpass as lowpass
 
 
 # NOTE

@@ -1,5 +1,6 @@
-import numpy as np
 import sys
+
+import numpy as np
 
 # sys.path.append(".")
 from c4dynamics.states.state import state
@@ -269,7 +270,7 @@ class pixelpoint(state):
 
     .. figure:: /_examples/pixelpoint/yolov3.png
 
-    """  # noqa: E501
+    """
 
     x: float
     y: float
@@ -516,7 +517,7 @@ class pixelpoint(state):
             2      |    0.550     |    0.397     |     648      |     272
             3      |    0.507     |    0.916     |     598      |     627
 
-        """  # noqa: E501
+        """
         # TODO complete with full state vector.
 
         # superx = super().X
@@ -561,11 +562,13 @@ class pixelpoint(state):
 
     @staticmethod
     def video_detections(vidpath, tf=None, storepath=False):
-        import c4dynamics as c4d
+        import os
         import pickle
         import zlib
-        import cv2  # noqa: F401,F811
-        import os
+
+        import cv2
+
+        import c4dynamics as c4d
 
         cap = cv2.VideoCapture(vidpath)
         fps = cap.get(cv2.CAP_PROP_FPS)

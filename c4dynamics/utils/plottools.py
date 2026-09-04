@@ -1,8 +1,10 @@
+import sys
+
+import matplotlib as mpl
+from matplotlib import font_manager
 from matplotlib import pyplot as plt
 from matplotlib.ticker import ScalarFormatter
-from matplotlib import font_manager
-import matplotlib as mpl
-import sys
+
 sys.path.append(".")
 
 available = {f.name for f in font_manager.fontManager.ttflist}

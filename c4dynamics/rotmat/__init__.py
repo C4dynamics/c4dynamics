@@ -19,12 +19,12 @@ import sys
 
 # sys.path.append(".")
 
-from c4dynamics.rotmat.rotmat import rotx as rotx   # noqa: F401
-from c4dynamics.rotmat.rotmat import roty as roty   # noqa: F401
-from c4dynamics.rotmat.rotmat import rotz as rotz   # noqa: F401
-from c4dynamics.rotmat.rotmat import dcm321 as dcm321   # noqa: F401
-from c4dynamics.rotmat.rotmat import dcm321euler as dcm321euler   # noqa: F401
-from c4dynamics.rotmat.animate import animate as animate   # noqa: F401
+from c4dynamics.rotmat.rotmat import rotx as rotx
+from c4dynamics.rotmat.rotmat import roty as roty
+from c4dynamics.rotmat.rotmat import rotz as rotz
+from c4dynamics.rotmat.rotmat import dcm321 as dcm321
+from c4dynamics.rotmat.rotmat import dcm321euler as dcm321euler
+from c4dynamics.rotmat.animate import animate as animate
 
 if __name__ == "__main__":
 
