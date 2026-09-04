@@ -39,7 +39,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=273b9ddd"></script>
+    <script src="../../_static/documentation_options.js?v=9cc71fc0"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -615,9 +615,11 @@ document.write(`
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="c1"># On Google Colab, install c4dynamics -- it ships this example&#39;s own module too:</span>
+<span class="c1"># On Google Colab, install c4dynamics -- it ships this example&#39;s own module too.</span>
+<span class="c1"># Pin &gt;=2.4.3: this notebook expects the 3-axis magnetometer introduced in that</span>
+<span class="c1"># release; older versions return a scalar heading and the EKF update fails.</span>
 <span class="k">if</span> <span class="s1">&#39;google.colab&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
-    <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-q<span class="w"> </span>c4dynamics
+    <span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;c4dynamics&gt;=2.4.3&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics.utils.use_cases</span><span class="w"> </span><span class="kn">import</span> <span class="n">quad_ekf</span>
 </pre></div>
