@@ -85,7 +85,7 @@ from . import envs as envs  # noqa: F401
 #
 # version
 ##
-__version__ = "2.4.2"  # update also in pyproject.toml
+__version__ = "2.4.3"  # update also in pyproject.toml
 
 
 #

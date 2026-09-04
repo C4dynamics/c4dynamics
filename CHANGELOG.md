@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+
+## [2.4.3] - 2026-09-04
 ### Changed
 - `c4dynamics.sensors.navigation.magnetometer` is now a full 3-axis device.
   `measure()` returns the body-frame geomagnetic field vector
@@ -13,6 +16,9 @@ All notable changes to this project will be documented in this file.
   3-axis vector correction (`h(x) = [BI] @ mref`, numeric 3x12 Jacobian),
   replacing the linear scalar-heading update and its innovation
   yaw-wrapping.
+- `quad_ekf` notebook: the Colab install cell now pins `c4dynamics>=2.4.3`,
+  so the notebook (which expects the 3-axis magnetometer) cannot run
+  against an older, incompatible release.
 
 
 ## [2.4.2] - 2026-09-03
