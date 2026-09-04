@@ -46,8 +46,9 @@ Contents
 --------
     jacobian_F            process Jacobian df/dx (12x12): analytic kinematic/
                            rotational blocks + numeric translational block
-    H_GPS, H_GYRO, H_MAG  constant measurement matrices
+    H_GPS, H_GYRO         constant measurement matrices (GPS, gyro)
     accel_h, accel_H      nonlinear accelerometer measurement model + Jacobian
+    mag_h, mag_H          nonlinear 3-axis magnetometer model + Jacobian
     gps, imu, magnetometer simulated sensors (truth -> measurement)
     ekf_quad              the quadrotor EKF (subclass of c4d.filters.ekf)
     default_ekf_config    reference EKF noise / initialization block
@@ -217,14 +218,14 @@ def jacobian_F(x, Omega, quad, rotor_speeds, params):
 #  MEASUREMENT MODELS
 # ============================================================================
 #
-# GPS, gyroscope and magnetometer are linear in the state, so their measurement
-# Jacobians are constant selector matrices.  The accelerometer is nonlinear
-# (it measures the gravity projection), so its prediction and Jacobian are
+# GPS and gyroscope are linear in the state, so their measurement Jacobians
+# are constant selector matrices.  The accelerometer (gravity projection) and
+# the 3-axis magnetometer (reference field rotated into the body frame) are
+# both nonlinear in the attitude, so their prediction and Jacobian are
 # recomputed at the current estimate every update.
 
 H_GPS = np.zeros((3, 12));  H_GPS[0, 0] = H_GPS[1, 1] = H_GPS[2, 2] = 1.0   # x,y,z
 H_GYRO = np.zeros((3, 12)); H_GYRO[0, 9] = H_GYRO[1, 10] = H_GYRO[2, 11] = 1.0  # p,q,r
-H_MAG = np.zeros((1, 12));  H_MAG[0, 8] = 1.0                                   # psi
 
 
 def accel_h(x, quad=None, rotor_speeds=None):
@@ -287,6 +288,35 @@ def accel_H(x, quad=None, rotor_speeds=None):
     return H
 
 
+def mag_h(x, mref):
+    """3-axis magnetometer model: reference geomagnetic field in the body frame.
+
+    ``h(x) = [BI](phi,theta,psi) @ mref`` — the fixed navigation-frame
+    reference field ``mref`` rotated into the body frame by the estimated
+    attitude, exactly what :meth:`magnetometer.measure
+    <c4dynamics.sensors.navigation.magnetometer.measure>` simulates (before
+    its per-axis noise / hard-iron / soft-iron terms, none of which the
+    filter models).  Depends on the attitude only.
+    """
+    return dcm321(x[6], x[7], x[8]) @ np.asarray(mref, float)
+
+
+def mag_H(x, mref):
+    """Jacobian ``dh/dx`` of :func:`mag_h` at the current estimate (3 x 12).
+
+    Numeric (central differences) w.r.t. ``phi, theta, psi`` — the DCM makes
+    the closed form cumbersome, and this matches how :func:`accel_H` and
+    :func:`jacobian_F`'s translational block are handled.
+    """
+    x = np.asarray(x, float)
+    H = np.zeros((3, 12))
+    for si in (6, 7, 8):   # phi, theta, psi
+        xp = x.copy(); xp[si] += EPS
+        xm = x.copy(); xm[si] -= EPS
+        H[:, si] = (mag_h(xp, mref) - mag_h(xm, mref)) / (2.0 * EPS)
+    return H
+
+
 
 # ============================================================================
 #  EXTENDED KALMAN FILTER   (subclass of c4d.filters.ekf)
@@ -308,7 +338,7 @@ class ekf_quad(c4d.filters.ekf):
     * per-sensor innovation gating (chi-squared NIS test),
     * adaptive GPS measurement noise (Mehra-style, two-phase),
     * adaptive velocity process noise during high-acceleration segments,
-    * the nonlinear accelerometer measurement.
+    * the nonlinear accelerometer and 3-axis magnetometer measurements.
 
     The NIS gate, the gain/covariance step, and covariance stabilization
     (symmetrize + tiny diagonal floor) are all native to the framework's
@@ -320,10 +350,11 @@ class ekf_quad(c4d.filters.ekf):
     # Chi-squared gates, by measurement dimension:
     _GATE_GPS  = 16.27 # 99.9% gate, 3 dimensions
     _GATE_GYRO = 7.81  # 95%, 3 dimensions
-    _GATE_MAG  = 3.84  # 95%, 1 dimension
+    _GATE_MAG  = 7.81  # 95%, 3 dimensions
     _GATE_ACC  = 5.99  # 95%, 2 dimensions
 
-    def __init__(self, X0, P0, Q, R_gps, R_gyro, R_mag, R_acc, params, dt_ref=0.005):
+    def __init__(self, X0, P0, Q, R_gps, R_gyro, R_mag, R_acc, params,
+                 dt_ref=0.005, mag_mref=None):
         # X0 may be a dict {name: value} or a 12-vector.
         if not isinstance(X0, dict):
             X0 = {n: float(v) for n, v in zip(STATE_NAMES, np.asarray(X0).ravel())}
@@ -333,9 +364,18 @@ class ekf_quad(c4d.filters.ekf):
 
         self.R_gps  = R_gps.copy()
         self.R_gyro = R_gyro.copy()
-        self.R_mag  = R_mag.copy()
+        self.R_mag  = np.atleast_2d(R_mag).copy()
         self.R_acc  = R_acc.copy()
         self._params = params
+
+        # 3-axis magnetometer reference field (navigation frame), rotated into
+        # the body frame by mag_h/mag_H. Defaults to a 60 deg-inclination,
+        # zero-declination, unit-intensity field if the caller doesn't supply
+        # the sensor's own mref.
+        if mag_mref is None:
+            _incl = np.deg2rad(60.0)
+            mag_mref = np.array([np.cos(_incl), 0.0, np.sin(_incl)])
+        self.mag_mref = np.asarray(mag_mref, float)
 
         # Attach physical parameters so this estimate can serve as the ``quad``
         # argument both to the shared dynamics (process model) and to
@@ -463,9 +503,13 @@ class ekf_quad(c4d.filters.ekf):
         super().update(innov=innov, H=self._accel_H_cached, R=self.R_acc, gate=self._GATE_ACC)
 
     def update_magnetometer(self, z_mag):
-        # Circular innovation keeps the wrapped measurement off the state vector.
-        innov = self._wrap(float(z_mag[0]) - float(self.psi))
-        super().update(innov=innov, H=H_MAG, R=self.R_mag, gate=self._GATE_MAG)
+        # 3-axis vector update: h(x) = [BI] @ mref. No yaw-wrapping needed --
+        # the residual lives in field space, not angle space, so an estimate
+        # near +-pi is corrected the short way round by construction.
+        x = np.asarray(self.X).ravel()
+        innov = np.asarray(z_mag, float).ravel() - mag_h(x, self.mag_mref)
+        H = mag_H(x, self.mag_mref)
+        super().update(innov=innov, H=H, R=self.R_mag, gate=self._GATE_MAG)
 
     def update_gps(self, z_gps):
         """GPS position update with two-phase adaptive measurement noise.
@@ -609,16 +653,22 @@ def run_fig8_ekf(
     # ekf_quad.predict() rescales it internally to whatever dt_sim actually is.
     R_gyro_eff = ekf_cfg['R_gyro'] * imu_noise_scale**2
     R_acc_eff  = ekf_cfg['R_acc']  * imu_noise_scale**2
-    est = ekf_quad(x0, ekf_cfg['P0'], ekf_cfg['Q'],
-                ekf_cfg['R_gps'], R_gyro_eff,
-                ekf_cfg['R_mag'], R_acc_eff, qp, dt_ref=dt)
-    est.jacobian_stride = jacobian_stride
 
     # ── Sensors ──────────────────────────────────────────────────────────────
+    mag_incl = ekf_cfg.get('mag_inclination', np.deg2rad(60.0))
+    mag_decl = ekf_cfg.get('mag_declination', 0.0)
     gps_sensor = gps(noise_std=ekf_cfg['gps_std'], isideal=ekf_cfg.get('ideal_gps', False))
     imu_sensor = imu(isideal=ekf_cfg['ideal_imu'], gyro_std=ekf_cfg['gyro_std'] * imu_noise_scale,
                       acc_std=ekf_cfg['acc_std'] * imu_noise_scale)
-    mag_sensor = magnetometer(noise_std=ekf_cfg['mag_std'])
+    mag_sensor = magnetometer(noise_std=ekf_cfg['mag_std'],
+                              inclination=mag_incl, declination=mag_decl,
+                              isideal=ekf_cfg.get('ideal_magnetometer', False))
+
+    est = ekf_quad(x0, ekf_cfg['P0'], ekf_cfg['Q'],
+                ekf_cfg['R_gps'], R_gyro_eff,
+                ekf_cfg['R_mag'], R_acc_eff, qp, dt_ref=dt,
+                mag_mref=mag_sensor.mref)
+    est.jacobian_stride = jacobian_stride
     # gps_rate/mag_rate are counts of Ts_inner periods (e.g. gps_rate=20 -> 10 Hz
     # at the 200 Hz baseline); convert to sim-step counts at the actual dt_sim.
     gps_decim = max(1, round(ekf_cfg['gps_rate'] * dt / dt_sim))

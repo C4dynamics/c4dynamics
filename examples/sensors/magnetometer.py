@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 savedir = os.path.join(os.getcwd(), "docs", "source", "_examples", "navigation")
 
 
-def true_heading():
+def true_attitude():
     """Build a 12-state vector with a known yaw entry (index 8)."""
     x_true = np.zeros(12)
     x_true[8] = 0.5  # true heading [rad]
@@ -21,43 +21,57 @@ def true_heading():
 
 
 def ideal(x_true):
-    """Demonstrate an ideal magnetometer measurement (errors model muted)."""
+    """Demonstrate an ideal 3-axis magnetometer measurement (errors model muted)."""
     mag_ideal = c4d.sensors.magnetometer(isideal=True)
-    measurement = mag_ideal.measure(x_true)
 
-    print("Ideal magnetometer:", measurement)
-    # [0.5]
+    print("Ideal magnetometer, level & north:", mag_ideal.measure(np.zeros(12)))
+    # [0.5  0.  0.866]
+
+    measurement = mag_ideal.measure(x_true)
+    print("Ideal magnetometer, psi = 0.5 rad:", measurement)
+    # [0.439  -0.24  0.866]
 
     return mag_ideal, measurement
 
 
 def nonideal(x_true):
-    """Demonstrate a magnetometer measurement with bias and white noise."""
+    """Demonstrate a magnetometer measurement with white noise."""
     np.random.seed(42)
-    mag_sensor = c4d.sensors.magnetometer(noise_std=0.05, bias=0.02)
+    mag_sensor = c4d.sensors.magnetometer(noise_std=0.02)
     measurement = mag_sensor.measure(x_true)
 
     print(measurement)
-    # [0.545]
+    # [0.449  -0.242  0.879]
 
     return mag_sensor, measurement
 
 
-def bias(x_true):
-    """Demonstrate a deterministic heading bias with noise disabled."""
-    mag_bias = c4d.sensors.magnetometer(noise_std=0, bias=0.1)
-    measurement = mag_bias.measure(x_true)
+def hard_iron(x_true):
+    """Demonstrate a deterministic hard-iron offset with noise disabled."""
+    mag_hi = c4d.sensors.magnetometer(noise_std=0, hard_iron=[0.1, 0, 0])
+    mag_ref = c4d.sensors.magnetometer(isideal=True)
 
-    print(measurement - x_true[8])
-    # [0.1]
+    print(mag_hi.measure(x_true) - mag_ref.measure(x_true))
+    # [0.1  0.  0.]
 
-    return mag_bias, measurement
+    return mag_hi
+
+
+def soft_iron():
+    """Demonstrate a soft-iron gain on the body x axis."""
+    mag_si = c4d.sensors.magnetometer(
+        noise_std=0, soft_iron=np.diag([1.2, 1.0, 1.0]))
+
+    print(mag_si.measure(np.zeros(12)))
+    # [0.6  0.  0.866]
+
+    return mag_si
 
 
 def noise(x_true):
-    """Demonstrate sample-to-sample magnetometer noise."""
+    """Demonstrate sample-to-sample per-axis magnetometer noise."""
     np.random.seed(1)
-    mag_noise = c4d.sensors.magnetometer(noise_std=0.05, bias=0)
+    mag_noise = c4d.sensors.magnetometer(noise_std=0.02)
 
     print("Repeated measurements of the same state:")
     for _ in range(3):
@@ -84,20 +98,21 @@ def demo():
 def measure():
     """`measure()`'s own docstring example."""
     np.random.seed(42)
-    mag_sensor = c4d.sensors.magnetometer(noise_std=0, bias=0.1)
+    mag_sensor = c4d.sensors.magnetometer(isideal=True)
     x = np.zeros(12)
     x[8] = 0.5
     print(mag_sensor.measure(x))
-    # [0.6]
+    # [0.439  -0.24  0.866]
 
 
 if __name__ == "__main__":
-    x_true = true_heading()
+    x_true = true_attitude()
 
     # Run the examples individually while experimenting.
     ideal(x_true)
     nonideal(x_true)
-    bias(x_true)
+    hard_iron(x_true)
+    soft_iron()
     noise(x_true)
     demo()
 

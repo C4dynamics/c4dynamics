@@ -22,8 +22,14 @@ def default_ekf_config() -> dict:
     -------
     dict
         Keys: ``Q, P0, R_gps, R_gyro, R_mag, R_acc, x0_pos_sigma,
-        x0_att_sigma, gps_std, gyro_std, mag_std, acc_std, gps_rate,
-        mag_rate, seed, ideal_imu, ideal_magnetometer, ideal_gps``.
+        x0_att_sigma, gps_std, gyro_std, mag_std, acc_std, mag_inclination,
+        mag_declination, gps_rate, mag_rate, seed, ideal_imu,
+        ideal_magnetometer, ideal_gps``.
+
+    ``R_mag`` / ``mag_std`` are per-axis, in the normalized-field units of
+    the 3-axis :class:`magnetometer <c4dynamics.sensors.navigation.magnetometer>`
+    (total intensity ``F = 1``). ``mag_inclination`` / ``mag_declination``
+    set the reference-field geometry [rad].
     """
     Q = np.diag(np.array([
         0.005, 0.005, 0.008,   # x, y, z        [m]
@@ -43,7 +49,7 @@ def default_ekf_config() -> dict:
         'P0'     : P0,
         'R_gps'  : np.diag([0.50**2, 0.50**2, 0.50**2]),
         'R_gyro' : np.diag([0.015**2, 0.015**2, 0.015**2]),
-        'R_mag'  : np.array([[0.055**2]]),
+        'R_mag'  : np.diag([0.025**2, 0.025**2, 0.025**2]),
         'R_acc'  : np.diag([0.10**2, 0.10**2]),
         # initial-estimate offset (1-sigma) from truth
         'x0_pos_sigma': 0.30,
@@ -51,8 +57,11 @@ def default_ekf_config() -> dict:
         # sensor white-noise levels (1-sigma) actually injected
         'gps_std' : 0.50,
         'gyro_std': 0.01,
-        'mag_std' : 0.05,
+        'mag_std' : 0.02,
         'acc_std' : 0.05,
+        # 3-axis magnetometer reference-field geometry [rad]
+        'mag_inclination': np.deg2rad(60.0),
+        'mag_declination': 0.0,
         # sensor decimation relative to the 200 Hz master loop
         'gps_rate': 20,   # 10 Hz
         'mag_rate': 4,    # 50 Hz

@@ -17,7 +17,7 @@ of electro-optic, lasers, electro-magnetic, and navigation devices.
   * - :class:`imu <c4dynamics.sensors.navigation.imu>`
     - Gyroscope + accelerometer
   * - :class:`magnetometer <c4dynamics.sensors.navigation.magnetometer>`
-    - Heading (yaw) sensor
+    - 3-axis geomagnetic field sensor
 
 """
 
