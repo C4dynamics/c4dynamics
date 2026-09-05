@@ -85,7 +85,7 @@ Across:
 
 **Real implementations of modeling, estimation, and control**
 
-> These are not isolated demos.
+> Not isolated demos.
 > They all follow the same structure.
 
 
