@@ -69,7 +69,7 @@
     <link rel="prev" title="Quadcopter Cascade PID — Figure-8 Trajectory Tracking" href="../pid_cascade/quadcopter_pid.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Sep 04, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 05, 2026"/>
   </head>
   
   
@@ -213,7 +213,6 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
-
 
 <li class="toctree-l1"><a class="reference internal" href="../pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
@@ -524,9 +523,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Author">Author</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Goal">Goal</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Table-of-Contents">Table of Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Table-of-Contents">Table of Contents</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-The-Estimation-Problem">2. The Estimation Problem</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Dynamics">3. Dynamics</a></li>
@@ -576,7 +573,7 @@ document.write(`
 <section id="Quadcopter-EKF---State-Estimation-for-Figure-8-Trajectory-Tracking">
 <h1>Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking<a class="headerlink" href="#Quadcopter-EKF---State-Estimation-for-Figure-8-Trajectory-Tracking" title="Link to this heading">#</a></h1>
 <p><em>An estimation-control companion to the Cascade-PID example.</em></p>
-<p>This notebook extends the Quadcopter Cascade-PID figure-8 example so that the quadcopter no longer has access to its true state. Instead it carries an <strong>Extended Kalman Filter</strong> (<span class="math notranslate nohighlight">\(EKF\)</span>) that reconstructs the full state vector from <strong>noisy GPS and IMU measurements</strong>, and the cascade controller closes the loop on that <em>estimate</em>. The result is a complete, realistic <strong>estimation-control pipeline</strong>.</p>
+<div style="margin-top: 30px;"></div><p>This notebook extends the Quadcopter Cascade-PID figure-8 example so that the quadcopter no longer has access to its true state. Instead it carries an <strong>Extended Kalman Filter</strong> (<span class="math notranslate nohighlight">\(EKF\)</span>) that reconstructs the full state vector from <strong>noisy GPS and IMU measurements</strong>, and the cascade controller closes the loop on that <em>estimate</em>. The result is a complete, realistic <strong>estimation-control pipeline</strong>.</p>
 <section id="Author">
 <h2>Author<a class="headerlink" href="#Author" title="Link to this heading">#</a></h2>
 <p>This notebook was developed by Usama Khan (<a class="reference external" href="https://github.com/usama-k-mech">&#64;usama-k-mech</a>) as part of the c4dynamics project, under the guidance of the <em>c4dynamics maintainers</em>.</p>
@@ -591,10 +588,10 @@ document.write(`
 <section id="Overview">
 <h2>Overview<a class="headerlink" href="#Overview" title="Link to this heading">#</a></h2>
 <p><img alt="The EKF receives the same control inputs that drive the plant to predict the system state and incorporates GPS, IMU, and magnetometer measurements to correct the prediction. The resulting state estimate replaces the true state in the feedback loop, enabling output-feedback control based solely on sensor information." src="../../_images/architecture.png" /></p>
-</section>
+<p>{{&lt; pagebreak &gt;}}</p>
 </section>
 <section id="Table-of-Contents">
-<h1>Table of Contents<a class="headerlink" href="#Table-of-Contents" title="Link to this heading">#</a></h1>
+<h2>Table of Contents<a class="headerlink" href="#Table-of-Contents" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p>Setup</p></li>
 <li><p>The Estimation Problem</p></li>
@@ -608,6 +605,7 @@ document.write(`
 <li><p>Summary &amp; Conclusions</p></li>
 <li><p>Appendix: Sensor Demos</p></li>
 </ol>
+</section>
 <section id="1.-Setup">
 <h2>1. Setup<a class="headerlink" href="#1.-Setup" title="Link to this heading">#</a></h2>
 <div class="nbinput nblast docutils container">
@@ -1180,13 +1178,10 @@ Cascade-<span class="math notranslate nohighlight">\(PID\)</span> controllers re
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 EKF closed-loop  |  tf = 90.0 s  |  control dt = 0.005 s  |  IMU = 200 Hz  (sim dt = 0.005 s)
-
-<span class="ansi-yellow-intense-fg">Quadcopter hit the ground at t=89.830 s (z=-0.0036 m); stopping simulation.
-</span>To suppress c4dynamics&#39; warnings, run: import warnings,import c4dynamics as c4d, warnings.simplefilter(&#39;ignore&#39;, c4d.c4warn)
- (File: C:\Users\zivme\Dropbox\c4dynamics\c4dynamics\utils\use_cases\quad_ekf.py, Line: 722)
 EKF closed-loop complete.
 </pre></div></div>
 </div>
+<p>{{&lt; pagebreak &gt;}}</p>
 </section>
 <section id="8.-Results">
 <h2>8. Results<a class="headerlink" href="#8.-Results" title="Link to this heading">#</a></h2>
@@ -1203,7 +1198,7 @@ EKF closed-loop complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_54_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_54_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_56_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_56_0.png" />
 </div>
 </div>
 <p>The following figures take the estimate apart one channel at a time. <strong>±2σ bands</strong> the error curve above should stay inside the shaded <span class="math notranslate nohighlight">\(±2σ\)</span> envelope most of the time (<span class="math notranslate nohighlight">\(≈95\%\)</span>). Escaping it often means the filter is over-confident; hugging zero far inside it means it is over-conservative.</p>
@@ -1223,10 +1218,11 @@ EKF closed-loop complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_57_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_57_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_59_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_59_0.png" />
 </div>
 </div>
 <p>Position (<span class="math notranslate nohighlight">\(x,y,z\)</span>): tracked to a few tens of centimetres - <span class="math notranslate nohighlight">\(GPS\)</span> at <span class="math notranslate nohighlight">\(10 Hz\)</span> bounds the position error while the dynamics bridges the gaps between fixes.</p>
+<p>{{&lt; pagebreak &gt;}}</p>
 <ul class="simple">
 <li><p><strong>Velocity</strong> (<span class="math notranslate nohighlight">\(v_x,v_y,v_z\)</span>)</p></li>
 </ul>
@@ -1243,10 +1239,11 @@ EKF closed-loop complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_60_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_60_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_62_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_62_0.png" />
 </div>
 </div>
 <p>Velocity (<span class="math notranslate nohighlight">\(v_x,v_y,v_z\)</span>): thanks to the full specific-force accelerometer, horizontal velocity is typically estimated to a few centimetres/second even though there is no direct velocity sensor.</p>
+<p>{{&lt; pagebreak &gt;}}</p>
 <ul class="simple">
 <li><p><strong>Attitude</strong> (<span class="math notranslate nohighlight">\(\varphi,\theta,\psi\)</span>)</p></li>
 </ul>
@@ -1263,13 +1260,14 @@ EKF closed-loop complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_63_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_63_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_65_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_65_0.png" />
 </div>
 </div>
 <div class="line-block">
 <div class="line">Roll/pitch are observed by the accelerometer at <span class="math notranslate nohighlight">\(200 Hz\)</span> and stay within a couple of degrees.</div>
 <div class="line">Yaw relies on the <span class="math notranslate nohighlight">\(50 Hz\)</span> magnetometer.</div>
 </div>
+<p>{{&lt; pagebreak &gt;}}</p>
 <ul class="simple">
 <li><p><strong>Errors</strong> (<span class="math notranslate nohighlight">\(x, v_x, \varphi, \psi\)</span>)</p></li>
 </ul>
@@ -1286,7 +1284,7 @@ EKF closed-loop complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_66_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_66_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_68_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_68_0.png" />
 </div>
 </div>
 <p>Each panel is the estimation error <code class="docutils literal notranslate"><span class="pre">true</span> <span class="pre">-</span> <span class="pre">est</span></code> for one state, against the <span class="math notranslate nohighlight">\(\pm 2\sigma\)</span> envelope the filter reports for it.</p>
@@ -1321,7 +1319,7 @@ EKF closed-loop complete.
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_69_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_69_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_71_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_71_0.png" />
 </div>
 </div>
 <p>NEES is <em>ideally</em> around <span class="math notranslate nohighlight">\(n=12\)</span>; with the accelerometer’s dynamic term now properly modeled (rather than absorbed as noise), don’t be surprised to see it run somewhat below <span class="math notranslate nohighlight">\(12\)</span> - that means the filter is a little conservative (it reports more uncertainty than it turns out to need), which is a safer direction to be in than the reverse.</p>
@@ -1458,11 +1456,11 @@ This is the main price of output-feedback control in this example.</p></li>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-IMU rate =     10 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2050 m  (n=20/20)
-IMU rate =     50 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2952 m  (n=20/20)
-IMU rate =    100 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2676 m  (n=20/20)
-IMU rate =    150 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2904 m  (n=20/20)
-IMU rate =    200 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2898 m  (n=20/20)
+IMU rate =     10 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2046 m  (n=15/20)
+IMU rate =     50 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.3197 m  (n=14/20)
+IMU rate =    100 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2453 m  (n=13/20)
+IMU rate =    150 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2835 m  (n=15/20)
+IMU rate =    200 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2835 m  (n=15/20)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1477,7 +1475,7 @@ IMU rate =    200 Hz  -&gt;  RMS position error during 1.5s GPS dropout = 0.2898
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_82_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_82_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_84_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_84_0.png" />
 </div>
 </div>
 <div class="line-block">
@@ -1518,7 +1516,7 @@ against an ideal of <span class="math notranslate nohighlight">\(12\)</span>): i
 <div class="line">This appendix runs the sensor objects on their own, outside the filter: each demo() drives its sensor with a known reference signal and plots the noisy, biased output against that ground truth — so the raw measurement behaviour the <span class="math notranslate nohighlight">\(EKF\)</span>’s update stage has to cope with is visible in isolation, before it’s buried inside the closed loop.</div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics.sensors.navigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">imu</span><span class="p">,</span> <span class="n">gps</span><span class="p">,</span> <span class="n">magnetometer</span>
@@ -1528,28 +1526,10 @@ against an ideal of <span class="math notranslate nohighlight">\(12\)</span>): i
 <section id="IMU">
 <h2>IMU<a class="headerlink" href="#IMU" title="Link to this heading">#</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">imu</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_90_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_90_0.png" />
-</div>
-</div>
-</section>
-<section id="GPS">
-<h2>GPS<a class="headerlink" href="#GPS" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gps</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
@@ -1561,10 +1541,28 @@ against an ideal of <span class="math notranslate nohighlight">\(12\)</span>): i
 </div>
 </div>
 </section>
+<section id="GPS">
+<h2>GPS<a class="headerlink" href="#GPS" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gps</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_94_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_94_0.png" />
+</div>
+</div>
+</section>
 <section id="Magnetometer">
 <h2>Magnetometer<a class="headerlink" href="#Magnetometer" title="Link to this heading">#</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">magnetometer</span><span class="o">.</span><span class="n">demo</span><span class="p">();</span>
@@ -1575,7 +1573,7 @@ against an ideal of <span class="math notranslate nohighlight">\(12\)</span>): i
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../../_images/programs_ekf_estimation_quad_ekf_94_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_94_0.png" />
+<img alt="../../_images/programs_ekf_estimation_quad_ekf_96_0.png" src="../../_images/programs_ekf_estimation_quad_ekf_96_0.png" />
 </div>
 </div>
 </section>
@@ -1630,9 +1628,7 @@ against an ideal of <span class="math notranslate nohighlight">\(12\)</span>): i
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Author">Author</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Goal">Goal</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Overview">Overview</a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#Table-of-Contents">Table of Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Table-of-Contents">Table of Contents</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Setup">1. Setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-The-Estimation-Problem">2. The Estimation Problem</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Dynamics">3. Dynamics</a></li>
@@ -1696,7 +1692,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Sep 04, 2026.
+  Last updated on Sep 05, 2026.
   <br/>
 </p>
   </div>

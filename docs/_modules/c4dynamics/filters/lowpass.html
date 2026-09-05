@@ -63,7 +63,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Sep 04, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 05, 2026"/>
   </head>
   
   
@@ -209,7 +209,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
-
 
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
@@ -586,9 +585,10 @@ document.write(`
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">doctest</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">doctest</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
     <span class="kn">from</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="kn">import</span> <span class="n">IgnoreOutputChecker</span><span class="p">,</span> <span class="n">cprint</span>
 
     <span class="c1"># Register the custom OutputChecker</span>
@@ -598,9 +598,9 @@ document.write(`
     <span class="n">optionflags</span> <span class="o">=</span> <span class="n">doctest</span><span class="o">.</span><span class="n">FAIL_FAST</span>
 
     <span class="k">if</span> <span class="n">tofile</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;tests/_out/output.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">optionflags</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;tests/_out/output.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">,</span> \
+             <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stderr</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">optionflags</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">optionflags</span><span class="p">)</span>
 
@@ -655,7 +655,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Sep 04, 2026.
+  Last updated on Sep 05, 2026.
   <br/>
 </p>
   </div>

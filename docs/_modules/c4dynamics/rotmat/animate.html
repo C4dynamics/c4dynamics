@@ -63,7 +63,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Sep 04, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 05, 2026"/>
   </head>
   
   
@@ -209,7 +209,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
-
 
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
@@ -474,12 +473,13 @@ document.write(`
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="c1"># sys.path.append(&quot;.&quot;)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
 
 <div class="viewcode-block" id="animate">
@@ -790,7 +790,7 @@ document.write(`
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">open3d</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">o3d</span>  <span class="c1"># noqa: F401, F811</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">open3d</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">o3d</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
             <span class="s2">&quot;The &#39;open3d&#39; package is required for this function to work. &quot;</span>
@@ -807,7 +807,7 @@ document.write(`
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">rb</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;No stored data for the given rigidbody.&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">c4d</span><span class="o">.</span><span class="n">c4warn</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span>
 
     <span class="c1">#</span>
     <span class="c1"># load the model</span>
@@ -848,7 +848,7 @@ document.write(`
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">files</span><span class="p">)):</span>
 
         <span class="n">mfilepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">modelpath</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
-        <span class="n">ismesh</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;stl&quot;</span><span class="p">,</span> <span class="s2">&quot;obj&quot;</span><span class="p">,</span> <span class="s2">&quot;ply&quot;</span><span class="p">])</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="n">ismesh</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;stl&quot;</span><span class="p">,</span> <span class="s2">&quot;obj&quot;</span><span class="p">,</span> <span class="s2">&quot;ply&quot;</span><span class="p">])</span>
         <span class="n">imodel</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">o3d</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_triangle_mesh</span><span class="p">(</span><span class="n">mfilepath</span><span class="p">)</span> <span class="k">if</span> <span class="n">ismesh</span> <span class="k">else</span> <span class="n">o3d</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">mfilepath</span><span class="p">)</span>
         <span class="p">)</span>
@@ -988,7 +988,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Sep 04, 2026.
+  Last updated on Sep 05, 2026.
   <br/>
 </p>
   </div>

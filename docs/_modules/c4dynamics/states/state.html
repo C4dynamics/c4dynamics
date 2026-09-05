@@ -63,7 +63,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-    <meta name="docbuild:last-update" content="Sep 04, 2026"/>
+    <meta name="docbuild:last-update" content="Sep 05, 2026"/>
   </head>
   
   
@@ -209,7 +209,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pid_cascade/quadcopter_pid.html">Quadcopter Cascade <em>PID</em> — Figure-8 Trajectory Tracking</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ekf_estimation/quad_ekf.html">Quadcopter EKF - State Estimation for Figure-8 Trajectory Tracking</a></li>
-
 
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/pn_guidance/dof6sim.html">Proportional Navigation Guidance - 6 Degrees of Freedom Simulation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../programs/ballistic_ekf/ballistic_coefficient.html">Ballistic Coefficient Estimation - Extended Kalman Filter</a></li>
@@ -472,12 +471,14 @@ document.write(`
                   
   <h1>Source code for c4dynamics.states.state</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
+
 <span class="c1"># sys.path.append(&quot;.&quot;)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">c4dynamics</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">c4d</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
 <span class="c1"># ======= top level</span>
 <span class="c1"># ------- level 2</span>
@@ -622,7 +623,6 @@ document.write(`
         <span class="p">(</span><span class="s2">&quot;Psi&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\u03a8</span><span class="s2">&quot;</span><span class="p">),</span>
         <span class="p">(</span><span class="s2">&quot;Omega&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\u03a9</span><span class="s2">&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="c1">#</span>
 
     <span class="n">_reserved_keys</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;X&quot;</span><span class="p">,</span>
@@ -881,7 +881,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">xout</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_didx</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_didx</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;t&quot;</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="c1"># xout.append(eval(&#39;self.&#39; + k + &#39;0&#39;))</span>
@@ -2041,9 +2041,9 @@ document.write(`
 
     <span class="k">def</span><span class="w"> </span><span class="nf">cartesian</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># TODO document!</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;vx&quot;</span><span class="p">,</span> <span class="s2">&quot;vy&quot;</span><span class="p">,</span> <span class="s2">&quot;vz&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">)]):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;vx&quot;</span><span class="p">,</span> <span class="s2">&quot;vy&quot;</span><span class="p">,</span> <span class="s2">&quot;vz&quot;</span><span class="p">]):</span>
             <span class="k">return</span> <span class="mi">2</span>
-        <span class="k">elif</span> <span class="nb">any</span><span class="p">([</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">)]):</span>
+        <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">]):</span>
             <span class="k">return</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span></div>
@@ -2102,7 +2102,7 @@ By c4dynamics
   
   <div class="footer-item">
     <p class="last-updated">
-  Last updated on Sep 04, 2026.
+  Last updated on Sep 05, 2026.
   <br/>
 </p>
   </div>
