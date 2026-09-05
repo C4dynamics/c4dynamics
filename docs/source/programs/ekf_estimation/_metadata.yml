@@ -6,6 +6,63 @@ format:
     include-in-header:
       text: |
         #show heading.where(level: 1): set text(size: 2.5em)
-        #show heading.where(level: 2): set text(size: 2em)
+
+        // Appendix sensor-demo headings (IMU / GPS / Magnetometer) each start
+        // a fresh page in the PDF -- kept here instead of a {{< pagebreak >}}
+        // shortcode in the notebook so the source stays free of Quarto-only
+        // markup that would otherwise show up as literal text on GitHub,
+        // in Jupyter/VS Code previews, and in the nbsphinx-built HTML docs.
+
+        #let heading-plain-text(it) = {
+          if type(it) == str { it }
+          else if it == none { "" }
+          else if it.has("children") { it.children.map(heading-plain-text).join("") }
+          else if it.has("text") { it.text }
+          else if it.has("body") { heading-plain-text(it.body) }
+          else { "" }
+        }
+        #show heading.where(level: 2): it => {
+          if heading-plain-text(it.body).trim() in ("GPS", "IMU", "Magnetometer") {
+            pagebreak(weak: true)
+          }
+          set text(size: 2em)
+          it
+        }
         #show heading.where(level: 3): set text(size: 1.25em)
         #show heading.where(level: 4): set text(size: 1.1em)
+
+        // header and footer
+        #set page(
+          header: [
+            #align(right)[
+            #grid(
+                columns: (auto, auto),
+                column-gutter: 4pt,
+                align: (right, horizon),
+                image("c4dlogo.svg", height: 16pt),
+                text(size: 9pt, weight: "bold")[C4DYNAMICS],
+              )
+            ]
+          ],
+          footer: [
+
+            #line(length: 100%, stroke: 0.5pt)
+            #grid(
+              columns: (auto, 1fr),
+              column-gutter: 10pt,
+              context [
+                #text(size: 9pt)[#counter(page).display()]
+              ],
+              [
+                #align(right)[
+                  #text(size: 8pt)[The Python framework for state-space]
+                  #linebreak()
+                  #text(size: 8pt)[modeling and algorithm development]
+                ]
+              ],
+            )
+
+
+
+          ]
+        )

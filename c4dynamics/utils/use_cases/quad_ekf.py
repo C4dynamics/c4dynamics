@@ -692,7 +692,6 @@ def run_fig8_ekf(
     nees = np.zeros(N)
     innov_gps, innov_gps_t = [], []
     mag_ctr = gps_ctr = imu_ctr = 0
-    took_off = False
 
     if verbose:
         print(f'EKF closed-loop  |  tf = {tf} s  |  control dt = {dt} s  |  '
@@ -712,13 +711,22 @@ def run_fig8_ekf(
         except np.linalg.LinAlgError:
             nees[k] = np.nan
 
+        # Reference at current time (also needed by the ground-contact guard
+        # below and the cascade PID further down).
+        xd, yd, zd = position_reference(t, A, B, omega, z_ref,
+                                         t_takeoff=t_takeoff, t_land=t_land, t_sim=tf)
+        vxd_ff, vyd_ff = velocity_reference(t, A, B, omega,
+                                             t_takeoff=t_takeoff, t_land=t_land, t_sim=tf)
+
         # Ground-contact guard (shared with the plain cascade-PID example):
         # stop as soon as the real (quad_true) vehicle comes back down to z <= 0
-        # after having been airborne -- there's no ground-collision model in
-        # dynamics(), so continuing past this point would just integrate an
-        # unphysical, below-ground trajectory.
-        took_off, hit_ground = ground_contact(quad_true.z, took_off)
-        if hit_ground:
+        # while the reference still commands meaningful altitude -- there's no
+        # ground-collision model in dynamics(), so continuing past this point
+        # would just integrate an unphysical, below-ground trajectory. A dip to
+        # z <= 0 while the reference altitude is below GROUND_REF_EPS (at rest
+        # before takeoff, or the tail of a scripted landing) is expected and
+        # not flagged.
+        if ground_contact(quad_true.z, zd):
             warnings.warn(f'Quadcopter hit the ground at t={t:.3f} s '
                            f'(z={quad_true.z:.4f} m); stopping simulation.', c4d.c4warn)
             t_hist, nees = t_hist[:k + 1], nees[:k + 1]
@@ -775,11 +783,6 @@ def run_fig8_ekf(
             break
 
         # 4. cascade PID on the ESTIMATE -> rotor speeds
-        xd, yd, zd = position_reference(t, A, B, omega, z_ref,
-                                         t_takeoff=t_takeoff, t_land=t_land, t_sim=tf)
-        vxd_ff, vyd_ff = velocity_reference(t, A, B, omega,
-                                             t_takeoff=t_takeoff, t_land=t_land, t_sim=tf)
-
         outer_time += dt_sim
         if outer_time >= Ts_outer:
             T_cmd, phi_d, theta_d, psi_d = outer_ctrl.compute(
